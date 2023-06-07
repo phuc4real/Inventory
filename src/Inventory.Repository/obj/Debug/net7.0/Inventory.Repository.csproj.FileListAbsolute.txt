@@ -1,0 +1,17 @@
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\bin\Debug\net7.0\Inventory.Repository.deps.json
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\bin\Debug\net7.0\Inventory.Repository.runtimeconfig.json
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\bin\Debug\net7.0\Inventory.Repository.dll
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\bin\Debug\net7.0\Inventory.Repository.pdb
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\bin\Debug\net7.0\Inventory.Core.dll
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\bin\Debug\net7.0\Inventory.Core.pdb
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.csproj.AssemblyReference.cache
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.GeneratedMSBuildEditorConfig.editorconfig
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.AssemblyInfoInputs.cache
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.AssemblyInfo.cs
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.csproj.CoreCompileInputs.cache
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.csproj.CopyComplete
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.dll
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\refint\Inventory.Repository.dll
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.pdb
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\Inventory.Repository.genruntimeconfig.cache
+D:\SSIntern\repos\Inventory\src\Inventory.Repository\obj\Debug\net7.0\ref\Inventory.Repository.dll
