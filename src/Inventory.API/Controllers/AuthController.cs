@@ -44,7 +44,7 @@ namespace Inventory.API.Controllers
             var result = await _authService.SignInAsync(dto.Username!, dto.Password!);
 
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
-                return Ok(result.Token);
+                return Ok(result);
             else
                 return BadRequest(result.Messages);
         }
@@ -66,7 +66,7 @@ namespace Inventory.API.Controllers
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
                 return Ok(result);
             else
-                return BadRequest(result);
+                return BadRequest(result.Messages);
         }
 
         [HttpDelete("logout/{id}")]
@@ -95,7 +95,7 @@ namespace Inventory.API.Controllers
 
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
             {
-                return Ok(result);
+                return Ok(result.Token);
             }
             else
             {

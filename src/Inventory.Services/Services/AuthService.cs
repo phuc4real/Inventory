@@ -106,6 +106,7 @@ namespace Inventory.Services.Services
                 if (result.Succeeded)
                 {
                     response.Token = await GetTokens(user);
+                    response.Messages!.Add(new ResponseMessage() { Key = "UserId", Value = user.Id });
                     response.Status = ResponeStatus.STATUS_SUCCESS;
                 }
                 else
