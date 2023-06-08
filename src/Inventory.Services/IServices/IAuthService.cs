@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Response;
 using Inventory.Repository.Model;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;

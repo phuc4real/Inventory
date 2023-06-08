@@ -2,15 +2,12 @@ using Inventory.Core.Helper;
 using Inventory.Core.Options;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.Model;
-using Inventory.Services.IServices;
-using Inventory.Services.Services;
-using Microsoft.AspNetCore.Authentication;
+using Inventory.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -73,7 +70,7 @@ builder.Services.AddControllers(
     options => options.Conventions.Add(
         new RouteTokenTransformerConvention(new SlugifyParameterTransformer())));
 
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddInventoryService();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
