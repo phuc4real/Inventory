@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Inventory.Repository.Migrations
 {
     /// <inheritdoc />
-    public partial class initialDb : Migration
+    public partial class initialDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -23,6 +25,38 @@ namespace Inventory.Repository.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetRoles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Catalogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Catalogs", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tickets",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TicketNumber = table.Column<int>(type: "int", nullable: false),
+                    Purpose = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PMApprove = table.Column<bool>(type: "bit", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    RejectReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClosedDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tickets", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -143,180 +177,21 @@ namespace Inventory.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Catalogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Catalogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Catalogs_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Catalogs_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Exports",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                    CreatedBy = table.Column<string>(type: "nvarchar(450)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Exports", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Exports_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Exports_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Exports_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Orders",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Orders", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Orders_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Orders_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Receipts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ItemCount = table.Column<int>(type: "int", nullable: false),
-                    Total = table.Column<int>(type: "int", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Receipts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Receipts_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Receipts_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Teams",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TotalMember = table.Column<int>(type: "int", nullable: false),
-                    PmId = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Teams", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Teams_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Teams_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Teams_AspNetUsers_PmId",
-                        column: x => x.PmId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tickets",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TicketName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ProjectManager = table.Column<int>(type: "int", nullable: false),
-                    DepotManager = table.Column<int>(type: "int", nullable: false),
-                    DoneDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tickets", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Tickets_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Tickets_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
+                        name: "FK_Exports_AspNetUsers_CreatedBy",
+                        column: x => x.CreatedBy,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                 });
@@ -331,31 +206,203 @@ namespace Inventory.Repository.Migrations
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     InStock = table.Column<int>(type: "int", nullable: false),
                     Used = table.Column<int>(type: "int", nullable: false),
-                    CatalogId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CatalogId = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    LastModified = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    LastModifiedById = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    LastModifiedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Items", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Items_AspNetUsers_CreatedById",
-                        column: x => x.CreatedById,
+                        name: "FK_Items_AspNetUsers_CreatedBy",
+                        column: x => x.CreatedBy,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Items_AspNetUsers_LastModifiedById",
-                        column: x => x.LastModifiedById,
+                        name: "FK_Items_AspNetUsers_LastModifiedBy",
+                        column: x => x.LastModifiedBy,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Items_Catalogs_CatalogId",
                         column: x => x.CatalogId,
                         principalTable: "Catalogs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Orders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    OrderTotal = table.Column<double>(type: "float", nullable: false),
+                    OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    OrderBy = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    CompleteDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Orders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Orders_AspNetUsers_OrderBy",
+                        column: x => x.OrderBy,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Receipts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ItemCount = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Receipts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Receipts_AspNetUsers_CreatedBy",
+                        column: x => x.CreatedBy,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Teams",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Lead = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Teams", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Teams_AspNetUsers_Lead",
+                        column: x => x.Lead,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ExportDetail",
+                columns: table => new
+                {
+                    ExportId = table.Column<int>(type: "int", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExportDetail", x => new { x.ExportId, x.ItemId });
+                    table.ForeignKey(
+                        name: "FK_ExportDetail_Exports_ExportId",
+                        column: x => x.ExportId,
+                        principalTable: "Exports",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ExportDetail_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TicketDetail",
+                columns: table => new
+                {
+                    TicketId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TicketDetail", x => new { x.ItemId, x.TicketId });
+                    table.ForeignKey(
+                        name: "FK_TicketDetail_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TicketDetail_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderDetail",
+                columns: table => new
+                {
+                    OrderId = table.Column<int>(type: "int", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<double>(type: "float", nullable: false),
+                    Total = table.Column<double>(type: "float", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderDetail", x => new { x.ItemId, x.OrderId });
+                    table.ForeignKey(
+                        name: "FK_OrderDetail_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderDetail_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReceiptDetail",
+                columns: table => new
+                {
+                    ReceiptId = table.Column<int>(type: "int", nullable: false),
+                    ItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReceiptDetail", x => new { x.ItemId, x.ReceiptId });
+                    table.ForeignKey(
+                        name: "FK_ReceiptDetail_Items_ItemId",
+                        column: x => x.ItemId,
+                        principalTable: "Items",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReceiptDetail_Receipts_ReceiptId",
+                        column: x => x.ReceiptId,
+                        principalTable: "Receipts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "46a4f2b7-2a9e-4977-ae32-e0e5793e6267", null, "Employee", "EMPLOYEE" },
+                    { "4e5e4a2b-9b92-40fa-87f2-1fefc574336b", null, "Depot Manager", "DEPOT MANAGER" },
+                    { "f8b59b69-fabb-4386-948e-5fb7054ffff4", null, "Project Manager", "PROJECT MANAGER" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -403,29 +450,14 @@ namespace Inventory.Repository.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Catalogs_CreatedById",
-                table: "Catalogs",
-                column: "CreatedById");
+                name: "IX_ExportDetail_ItemId",
+                table: "ExportDetail",
+                column: "ItemId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Catalogs_LastModifiedById",
-                table: "Catalogs",
-                column: "LastModifiedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Exports_CreatedById",
+                name: "IX_Exports_CreatedBy",
                 table: "Exports",
-                column: "CreatedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Exports_LastModifiedById",
-                table: "Exports",
-                column: "LastModifiedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Exports_UserId",
-                table: "Exports",
-                column: "UserId");
+                column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Items_CatalogId",
@@ -433,59 +465,44 @@ namespace Inventory.Repository.Migrations
                 column: "CatalogId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Items_CreatedById",
+                name: "IX_Items_CreatedBy",
                 table: "Items",
-                column: "CreatedById");
+                column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Items_LastModifiedById",
+                name: "IX_Items_LastModifiedBy",
                 table: "Items",
-                column: "LastModifiedById");
+                column: "LastModifiedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_CreatedById",
+                name: "IX_OrderDetail_OrderId",
+                table: "OrderDetail",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Orders_OrderBy",
                 table: "Orders",
-                column: "CreatedById");
+                column: "OrderBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Orders_LastModifiedById",
-                table: "Orders",
-                column: "LastModifiedById");
+                name: "IX_ReceiptDetail_ReceiptId",
+                table: "ReceiptDetail",
+                column: "ReceiptId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Receipts_CreatedById",
+                name: "IX_Receipts_CreatedBy",
                 table: "Receipts",
-                column: "CreatedById");
+                column: "CreatedBy");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Receipts_LastModifiedById",
-                table: "Receipts",
-                column: "LastModifiedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Teams_CreatedById",
+                name: "IX_Teams_Lead",
                 table: "Teams",
-                column: "CreatedById");
+                column: "Lead");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Teams_LastModifiedById",
-                table: "Teams",
-                column: "LastModifiedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Teams_PmId",
-                table: "Teams",
-                column: "PmId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tickets_CreatedById",
-                table: "Tickets",
-                column: "CreatedById");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tickets_LastModifiedById",
-                table: "Tickets",
-                column: "LastModifiedById");
+                name: "IX_TicketDetail_TicketId",
+                table: "TicketDetail",
+                column: "TicketId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserClaims_AspNetUsers_UserId",
@@ -523,15 +540,7 @@ namespace Inventory.Repository.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_Teams_AspNetUsers_CreatedById",
-                table: "Teams");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Teams_AspNetUsers_LastModifiedById",
-                table: "Teams");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Teams_AspNetUsers_PmId",
+                name: "FK_Teams_AspNetUsers_Lead",
                 table: "Teams");
 
             migrationBuilder.DropTable(
@@ -550,10 +559,22 @@ namespace Inventory.Repository.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Exports");
+                name: "ExportDetail");
 
             migrationBuilder.DropTable(
-                name: "Items");
+                name: "OrderDetail");
+
+            migrationBuilder.DropTable(
+                name: "ReceiptDetail");
+
+            migrationBuilder.DropTable(
+                name: "TicketDetail");
+
+            migrationBuilder.DropTable(
+                name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Exports");
 
             migrationBuilder.DropTable(
                 name: "Orders");
@@ -562,10 +583,10 @@ namespace Inventory.Repository.Migrations
                 name: "Receipts");
 
             migrationBuilder.DropTable(
-                name: "Tickets");
+                name: "Items");
 
             migrationBuilder.DropTable(
-                name: "AspNetRoles");
+                name: "Tickets");
 
             migrationBuilder.DropTable(
                 name: "Catalogs");

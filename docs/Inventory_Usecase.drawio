@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-06-07T02:47:54.057Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="TBq8UvXoRaEO5_71t1tT" version="21.2.8" type="device">
+<mxfile host="Electron" modified="2023-06-08T04:02:19.350Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="G71_NRXMXtkso-qjzEZA" version="21.2.8" type="device">
   <diagram name="Page-1" id="PO3x2LhO33WNsq4n8qBL">
     <mxGraphModel dx="1418" dy="868" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff" math="0" shadow="1">
       <root>
@@ -113,7 +113,7 @@
         <mxCell id="ZTkKuJltNhoVlo2dpilN-2" value="Quản lý kho" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
           <mxGeometry x="440" y="431" width="30" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="ZTkKuJltNhoVlo2dpilN-5" value="Nhập kho&lt;span style=&quot;white-space: pre;&quot;&gt;	&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="ZTkKuJltNhoVlo2dpilN-5" value="Nhập kho&lt;span style=&quot;white-space: pre;&quot;&gt; &lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="640" y="290" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="ZTkKuJltNhoVlo2dpilN-6" value="Xuất kho" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
