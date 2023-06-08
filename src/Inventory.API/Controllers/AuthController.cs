@@ -95,7 +95,7 @@ namespace Inventory.API.Controllers
 
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
             {
-                return Ok(result.Token);
+                return Ok(result);
             }
             else
             {

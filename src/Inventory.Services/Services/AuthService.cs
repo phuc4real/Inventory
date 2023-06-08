@@ -1,6 +1,4 @@
-﻿using Azure;
-using Azure.Core;
-using Inventory.Core.Common;
+﻿using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Helper;
 using Inventory.Core.Options;
@@ -10,8 +8,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -24,19 +20,16 @@ namespace Inventory.Services.Services
     public class AuthService : IAuthService
     {
         private readonly UserManager<AppUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly JWTOption _option;
 
         public AuthService(
             UserManager<AppUser> userManager,
-            RoleManager<IdentityRole> roleManager,
             SignInManager<AppUser> signInManager,
             IOptionsSnapshot<JWTOption> option
             )
         {
             _userManager = userManager;
-            _roleManager = roleManager;
             _signInManager = signInManager;
             _option = option.Value;
         }
@@ -175,7 +168,7 @@ namespace Inventory.Services.Services
             else
             {
                 await _userManager.RemoveAuthenticationTokenAsync(user, "Inventory", "RefreshToken");
-
+                await _userManager.UpdateSecurityStampAsync(user);
                 response.Status = ResponeStatus.STATUS_SUCCESS;
                 response.Messages.Add(new ResponseMessage() { Key = "User", Value = "User logout!" });
             }
@@ -201,11 +194,13 @@ namespace Inventory.Services.Services
                     var username = principal.Identity!.Name;
                     var user = await _userManager.FindByNameAsync(username!);
 
-                    var isValid = await _userManager.VerifyUserTokenAsync(user, "Inventory", "RefreshToken",tokens.RefreshToken!);
+                    var storedToken = await _userManager.GetAuthenticationTokenAsync(user!, "Inventory", "RefreshToken");
+
+                    var isValid = await _userManager.VerifyUserTokenAsync(user!, "Inventory", "RefreshToken", tokens.RefreshToken); 
 
                     if (isValid)
                     {
-                        var newAccessToken = await GetTokens(user);
+                        var newAccessToken = await GetTokens(user!);
                         response.Status = ResponeStatus.STATUS_SUCCESS;
                         response.Token = newAccessToken;
                     }
@@ -221,11 +216,13 @@ namespace Inventory.Services.Services
             catch (Exception ex)
             {
                 response.Status = ResponeStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage()
-                {
-                    Key = "SecurityTokenException",
-                    Value = ex.Message
-                });
+
+                response.Messages.Add(new ResponseMessage() { Key = "AccessToken", Value = "Token Invalid!" });
+                //response.Messages.Add(new ResponseMessage()
+                //{
+                //    Key = "SecurityTokenException",
+                //    Value = ex.Message
+                //});
                 return response;
             }
         }
@@ -274,7 +271,7 @@ namespace Inventory.Services.Services
         private async Task<TokenModel> GetTokens(AppUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
-            var token = GenerateToken(user, userRoles, 30);
+            var token = GenerateToken(user, userRoles, 10);
             var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory", "RefreshToken");
             await _userManager.SetAuthenticationTokenAsync(user, "Inventory", "RefreshToken", refreshToken);
 
