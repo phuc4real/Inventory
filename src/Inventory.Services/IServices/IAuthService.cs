@@ -1,4 +1,6 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Response;
+using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -12,16 +14,16 @@ namespace Inventory.Services.IServices
 {
     public interface IAuthService
     {
-        Task<AuthResponse> SignInAsync(string username, string password);
+        Task<ResultResponse<TokenModel>> SignInAsync(LoginDTO dto);
 
-        Task<AuthResponse> SignUpAsync(string email, string username,string password);
+        Task<ResultResponse<TokenModel>> SignUpAsync(RegisterDTO dto);
 
         AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl);
 
-        Task<AuthResponse> ExternalLoginAsync();
+        Task<ResultResponse<TokenModel>> ExternalLoginAsync();
 
-        Task<AuthResponse> SignOutAsync(string id);
+        Task<ResultResponse<TokenModel>> SignOutAsync(string id);
 
-        Task<AuthResponse> RefreshToken(TokenModel tokens);
+        Task<ResultResponse<TokenModel>> RefreshToken(TokenModel tokens);
     }
 }

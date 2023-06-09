@@ -31,17 +31,20 @@ namespace Inventory.Repository.DbContext
             base.OnModelCreating(builder);
 
             builder.Entity<IdentityRole>()
-                .HasData(new IdentityRole { 
+                .HasData(new IdentityRole {
+                    Id = "46a4f2b7-2a9e-4977-ae32-e0e5793e6267",
                     Name = InventoryRoles.Employee,
                     NormalizedName = InventoryRoles.Employee.ToUpper(),
                 });
             builder.Entity<IdentityRole>()
                 .HasData(new IdentityRole { 
+                    Id = "f8b59b69-fabb-4386-948e-5fb7054ffff4",
                     Name = InventoryRoles.PM,
                     NormalizedName = InventoryRoles.PM.ToUpper(),
                 });
             builder.Entity<IdentityRole>()
                 .HasData(new IdentityRole { 
+                    Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
                     Name = InventoryRoles.DM,
                     NormalizedName = InventoryRoles.DM.ToUpper(),
                 });
@@ -83,6 +86,12 @@ namespace Inventory.Repository.DbContext
                 .WithOne(e => e.Team)
                 .HasForeignKey(e => e.TeamId)
                 .IsRequired(false);
+
+            builder.Entity<Catalog>()
+                .HasQueryFilter(x => !x.IsDeleted);
+
+            builder.Entity<Item>()
+                .HasQueryFilter(x => !x.IsDeleted);
         }
     }
 }
