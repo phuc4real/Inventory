@@ -1,9 +1,8 @@
-﻿using Inventory.API.ViewModel;
+﻿using Inventory.Core.ViewModel;
 using Inventory.Core.Common;
 using Inventory.Core.Enums;
+using Inventory.Core.Response;
 using Inventory.Services.IServices;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers
@@ -20,13 +19,13 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("register")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _authService.SignUpAsync(dto.Email, dto.Username,dto.Password);
+            var result = await _authService.SignUpAsync(dto);
 
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
                 return Ok(result.Messages);
@@ -35,13 +34,13 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("login")]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = await _authService.SignInAsync(dto.Username!, dto.Password!);
+            var result = await _authService.SignInAsync(dto);
 
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
                 return Ok(result);
@@ -57,8 +56,8 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("external-login-callback")]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ExternalLoginCallback()
         {
             var result = await _authService.ExternalLoginAsync();
@@ -70,8 +69,8 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("logout/{id}")]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Logout(string id)
         {
             var result = await _authService.SignOutAsync(id);
@@ -87,15 +86,15 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("refresh")]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RefreshToken(TokenModel tokens)
         {
             var result = await _authService.RefreshToken(tokens);
 
             if (result.Status == ResponeStatus.STATUS_SUCCESS)
             {
-                return Ok(result.Token);
+                return Ok(result.Data);
             }
             else
             {

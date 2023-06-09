@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Response
 {
-    public class BaseResponse
+    public class ResultResponse<T> where T : class
     {
-        public ResponeStatus Status { get; set; }
+        public string? Status { get; set; }
         public IList<ResponseMessage>? Messages { get; set; }
+        public T? Data { get; set; }
     }
 }

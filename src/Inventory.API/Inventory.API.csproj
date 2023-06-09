@@ -22,10 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Inventory.Services\Inventory.Services.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Mapping\" />
+    <ProjectReference Include="..\Shared\Inventory.Core\Inventory.Core.csproj" />
   </ItemGroup>
 
 </Project>

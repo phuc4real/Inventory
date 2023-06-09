@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Enums
 {
-    public enum ResponeStatus
+    public class ResponeStatus
     {
-        STATUS_SUCCESS = 0,
-        STATUS_FAILURE = 1
+        public const string STATUS_SUCCESS = "Success";
+        public const string STATUS_FAILURE = "Failure";
     }
 }

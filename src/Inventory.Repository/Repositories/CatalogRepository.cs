@@ -18,7 +18,7 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        public async Task<Catalog> FindById(Guid id)
+        public async Task<Catalog> FindById(int id)
         {
 #pragma warning disable CS8603 // Possible null reference return.
             return await _context.Catalogs.FindAsync(id);

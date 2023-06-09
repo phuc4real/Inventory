@@ -9,6 +9,6 @@ namespace Inventory.Repository.IRepository
 {
     public interface ICatalogRepository : IRepository<Catalog>
     {
-        Task<Catalog> FindById(Guid id);
+        Task<Catalog> FindById(int id);
     }
 }
