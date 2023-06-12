@@ -26,11 +26,7 @@ namespace Inventory.Services.Services
             ResultResponse<TeamDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            Team team = new() 
-            {
-                Name = dto.Name,
-                LeaderId = dto.LeaderId,
-            };
+            Team team = _mapper.Map<Team>(dto);
 
             await _team.AddAsync(team);
             await _unitOfWork.SaveAsync();

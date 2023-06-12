@@ -70,7 +70,7 @@ namespace Inventory.API.Controllers
                 return NotFound(result.Messages);
         }
 
-        [HttpDelete]
+        [HttpDelete("{id:Guid}")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteTeam(Guid id)

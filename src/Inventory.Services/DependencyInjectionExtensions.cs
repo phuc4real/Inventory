@@ -43,6 +43,7 @@ namespace Inventory.Services
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICatalogRepository, CatalogRepository>();
             services.AddScoped<ITeamRepository, TeamRepository>();
+            services.AddScoped<IItemRepository, ItemRepository>();
 
             return services;
         }
@@ -53,6 +54,7 @@ namespace Inventory.Services
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICatalogServices,CatalogService>();
             services.AddScoped<ITeamServices,TeamService>();
+            services.AddScoped<IItemService, ItemService>();
 
             return services;
         }

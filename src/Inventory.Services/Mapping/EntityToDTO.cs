@@ -21,6 +21,8 @@ namespace Inventory.Services.Mapping
 
 
             CreateMap<AppUser, AppUserDTO>();
+
+            CreateMap<Item, ItemDTO>();
         }
     }
 }

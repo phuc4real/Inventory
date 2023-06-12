@@ -14,11 +14,17 @@ namespace Inventory.Services.Mapping
         public DTOtoEntity()
         {
             CreateMap<CatalogDTO, Catalog>();
+            CreateMap<CatalogEditDTO, Catalog>();
 
             CreateMap<TeamDTO, Team>();
+            CreateMap<TeamEditDTO, Team>();
             CreateMap<TeamWithMembersDTO, Team>();
 
             CreateMap<AppUserDTO, AppUser>();
+            CreateMap<AppUserEditDTO, AppUser>();
+
+            CreateMap<ItemDTO, Item>();
+            CreateMap<ItemEditDTO, Item>();
         }
     }
 }
