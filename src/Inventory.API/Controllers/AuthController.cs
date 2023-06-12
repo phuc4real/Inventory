@@ -1,6 +1,5 @@
 ﻿using Inventory.Core.ViewModel;
 using Inventory.Core.Common;
-using Inventory.Core.Enums;
 using Inventory.Core.Response;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +26,7 @@ namespace Inventory.API.Controllers
 
             var result = await _authService.SignUpAsync(dto);
 
-            if (result.Status == ResponeStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 return Ok(result.Messages);
             else 
                 return BadRequest(result.Messages);
@@ -42,7 +41,7 @@ namespace Inventory.API.Controllers
 
             var result = await _authService.SignInAsync(dto);
 
-            if (result.Status == ResponeStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 return Ok(result);
             else
                 return BadRequest(result.Messages);
@@ -62,7 +61,7 @@ namespace Inventory.API.Controllers
         {
             var result = await _authService.ExternalLoginAsync();
 
-            if (result.Status == ResponeStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 return Ok(result);
             else
                 return BadRequest(result.Messages);
@@ -75,7 +74,7 @@ namespace Inventory.API.Controllers
         {
             var result = await _authService.SignOutAsync(id);
 
-            if (result.Status == ResponeStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
                 return Ok(result.Messages);
             }
@@ -92,7 +91,7 @@ namespace Inventory.API.Controllers
         {
             var result = await _authService.RefreshToken(tokens);
 
-            if (result.Status == ResponeStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
                 return Ok(result.Data);
             }

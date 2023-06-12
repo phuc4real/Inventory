@@ -14,6 +14,13 @@ namespace Inventory.Services.Mapping
         public EntityToDTO()
         {
             CreateMap<Catalog, CatalogDTO>();
+
+
+            CreateMap<Team, TeamDTO>();
+            CreateMap<Team, TeamWithMembersDTO>();
+
+
+            CreateMap<AppUser, AppUserDTO>();
         }
     }
 }

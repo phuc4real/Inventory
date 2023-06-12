@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Core.Enums
+namespace Inventory.Core.Common
 {
-    public class ResponeStatus
+    public class ResponseStatus
     {
         public const string STATUS_SUCCESS = "Success";
         public const string STATUS_FAILURE = "Failure";

@@ -14,9 +14,11 @@ namespace Inventory.Repository.Model
         [Key]
         public Guid Id { get; set; }
         public string? Name { get; set; }
-        public string? Lead { get; set; }
-        [ForeignKey(nameof(Lead))]
+
+        public string? LeaderId { get; set; }
+        [ForeignKey(nameof(LeaderId))]
         public AppUser? Leader { get; set; }
+
         public IList<AppUser>? Members { get; set; }
     }
 }

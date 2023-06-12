@@ -1,15 +1,10 @@
 ﻿using AutoMapper;
-using Inventory.Core.Enums;
+using Inventory.Core.Common;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.Services
 {
@@ -33,7 +28,7 @@ namespace Inventory.Services.Services
             var catalogs = await _catalog.GetAsync();
 
             response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
-            response.Status = ResponeStatus.STATUS_SUCCESS;
+            response.Status = ResponseStatus.STATUS_SUCCESS;
 
             return response;
         }
@@ -46,58 +41,50 @@ namespace Inventory.Services.Services
 
             if (result == null)
             {
-                response.Status = ResponeStatus.STATUS_FAILURE;
+                response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Catalog", "Catalog not found!"));
             }
             else
             {
-                response.Status = ResponeStatus.STATUS_SUCCESS;
+                response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Data = _mapper.Map<CatalogDTO>(result);
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<CatalogDTO>> CreateCatalog(string catalogName)
+        public async Task<ResultResponse<CatalogDTO>> CreateCatalog(CatalogEditDTO dto)
         {
             ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
-            Catalog catalog = new Catalog() { Name = catalogName };
-            var exists = await _catalog.AnyAsync(x => x.Id == catalog.Id);
-            if (exists)
-            {
-                response.Status = ResponeStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", "Catalog already exists!"));
-            }
-            else
-            {
-                await _catalog.AddAsync(catalog);
-                await _unitOfWork.SaveAsync();
+            Catalog catalog = new() { Name = dto.Name };
 
-                response.Status = ResponeStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<CatalogDTO>(catalog);
-                response.Messages.Add(new ResponseMessage("Catalog", "Catalog created!"));
-            }
+            await _catalog.AddAsync(catalog);
+            await _unitOfWork.SaveAsync();
+
+            response.Status = ResponseStatus.STATUS_SUCCESS;
+            response.Data = _mapper.Map<CatalogDTO>(catalog);
+            response.Messages.Add(new ResponseMessage("Catalog", "Catalog created!"));
 
             return response;
         }
 
-        public async Task<ResultResponse<CatalogDTO>> UpdateCatalog(int id, string name)
+        public async Task<ResultResponse<CatalogDTO>> UpdateCatalog(int id, CatalogEditDTO dto)
         {
             ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
 
             var catalog = await _catalog.FindById(id);
             if (catalog == null)
             {
-                response.Status = ResponeStatus.STATUS_FAILURE;
+                response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Catalog", "Catalog not exists!"));
             }
             else
             {
-                catalog.Name = name;
+                catalog.Name = dto.Name;
                 _catalog.Update(catalog);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponeStatus.STATUS_SUCCESS;
+                response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Data = _mapper.Map<CatalogDTO>(catalog);
             }
             return response;
@@ -110,7 +97,7 @@ namespace Inventory.Services.Services
             var catalog = await _catalog.FindById(id);
             if (catalog == null)
             {
-                response.Status = ResponeStatus.STATUS_FAILURE;
+                response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Catalog", "Catalog not exists!"));
             }
             else
@@ -119,7 +106,7 @@ namespace Inventory.Services.Services
                 _catalog.Update(catalog);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponeStatus.STATUS_SUCCESS;
+                response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Messages.Add(new ResponseMessage("Catalog", "Catalog deleted!"));
             }
             return response;
@@ -138,12 +125,12 @@ namespace Inventory.Services.Services
 
             if (catalogs.Any())
             {
-                response.Status = ResponeStatus.STATUS_SUCCESS;
+                response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
             }
             else
             {
-                response.Status = ResponeStatus.STATUS_FAILURE;
+                response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Catalog", "Not found!"));
             }
 

@@ -42,16 +42,17 @@ namespace Inventory.Services
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICatalogRepository, CatalogRepository>();
+            services.AddScoped<ITeamRepository, TeamRepository>();
 
             return services;
         }
 
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
-
             services.AddAutoMapper(typeof(DependencyInjectionExtensions).Assembly);
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICatalogServices,CatalogService>();
+            services.AddScoped<ITeamServices,TeamService>();
 
             return services;
         }

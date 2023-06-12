@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,12 @@ namespace Inventory.Services.Mapping
     {
         public DTOtoEntity()
         {
-            CreateMap<CatalogDTO, CatalogDTO>();
+            CreateMap<CatalogDTO, Catalog>();
+
+            CreateMap<TeamDTO, Team>();
+            CreateMap<TeamWithMembersDTO, Team>();
+
+            CreateMap<AppUserDTO, AppUser>();
         }
     }
 }
