@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Common
 {
-    public class ResponseMessage
+    public class ResponseStatus
     {
-        public string? Key { get; set; }
-        public string? Value { get; set; }
+        public const string STATUS_SUCCESS = "Success";
+        public const string STATUS_FAILURE = "Failure";
     }
 }

@@ -4,6 +4,7 @@ using Inventory.Repository.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230609040021_addColumntoCatalog")]
+    partial class addColumntoCatalog
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,7 +235,7 @@ namespace Inventory.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("LeaderId")
+                    b.Property<string>("Lead")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
@@ -240,7 +243,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LeaderId");
+                    b.HasIndex("Lead");
 
                     b.ToTable("Teams");
                 });
@@ -641,7 +644,7 @@ namespace Inventory.Repository.Migrations
                 {
                     b.HasOne("Inventory.Repository.Model.AppUser", "Leader")
                         .WithMany()
-                        .HasForeignKey("LeaderId");
+                        .HasForeignKey("Lead");
 
                     b.Navigation("Leader");
                 });

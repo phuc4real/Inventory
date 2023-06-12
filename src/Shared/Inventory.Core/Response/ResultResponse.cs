@@ -5,12 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Core.Common
+namespace Inventory.Core.Response
 {
-    public class AuthResponse
+    public class ResultResponse<T> where T : class
     {
-        public ResponeStatus Status { get; set; }
+        public string? Status { get; set; }
         public IList<ResponseMessage>? Messages { get; set; }
-        public TokenModel? Token { get; set; }
+        public T? Data { get; set; }
     }
 }
