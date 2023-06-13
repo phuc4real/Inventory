@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Inventory.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,6 +15,7 @@ namespace Inventory.Repository.Model
         public int Id { get; set; }
         public double OrderTotal { get; set; }
         public DateTime OrderDate { get; set; }
+        public OrderStatus Status { get; set; }
         public string? OrderBy { get; set; }
         [ForeignKey(nameof(OrderBy))]
         public AppUser? OrderByUser { get; set; }

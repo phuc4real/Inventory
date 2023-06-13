@@ -20,7 +20,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<ItemDTO>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<ItemDetailDTO>),StatusCodes.Status200OK)]
         public async Task<IActionResult> ListItem()
         {
             var result = await _itemService.GetAll();
@@ -29,7 +29,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
-        [ProducesResponseType(typeof(ItemDTO),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ItemDetailDTO),StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetItem(Guid id)
         {
@@ -46,7 +46,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ItemDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ItemDetailDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateItem(ItemEditDTO item)
         {
@@ -58,7 +58,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
-        [ProducesResponseType(typeof(ResultResponse<ItemDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateItem(Guid id, ItemEditDTO item)
@@ -75,7 +75,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
-        [ProducesResponseType(typeof(ResultResponse<ItemDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
@@ -89,7 +89,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("search")]
-        [ProducesResponseType(typeof(ResultResponse<ItemDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SearchByName(string name)
         {

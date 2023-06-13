@@ -47,6 +47,7 @@ namespace Inventory.API.Controllers
                 return BadRequest(result.Messages);
         }
 
+        //Change to HttpPost if have front-end
         [HttpGet("external-login")]
         public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/home")
         {
@@ -54,6 +55,7 @@ namespace Inventory.API.Controllers
             return new ChallengeResult(provider!, properties);
         }
 
+        //Change to HttpPost if have front-end
         [HttpGet("external-login-callback")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status400BadRequest)]

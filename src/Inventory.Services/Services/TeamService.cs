@@ -35,7 +35,6 @@ namespace Inventory.Services.Services
             response.Status = ResponseStatus.STATUS_SUCCESS;
             response.Messages.Add(new ResponseMessage("Team", "Team created!"));
             return response;
-
         }
 
         public async Task<ResultResponse<TeamDTO>> DeleteTeam(Guid id)

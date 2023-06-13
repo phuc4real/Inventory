@@ -1,6 +1,7 @@
 ﻿using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;

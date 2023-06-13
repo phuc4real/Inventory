@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Inventory.Core.Helper;
+using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +51,11 @@ builder.Services.AddAuthentication(
 
 builder.Services.AddControllers(
     options => options.Conventions
-    .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()))
-    );
+    .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())))
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

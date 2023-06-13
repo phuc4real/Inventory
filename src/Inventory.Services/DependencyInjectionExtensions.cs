@@ -44,6 +44,7 @@ namespace Inventory.Services
             services.AddScoped<ICatalogRepository, CatalogRepository>();
             services.AddScoped<ITeamRepository, TeamRepository>();
             services.AddScoped<IItemRepository, ItemRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
 
             return services;
         }
@@ -51,10 +52,12 @@ namespace Inventory.Services
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
             services.AddAutoMapper(typeof(DependencyInjectionExtensions).Assembly);
+            services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ICatalogServices,CatalogService>();
             services.AddScoped<ITeamServices,TeamService>();
             services.AddScoped<IItemService, ItemService>();
+            services.AddScoped<IOrderService, OrderService>();
 
             return services;
         }

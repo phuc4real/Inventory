@@ -26,9 +26,9 @@ namespace Inventory.Services.Services
             _mapper = mapper;
         }
 
-        public async Task<ResultResponse<ItemDTO>> CreateItem(ItemEditDTO dto)
+        public async Task<ResultResponse<ItemDetailDTO>> CreateItem(ItemEditDTO dto)
         {
-            ResultResponse<ItemDTO> response = new()
+            ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
             Item item = _mapper.Map<Item>(dto);
@@ -36,14 +36,14 @@ namespace Inventory.Services.Services
             await _item.AddAsync(item);
             await _unitOfWork.SaveAsync();
 
-            response.Data = _mapper.Map<ItemDTO>(item);
+            response.Data = _mapper.Map<ItemDetailDTO>(item);
             response.Status = ResponseStatus.STATUS_SUCCESS;
             return response;
         }
 
-        public async Task<ResultResponse<ItemDTO>> DeleteItem(Guid id)
+        public async Task<ResultResponse<ItemDetailDTO>> DeleteItem(Guid id)
         {
-            ResultResponse<ItemDTO> response = new()
+            ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var item = await _item.GetById(id);
@@ -66,20 +66,20 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ItemDTO>>> GetAll()
+        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<ItemDTO>> response = new();
+            ResultResponse<IEnumerable<ItemDetailDTO>> response = new();
 
             var items = await _item.GetAsync();
 
             response.Status = ResponseStatus.STATUS_SUCCESS;
-            response.Data = _mapper.Map<IEnumerable<ItemDTO>>(items);
+            response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
             return response;
         }
 
-        public async Task<ResultResponse<ItemDTO>> GetById(Guid id)
+        public async Task<ResultResponse<ItemDetailDTO>> GetById(Guid id)
         {
-            ResultResponse<ItemDTO> response = new() 
+            ResultResponse<ItemDetailDTO> response = new() 
             { Messages = new List<ResponseMessage>() };
 
             var item = await _item.GetById(id);
@@ -92,22 +92,22 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<ItemDTO>(item);
+                response.Data = _mapper.Map<ItemDetailDTO>(item);
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ItemDTO>>> SearchByName(string name)
+        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> SearchByName(string name)
         {
-            ResultResponse<IEnumerable<ItemDTO>> response = new()
+            ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var items = await _item.GetAsync(x => x.Name!.Contains(name));
             if (items.Any())
             {
                 response.Status  = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<ItemDTO>>(items);
+                response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
             }
             else
             {
@@ -117,9 +117,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<ItemDTO>> UpdateItem(Guid id, ItemEditDTO dto)
+        public async Task<ResultResponse<ItemDetailDTO>> UpdateItem(Guid id, ItemEditDTO dto)
         {
-            ResultResponse<ItemDTO> response = new()
+            ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var item = await _item.GetById(id);

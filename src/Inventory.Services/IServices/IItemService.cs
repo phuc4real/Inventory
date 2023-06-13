@@ -10,12 +10,12 @@ namespace Inventory.Services.IServices
 {
     public interface IItemService
     {
-        Task<ResultResponse<IEnumerable<ItemDTO>>> GetAll();
-        Task<ResultResponse<ItemDTO>> GetById(Guid id);
-        Task<ResultResponse<IEnumerable<ItemDTO>>> SearchByName(string name);
-        Task<ResultResponse<ItemDTO>> CreateItem(ItemEditDTO dto);
-        Task<ResultResponse<ItemDTO>> UpdateItem(Guid id,ItemEditDTO dto);
-        Task<ResultResponse<ItemDTO>> DeleteItem(Guid id);
+        Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll();
+        Task<ResultResponse<ItemDetailDTO>> GetById(Guid id);
+        Task<ResultResponse<IEnumerable<ItemDetailDTO>>> SearchByName(string name);
+        Task<ResultResponse<ItemDetailDTO>> CreateItem(ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> UpdateItem(Guid id,ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> DeleteItem(Guid id);
 
     }
 }

@@ -53,7 +53,7 @@ namespace Inventory.Repository.DbContext
                 .HasMany(e => e.Items)
                 .WithMany(e => e.Orders)
                 .UsingEntity<OrderDetail>(
-                    l => l.HasOne<Item>().WithMany(e => e.OrderDetails),
+                    l => l.HasOne<Item>(e=>e.Item).WithMany(e => e.OrderDetails),
                     r => r.HasOne<Order>().WithMany(e => e.Details)
                 );
 
@@ -61,7 +61,7 @@ namespace Inventory.Repository.DbContext
                 .HasMany(e => e.Items)
                 .WithMany(e => e.Exports)
                 .UsingEntity<ExportDetail>(
-                    l => l.HasOne<Item>().WithMany(e => e.ExportDetails),
+                    l => l.HasOne<Item>(e => e.Item).WithMany(e => e.ExportDetails),
                     r => r.HasOne<Export>().WithMany(e => e.Details)
                 );
 
@@ -69,7 +69,7 @@ namespace Inventory.Repository.DbContext
                 .HasMany(e => e.Items)
                 .WithMany(e => e.Receipts)
                 .UsingEntity<ReceiptDetail>(
-                    l => l.HasOne<Item>().WithMany(e => e.ReceiptDetails),
+                    l => l.HasOne<Item>(e => e.Item).WithMany(e => e.ReceiptDetails),
                     r => r.HasOne<Receipt>().WithMany(e => e.Details)
                 );
 
@@ -77,7 +77,7 @@ namespace Inventory.Repository.DbContext
                 .HasMany(e => e.Items)
                 .WithMany(e => e.Tickets)
                 .UsingEntity<TicketDetail>(
-                    l => l.HasOne<Item>().WithMany(e => e.TicketDetails),
+                    l => l.HasOne<Item>(e => e.Item).WithMany(e => e.TicketDetails),
                     r => r.HasOne<Ticket>().WithMany(e => e.Details)
                 );
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Inventory.Core.Extensions;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using System;
@@ -23,6 +24,15 @@ namespace Inventory.Services.Mapping
             CreateMap<AppUser, AppUserDTO>();
 
             CreateMap<Item, ItemDTO>();
+            CreateMap<Item, ItemDetailDTO>();
+
+            CreateMap<Order, OrderDTO>()
+                .ForMember(src => src.Status, opt => opt
+                    .MapFrom(src => src.Status
+                        .ToDescriptionString()
+                     )
+                 );
+            CreateMap<OrderDetail, OrderDetailDTO>();
         }
     }
 }

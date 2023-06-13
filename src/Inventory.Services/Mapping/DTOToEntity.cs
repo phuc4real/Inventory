@@ -24,7 +24,11 @@ namespace Inventory.Services.Mapping
             CreateMap<AppUserEditDTO, AppUser>();
 
             CreateMap<ItemDTO, Item>();
+            CreateMap<ItemDetailDTO, Item>();
             CreateMap<ItemEditDTO, Item>();
+
+            CreateMap<OrderCreateDTO, Order>();
+            CreateMap<OrderDetailDTO, OrderDetail>();
         }
     }
 }
