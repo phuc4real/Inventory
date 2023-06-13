@@ -24,7 +24,9 @@ namespace Inventory.Repository.Repositories
         {
             IQueryable<Order> query = _context.Orders.IgnoreQueryFilters();
 
-            query = query.Include(x => x.Details)!
+            query = query
+                .Include(x=>x.OrderByUser)
+                .Include(x => x.Details)!
                 .ThenInclude(x => x.Item);
 
             if (filter != null) query = query.Where(filter);
@@ -36,7 +38,9 @@ namespace Inventory.Repository.Repositories
         {
             IQueryable<Order> query = _context.Orders.IgnoreQueryFilters().Where(x=> x.Id == id);
 
-            query = query.Include(x => x.Details)!
+            query = query
+                .Include(x => x.OrderByUser)
+                .Include(x => x.Details)!
                 .ThenInclude(x => x.Item);
 
 #pragma warning disable CS8603 // Possible null reference return.

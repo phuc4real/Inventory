@@ -13,5 +13,6 @@ namespace Inventory.Services.IServices
     {
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
         SecurityToken GenerateToken(AppUser user, IList<string> userRoles, int expireMinutes);
+        string GetUserId(string token);
     }
 }

@@ -13,9 +13,9 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll();
         Task<ResultResponse<ItemDetailDTO>> GetById(Guid id);
         Task<ResultResponse<IEnumerable<ItemDetailDTO>>> SearchByName(string name);
-        Task<ResultResponse<ItemDetailDTO>> CreateItem(ItemEditDTO dto);
-        Task<ResultResponse<ItemDetailDTO>> UpdateItem(Guid id,ItemEditDTO dto);
-        Task<ResultResponse<ItemDetailDTO>> DeleteItem(Guid id);
+        Task<ResultResponse<ItemDetailDTO>> CreateItem(string jwtToken, ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> UpdateItem(string jwtToken, Guid id, ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> DeleteItem(string jwtToken, Guid id);
 
     }
 }

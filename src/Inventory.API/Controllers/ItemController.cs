@@ -3,6 +3,7 @@ using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -52,7 +53,7 @@ namespace Inventory.API.Controllers
         {
             if(!ModelState.IsValid) { return BadRequest(ModelState); }
 
-            var result = await _itemService.CreateItem(item);
+            var result = await _itemService.CreateItem(await GetToken(), item);
 
             return Ok(result);
         }
@@ -65,7 +66,7 @@ namespace Inventory.API.Controllers
         {
             if(!ModelState.IsValid) { return BadRequest(ModelState); }
 
-            var result = await _itemService.UpdateItem(id, item);
+            var result = await _itemService.UpdateItem(await GetToken(), id, item);
 
             if(result.Status == ResponseStatus.STATUS_SUCCESS)
             {
@@ -79,7 +80,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
-            var result = await _itemService.DeleteItem(id);
+            var result = await _itemService.DeleteItem(await GetToken(), id);
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
@@ -101,5 +102,9 @@ namespace Inventory.API.Controllers
             }
             else { return NotFound(result.Messages); }
         }
+
+#pragma warning disable CS8603 // Possible null reference return.
+        private async Task<string> GetToken() => await HttpContext.GetTokenAsync("access_token");
+#pragma warning restore CS8603 // Possible null reference return.
     }
 }

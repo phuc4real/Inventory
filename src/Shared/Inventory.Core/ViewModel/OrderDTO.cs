@@ -20,6 +20,6 @@ namespace Inventory.Core.ViewModel
     public class OrderCreateDTO
     {
         public double OrderTotal { get; set; }
-        public IList<OrderDetailEditDTO>? Details { get; set; }
+        public IList<OrderDetailCreateDTO>? Details { get; set; }
     }
 }

@@ -6,6 +6,8 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Inventory.Services.Services
 {
@@ -15,13 +17,20 @@ namespace Inventory.Services.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IItemRepository _item;
+        private readonly ITokenService _tokenService;
 
-        public OrderService(IOrderRepository order, IUnitOfWork unitOfWork, IMapper mapper, IItemRepository item)
+        public OrderService(
+            IOrderRepository order,
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IItemRepository item,
+            ITokenService tokenService)
         {
             _order = order;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _item = item;
+            _tokenService = tokenService;
         }
 
         public async Task<ResultResponse<IEnumerable<OrderDTO>>> GetAll()
@@ -37,11 +46,13 @@ namespace Inventory.Services.Services
         }
 
 
-        public async Task<ResultResponse<OrderDTO>> CreateOrder(OrderCreateDTO dto)
+        public async Task<ResultResponse<OrderDTO>> CreateOrder(string jwtToken, OrderCreateDTO dto)
         {
             ResultResponse<OrderDTO> response = new()
             { Messages = new List<ResponseMessage>() };
             IList<OrderDetail> orderDetails = new List<OrderDetail>();
+
+            var userid = _tokenService.GetUserId(jwtToken);
 
             foreach (var detail in dto.Details!)
             {
@@ -69,7 +80,9 @@ namespace Inventory.Services.Services
             {
                 OrderTotal = dto.OrderTotal,
                 Status = OrderStatus.Pending,
-                Details = orderDetails
+                Details = orderDetails,
+                OrderBy = userid,
+                OrderDate = DateTime.Now
             };
             
             await _order.AddAsync(order);
@@ -102,7 +115,7 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<OrderDTO>> UpdateStatus(int id)
+         public async Task<ResultResponse<OrderDTO>> UpdateStatus(int id)
         {
             ResultResponse<OrderDTO> response = new() { Messages = new List<ResponseMessage>() };
 

@@ -26,6 +26,7 @@ namespace Inventory.Services.Services
             var authClaims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, user.UserName!),
+                        new Claim(ClaimTypes.NameIdentifier, user.Id!),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                     };
 
@@ -69,6 +70,13 @@ namespace Inventory.Services.Services
                     .Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Invalid token");
             return principal;
+        }
+
+        public string GetUserId(string token)
+        {
+            var principal = GetPrincipalFromExpiredToken(token);
+
+            return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
         }
     }
 }

@@ -197,8 +197,10 @@ namespace Inventory.Services.Services
                 }
                 else
                 {
-                    var username = principal.Identity!.Name;
-                    var user = await _userManager.FindByNameAsync(username!);
+                    //var username = principal.Identity!.Name;
+
+                    var userid = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var user = await _userManager.FindByIdAsync(userid!);
 
                     var storedToken = await _userManager.GetAuthenticationTokenAsync(user!, "Inventory", "RefreshToken");
 
@@ -206,7 +208,7 @@ namespace Inventory.Services.Services
 
                     var curDateTime = DateTime.UtcNow;
 
-                    if (isValid && curDateTime < user!.RefreshTokenExpireTime)
+                    if (isValid && curDateTime < user!.RefreshTokenExpireTime && storedToken == tokens.RefreshToken)
                     {
                         var newAccessToken = await GetTokens(user!);
                         response.Status = ResponseStatus.STATUS_SUCCESS;

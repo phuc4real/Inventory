@@ -3,6 +3,8 @@ using Inventory.Core.Enums;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +12,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -35,7 +38,7 @@ namespace Inventory.API.Controllers
         {
             if(!ModelState.IsValid) { return BadRequest(ModelState); }
 
-            var result = await _orderService.CreateOrder(dto);
+            var result = await _orderService.CreateOrder(await GetToken(),dto);
 
             if(result.Status == ResponseStatus.STATUS_SUCCESS)
             {
@@ -99,5 +102,9 @@ namespace Inventory.API.Controllers
             else
             { return BadRequest(result.Messages); }
         }
+
+#pragma warning disable CS8603 // Possible null reference return.
+        private async Task<string> GetToken() => await HttpContext.GetTokenAsync("access_token");
+#pragma warning restore CS8603 // Possible null reference return.
     }
 }

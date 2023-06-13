@@ -18,20 +18,32 @@ namespace Inventory.Services.Services
         private readonly IItemRepository _item;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
 
-        public ItemService(IItemRepository item, IUnitOfWork unitOfWork, IMapper mapper)
+        public ItemService(
+            IItemRepository item,
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            ITokenService tokenService)
         {
             _item = item;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<ItemDetailDTO>> CreateItem(ItemEditDTO dto)
+        public async Task<ResultResponse<ItemDetailDTO>> CreateItem(string jwtToken, ItemEditDTO dto)
         {
             ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
+            var userid = _tokenService.GetUserId(jwtToken);
+
             Item item = _mapper.Map<Item>(dto);
+            item.CreatedBy = userid;
+            item.CreatedDate = DateTime.Now;
+            item.LastModifiedBy = userid;
+            item.LastModifiedDate = DateTime.Now;
 
             await _item.AddAsync(item);
             await _unitOfWork.SaveAsync();
@@ -41,11 +53,12 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<ItemDetailDTO>> DeleteItem(Guid id)
+        public async Task<ResultResponse<ItemDetailDTO>> DeleteItem(string jwtToken, Guid id)
         {
             ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
+            var userid = _tokenService.GetUserId(jwtToken);
             var item = await _item.GetById(id);
 
             if (item == null || item.IsDeleted)
@@ -56,6 +69,8 @@ namespace Inventory.Services.Services
             else
             {
                 item.IsDeleted = true;
+                item.LastModifiedBy = userid;
+                item.LastModifiedDate = DateTime.Now;
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
 
@@ -117,11 +132,12 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<ItemDetailDTO>> UpdateItem(Guid id, ItemEditDTO dto)
+        public async Task<ResultResponse<ItemDetailDTO>> UpdateItem(string jwtToken, Guid id, ItemEditDTO dto)
         {
             ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
+            var userid = _tokenService.GetUserId(jwtToken);
             var item = await _item.GetById(id);
 
             if (item == null || item.IsDeleted)
@@ -135,6 +151,8 @@ namespace Inventory.Services.Services
                 item.Description = dto.Description;
                 item.ImageUrl = dto.ImageUrl;
                 item.CatalogId = dto.CatalogId;
+                item.LastModifiedBy = userid;
+                item.LastModifiedDate = DateTime.Now;
 
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
