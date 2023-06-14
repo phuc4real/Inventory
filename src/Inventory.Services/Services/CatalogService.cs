@@ -23,12 +23,21 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<CatalogDTO>> response = new();
+            ResultResponse<IEnumerable<CatalogDTO>> response = new()
+            { Messages = new List<ResponseMessage>()};
 
             var catalogs = await _catalog.GetAsync();
 
-            response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
-            response.Status = ResponseStatus.STATUS_SUCCESS;
+            if(catalogs.Any())
+            {
+                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Catalog", "There is no record"));
+            }
 
             return response;
         }

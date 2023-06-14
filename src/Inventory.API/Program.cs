@@ -6,29 +6,31 @@ using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Inventory.Core.Helper;
-using Newtonsoft.Json;
 using System.Text.Json.Serialization;
+using Inventory.Core.Response;
+using Microsoft.AspNetCore.Mvc;
+using Inventory.API.RateLimits;
 using Microsoft.OpenApi.Models;
+using Inventory.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddOptions<JWTOption>().Bind(builder.Configuration.GetSection(JWTOption.JWTBearer));
+    .AddOptions<JWTOption>()
+    .Bind(builder.Configuration.GetSection(JWTOption.JWTBearer));
 
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddRepository()
     .AddServices();
 
-builder.Services.AddAuthentication(
-    options =>
+builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer(
-        jwtOptions =>
+    .AddJwtBearer(jwtOptions =>
         {
             jwtOptions.SaveToken = true;
             jwtOptions.TokenValidationParameters = new TokenValidationParameters()
@@ -41,8 +43,7 @@ builder.Services.AddAuthentication(
                     Encoding.UTF8.GetBytes(builder.Configuration["JWTBearer:SecretKey"]!))
             };
         })
-    .AddGoogle(
-        googleOptions =>
+    .AddGoogle(googleOptions =>
         {
             googleOptions.ClientId = builder.Configuration["OAuth:Google:ClientID"]!;
             googleOptions.ClientSecret = builder.Configuration["OAuth:Google:Secret"]!;
@@ -50,42 +51,49 @@ builder.Services.AddAuthentication(
         }
     );
 
-builder.Services.AddControllers(
-    options => options.Conventions
-    .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())))
+builder.Services.AddControllers(options => 
+    options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())))
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    })
+    .ConfigureApiBehaviorOptions(options=>
+    {
+        options.InvalidModelStateResponseFactory = (errorContext) =>
+        {
+            var errors = errorContext.ModelState
+                .Where(m => m.Value!.Errors.Any())
+                .Select(m => new ResponseMessage(
+                    m.Key, 
+                    m.Value!.Errors.FirstOrDefault()!.ErrorMessage))
+                .ToList();
+            return new BadRequestObjectResult(errors);
+        };
     });
+
+builder.Services.AddRateLimiter(option =>
+    {
+        option.AddPolicy<string, LimitRequestPerMinutesPolicy>("LimitRequestPer5Minutes");
+    } 
+);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+builder.Services.AddSwaggerGen(
+    options =>
     {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
-        }
-    });
-});
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "Bearer"
+        });
+        options.OperationFilter<AuthorizationOperationFilter>();
+    }
+);
 
 var app = builder.Build();
 

@@ -35,12 +35,21 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<OrderDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<OrderDTO>> response = new();
+            ResultResponse<IEnumerable<OrderDTO>> response = new()
+            { Messages = new List<ResponseMessage>() };
 
             var orders = await _order.GetAllAsync();
 
-            response.Status = ResponseStatus.STATUS_SUCCESS;
-            response.Data = _mapper.Map<IEnumerable<OrderDTO>>(orders);
+            if (orders.Any())
+            {
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Data = _mapper.Map<IEnumerable<OrderDTO>>(orders);
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Order", "There is no record"));
+            }
 
             return response;
         }
@@ -66,13 +75,7 @@ namespace Inventory.Services.Services
                     return response;
                 }
 
-                orderDetails.Add(new OrderDetail()
-                {
-                    ItemId = detail.ItemId,
-                    Price = detail.Price,
-                    Quantity = detail.Quantity,
-                    Total = detail.Total,
-                });
+                orderDetails.Add(_mapper.Map<OrderDetail>(detail));
             }
 
 

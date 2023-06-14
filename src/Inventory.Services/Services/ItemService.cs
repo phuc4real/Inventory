@@ -83,12 +83,22 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<ItemDetailDTO>> response = new();
+            ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
+            { Messages = new List<ResponseMessage>() };
 
             var items = await _item.GetAsync();
 
-            response.Status = ResponseStatus.STATUS_SUCCESS;
-            response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
+            if (items.Any())
+            {
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Item", "There is no record"));
+            }
+
             return response;
         }
 

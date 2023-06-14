@@ -22,8 +22,8 @@ namespace Inventory.Services.IServices
 
         Task<ResultResponse<TokenModel>> ExternalLoginAsync();
 
-        Task<ResultResponse<TokenModel>> SignOutAsync(string id);
+        Task<ResultResponse<TokenModel>> SignOutAsync(string token);
 
-        Task<ResultResponse<TokenModel>> RefreshToken(TokenModel tokens);
+        Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken);
     }
 }

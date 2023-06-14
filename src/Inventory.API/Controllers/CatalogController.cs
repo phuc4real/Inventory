@@ -3,6 +3,7 @@ using Inventory.Core.Common;
 using Inventory.Core.Response;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
+using Inventory.Core.Extensions;
 
 namespace Inventory.API.Controllers
 {
@@ -19,11 +20,13 @@ namespace Inventory.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListCatalog()
         {
             var result = await _catalogServices.GetAll();
             
-            return Ok(result.Data);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ? 
+                Ok(result.Data) : NotFound(result.Messages);
         }
 
         [HttpGet("{id:int}")]
@@ -33,10 +36,8 @@ namespace Inventory.API.Controllers
         {
             var result = await _catalogServices.GetById(id);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result.Data);
-            else
-                return NotFound(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                Ok(result.Data) : NotFound(result.Messages);
         }
 
         [HttpGet("search")]
@@ -46,16 +47,18 @@ namespace Inventory.API.Controllers
         {
             var result = await _catalogServices.SearchCatalog(value);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result.Data);
-            else
-                return NotFound(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                Ok(result.Data) : NotFound(result.Messages);
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCatalog(CatalogEditDTO dto)
         {
+            if (!ModelState.IsValid) 
+                return BadRequest(ModelState.GetErrorMessages());
+
             var result = await _catalogServices.CreateCatalog(dto);
             
             return Ok(result);
@@ -63,9 +66,13 @@ namespace Inventory.API.Controllers
 
         [HttpPut("{id:int}")]
         [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateCatalog(int id, CatalogEditDTO dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState.GetErrorMessages());
+
             var result = await _catalogServices.UpdateCatalog(id, dto);
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
@@ -78,6 +85,7 @@ namespace Inventory.API.Controllers
         [HttpDelete("{id:int}")]
 
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCatalog(int id)
         {

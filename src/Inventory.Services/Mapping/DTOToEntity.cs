@@ -28,7 +28,10 @@ namespace Inventory.Services.Mapping
             CreateMap<ItemEditDTO, Item>();
 
             CreateMap<OrderCreateDTO, Order>();
-            CreateMap<OrderDetailDTO, OrderDetail>();
+            CreateMap<OrderDetailCreateDTO, OrderDetail>();
+
+            CreateMap<ExportCreateDTO, Export>();
+            CreateMap<ExportDetailCreateDTO, ExportDetail>();
         }
     }
 }

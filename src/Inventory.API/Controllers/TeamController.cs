@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
@@ -19,35 +20,33 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListTeam()
         {
             var result = await _teamServices.GetAll();
             
-            return Ok(result.Data);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Data) : NotFound(result.Messages);
         }
 
         [HttpGet("{id:Guid}")]
-        [ProducesResponseType(typeof(IEnumerable<TeamWithMembersDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<TeamWithMembersDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTeamById(Guid id)
         {
             var result = await _teamServices.GetById(id);
 
-
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result.Data);
-            else
-                return NotFound(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Data) : NotFound(result.Messages);
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(IEnumerable<TeamDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-
+        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateTeam(TeamEditDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
 
             var result = await _teamServices.CreateTeam(dto);
 
@@ -55,46 +54,40 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
-        [ProducesResponseType(typeof(IEnumerable<TeamDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateTeam(Guid id, TeamEditDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
 
             var result = await _teamServices.UpdateTeam(id, dto);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result);
-            else
-                return NotFound(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result) : NotFound(result.Messages);
         }
 
         [HttpDelete("{id:Guid}")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteTeam(Guid id)
         {
             var result = await _teamServices.DeleteTeam(id);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result.Messages);
-            else
-                return NotFound(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Messages) : NotFound(result.Messages);
         }
 
 
         [HttpGet("search")]
-        [ProducesResponseType(typeof(IEnumerable<TeamDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SearchByName(string name)
         {
             var result = await _teamServices.SearchTeamByName(name);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result.Data);
-            else
-                return NotFound(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Data) : NotFound(result.Messages);
         }
     }
 }

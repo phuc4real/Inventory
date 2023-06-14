@@ -103,13 +103,12 @@ namespace Inventory.Services.Services
 
                 if (result.Succeeded)
                 {
-                    response.Data = await GetTokens(user);
-
+                    var tokens =  await GetTokens(user);
                     var refreshTokenExpireTime = DateTime.UtcNow.AddDays(15);
                     user.RefreshTokenExpireTime = refreshTokenExpireTime;
                     await _userManager.UpdateAsync(user);
 
-                    response.Messages!.Add(new ResponseMessage("UserId",user.Id));
+                    response.Data = tokens;
                     response.Status = ResponseStatus.STATUS_SUCCESS;
                 }
                 else
@@ -158,12 +157,15 @@ namespace Inventory.Services.Services
             return properties;
         }
 
-        public async Task<ResultResponse<TokenModel>> SignOutAsync(string id)
+        public async Task<ResultResponse<TokenModel>> SignOutAsync(string token)
         {
             ResultResponse<TokenModel> response = new() { 
                 Messages = new List<ResponseMessage>()
             };
-            var user = await _userManager.FindByIdAsync(id);
+
+            var userid = _tokenService.GetUserId(token);
+            var user = await _userManager.FindByIdAsync(userid);
+
             if (user == null)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
@@ -182,13 +184,13 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TokenModel>> RefreshToken(TokenModel tokens)
+        public async Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken)
         {
             ResultResponse<TokenModel> response = new() { Messages = new List<ResponseMessage>() };
 
             try
             {
-                var principal = _tokenService.GetPrincipalFromExpiredToken(tokens.AccessToken!);
+                var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
                 
                 if (principal == null)
                 {
@@ -204,11 +206,15 @@ namespace Inventory.Services.Services
 
                     var storedToken = await _userManager.GetAuthenticationTokenAsync(user!, "Inventory", "RefreshToken");
 
-                    var isValid = await _userManager.VerifyUserTokenAsync(user!, "Inventory", "RefreshToken", tokens.RefreshToken!);
+                    var refreshTokenValid = await _userManager.VerifyUserTokenAsync(user!, "Inventory", "RefreshToken", refreshToken);
 
                     var curDateTime = DateTime.UtcNow;
 
-                    if (isValid && curDateTime < user!.RefreshTokenExpireTime && storedToken == tokens.RefreshToken)
+                    bool isValid = refreshTokenValid
+                                   && curDateTime < user!.RefreshTokenExpireTime
+                                   && storedToken == refreshToken;
+
+                    if (isValid)
                     {
                         var newAccessToken = await GetTokens(user!);
                         response.Status = ResponseStatus.STATUS_SUCCESS;
@@ -226,13 +232,7 @@ namespace Inventory.Services.Services
             catch (Exception)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
-
                 response.Messages.Add(new ResponseMessage("AccessToken", "Token Invalid!"));
-                //response.Messages.Add(new ResponseMessage()
-                //{
-                //    Key = "SecurityTokenException",
-                //    Value = ex.Message
-                //});
                 return response;
             }
         }
@@ -258,7 +258,7 @@ namespace Inventory.Services.Services
         private async Task<TokenModel> GetTokens(AppUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
-            var token = _tokenService.GenerateToken(user, userRoles, 10);
+            var token = _tokenService.GenerateToken(user, userRoles,expireMinutes: 5);
             var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory", "RefreshToken");
             await _userManager.SetAuthenticationTokenAsync(user, "Inventory", "RefreshToken", refreshToken);
 

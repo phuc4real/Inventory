@@ -11,5 +11,8 @@ namespace Inventory.Services.IServices
     public interface IExportService
     {
         Task<ResultResponse<IEnumerable<ExportDTO>>> GetAll();
+        Task<ResultResponse<IEnumerable<ExportDTO>>> GetExportByItemId(Guid id);
+        Task<ResultResponse<ExportDTO>> GetById(int id);
+        Task<ResultResponse<ExportDTO>> CreateExport(string token,ExportCreateDTO dto);
     }
 }
