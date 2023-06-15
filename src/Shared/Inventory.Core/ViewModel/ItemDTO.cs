@@ -16,15 +16,10 @@ namespace Inventory.Core.ViewModel
         public CatalogDTO? Catalog { get; set; }
     }
 
-    public class ItemDetailDTO
+    public class ItemDetailDTO : ItemDTO
     {
-        public Guid Id { get; set; }
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-        public string? ImageUrl { get; set; }
         public int InStock { get; set; }
         public int Used { get; set; }
-        public CatalogDTO? Catalog { get; set; }
         public DateTime CreatedDate { get; set; }
         public AppUserDTO? CreatedByUser { get; set; }
         public DateTime LastModifiedDate { get; set; }

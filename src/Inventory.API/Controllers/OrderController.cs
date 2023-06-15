@@ -61,7 +61,7 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : NotFound(result.Messages);
         }
 
-        [HttpPut("updatestatus/{id:int}")]
+        [HttpPut("update-status/{id:int}")]
         [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateStatus(int id)
@@ -83,7 +83,7 @@ namespace Inventory.API.Controllers
                     Ok(result) : BadRequest(result.Messages);
         }
 
-        [HttpGet("byitem/{itemId:Guid}")]
+        [HttpGet("by-item/{itemId:Guid}")]
         [ProducesResponseType(typeof(List<OrderDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> OrdersByItemId(Guid itemId)

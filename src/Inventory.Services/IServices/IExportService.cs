@@ -14,5 +14,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<ExportDTO>>> GetExportByItemId(Guid id);
         Task<ResultResponse<ExportDTO>> GetById(int id);
         Task<ResultResponse<ExportDTO>> CreateExport(string token,ExportCreateDTO dto);
+        Task<ResultResponse<ExportDTO>> CancelExport(int id);
     }
 }

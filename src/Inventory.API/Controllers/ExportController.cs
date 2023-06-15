@@ -29,7 +29,7 @@ namespace Inventory.API.Controllers
                     ? Ok(result.Data) : NotFound(result.Messages);
         }
 
-        [HttpGet("byitem/{itemId:Guid}")]
+        [HttpGet("by-item/{itemId:Guid}")]
         [ProducesResponseType(typeof(List<ExportDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetExportByItemId(Guid itemId)
@@ -51,7 +51,6 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : NotFound(result.Messages);
         }
 
-
         [HttpPost]
         [ProducesResponseType(typeof(ResultResponse<ExportDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
@@ -66,6 +65,17 @@ namespace Inventory.API.Controllers
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Data) : NotFound(result.Messages);
+        }
+
+        [HttpDelete("cancel/{id:int}")]
+        [ProducesResponseType(typeof(ResultResponse<ExportDTO>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CancelExport(int id)
+        {
+            var result = await _exportService.CancelExport(id);
+
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result) : NotFound(result.Messages);
         }
     }
 }

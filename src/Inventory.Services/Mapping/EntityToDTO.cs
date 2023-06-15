@@ -36,6 +36,12 @@ namespace Inventory.Services.Mapping
 
             CreateMap<Export, ExportDTO>();
             CreateMap<ExportDetail, ExportDetailDTO>();
+
+            CreateMap<Receipt, ReceiptDTO>();
+            CreateMap<ReceiptDetail, ReceiptDetailDTO>();
+
+            CreateMap<Ticket, TicketDTO>();
+            CreateMap<TicketDetail, TicketDetailDTO>();
         }
     }
 }

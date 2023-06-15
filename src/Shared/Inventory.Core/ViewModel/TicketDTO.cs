@@ -1,18 +1,15 @@
 ﻿using Inventory.Core.Enums;
-using Inventory.Core.ViewModel;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Repository.Model
+namespace Inventory.Core.ViewModel
 {
-    public class Ticket
+    public class TicketDTO
     {
-        [Key]
         public Guid Id { get; set; }
         public TicketPurpose Purpose { get; set; }
         public string? Title { get; set; }
@@ -24,15 +21,24 @@ namespace Inventory.Repository.Model
         public bool IsClosed { get; set; }
         public DateTime ClosedDate { get; set; }
         public DateTime CreatedDate { get; set; }
-        public string? CreatedBy { get; set; }
-        [ForeignKey(nameof(CreatedBy))]
-        public AppUser? CreatedByUser { get; set; }
+        public AppUserDTO? CreatedByUser { get; set; }
         public DateTime LastModifiedDate { get; set; }
-        public string? LastModifiedBy { get; set; }
-        [ForeignKey(nameof(LastModifiedBy))]
-        public AppUser? ModifiedByUser { get; set; }
+        public AppUserDTO? ModifiedByUser { get; set; }
 
-        public IList<Item>? Items { get; set; }
-        public IList<TicketDetail>? Details { get; set; }
+        public IList<TicketDetailDTO>? Details { get; set; }
+    }
+
+    public class TicketCreateDTO
+    {
+        public TicketPurpose Purpose { get; set; }
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+        public IList<TicketDetailCreateDTO>? Details { get; set; }
+    }
+
+    public class TicketCancelDTO
+    {
+        public Guid Id { get; set; }
+        public string? RejectReason { get; set; }
     }
 }

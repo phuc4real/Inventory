@@ -104,7 +104,7 @@ namespace Inventory.Services.Services
                 if (result.Succeeded)
                 {
                     var tokens =  await GetTokens(user);
-                    var refreshTokenExpireTime = DateTime.UtcNow.AddDays(15);
+                    var refreshTokenExpireTime = DateTime.UtcNow.AddMinutes(30);
                     user.RefreshTokenExpireTime = refreshTokenExpireTime;
                     await _userManager.UpdateAsync(user);
 

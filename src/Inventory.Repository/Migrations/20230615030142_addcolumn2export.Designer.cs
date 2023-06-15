@@ -4,6 +4,7 @@ using Inventory.Repository.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230615030142_addcolumn2export")]
+    partial class addcolumn2export
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -260,29 +263,14 @@ namespace Inventory.Repository.Migrations
                     b.Property<DateTime>("ClosedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsClosed")
+                    b.Property<bool>("PMApprove")
                         .HasColumnType("bit");
 
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PMApprove")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Purpose")
-                        .HasColumnType("int");
+                    b.Property<string>("Purpose")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RejectReason")
                         .HasColumnType("nvarchar(max)");
@@ -290,14 +278,13 @@ namespace Inventory.Repository.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<int>("TicketNumber")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("LastModifiedBy");
 
                     b.ToTable("Tickets");
                 });
@@ -362,8 +349,8 @@ namespace Inventory.Repository.Migrations
                         new
                         {
                             Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
-                            Name = "Inventory Manager",
-                            NormalizedName = "INVENTORY MANAGER"
+                            Name = "Depot Manager",
+                            NormalizedName = "DEPOT MANAGER"
                         });
                 });
 
@@ -675,21 +662,6 @@ namespace Inventory.Repository.Migrations
                         .HasForeignKey("LeaderId");
 
                     b.Navigation("Leader");
-                });
-
-            modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
-                {
-                    b.HasOne("Inventory.Repository.Model.AppUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy");
-
-                    b.HasOne("Inventory.Repository.Model.AppUser", "ModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedBy");
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("ModifiedByUser");
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.TicketDetail", b =>

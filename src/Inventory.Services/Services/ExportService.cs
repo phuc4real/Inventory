@@ -36,6 +36,31 @@ namespace Inventory.Services.Services
             _tokenService = tokenService;
         }
 
+        public async Task<ResultResponse<ExportDTO>> CancelExport(int id)
+        {
+            ResultResponse<ExportDTO> response = new()
+            { Messages = new List<ResponseMessage>() };
+
+            var export = await _export.GetById(id);
+
+            if (export == null)
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Export", "Export not found!"));
+            }
+            else
+            {
+                export.IsCancel = true;
+                _export.Update(export);
+                await _unitOfWork.SaveAsync();
+
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Messages.Add(new ResponseMessage("Export", "Export canceled!"));
+                response.Data = _mapper.Map<ExportDTO>(export);
+            }
+            return response;
+        }
+
         public async Task<ResultResponse<ExportDTO>> CreateExport(string token, ExportCreateDTO dto)
         {
             ResultResponse<ExportDTO> response = new()
@@ -65,6 +90,7 @@ namespace Inventory.Services.Services
                 CreatedDate = DateTime.UtcNow,
                 CreatedBy = userid,
                 Details = exportDetails,
+                IsCancel = false
             };
 
             await _export.AddAsync(export);

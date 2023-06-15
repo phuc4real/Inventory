@@ -45,8 +45,8 @@ namespace Inventory.Repository.DbContext
             builder.Entity<IdentityRole>()
                 .HasData(new IdentityRole { 
                     Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
-                    Name = InventoryRoles.DM,
-                    NormalizedName = InventoryRoles.DM.ToUpper(),
+                    Name = InventoryRoles.IM,
+                    NormalizedName = InventoryRoles.IM.ToUpper(),
                 });
 
             builder.Entity<Order>()
