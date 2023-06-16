@@ -1,23 +1,18 @@
 ﻿using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.IServices
 {
     public interface ITicketService
     {
         Task<ResultResponse<IEnumerable<TicketDTO>>> GetAll();
-        Task<ResultResponse<IEnumerable<TicketDTO>>> TicketsByItemId();
+        Task<ResultResponse<IEnumerable<TicketDTO>>> TicketsByItemId(Guid itemId);
         Task<ResultResponse<TicketDTO>> GetTicketById(Guid id);
         Task<ResultResponse<TicketDTO>> CreateTicket(string token, TicketCreateDTO dto);
-        Task<ResultResponse<TicketDTO>> UpdateTicketInfo(string token, TicketCreateDTO dto);
-        Task<ResultResponse<TicketDTO>> PMApprove(string token, Guid ticketId);
+        Task<ResultResponse<TicketDTO>> UpdateTicketInfo(string token,Guid ticketId, TicketCreateDTO dto);
+        Task<ResultResponse<TicketDTO>> PMStatus(string token, Guid ticketId, string? rejectReason = null);
         Task<ResultResponse<TicketDTO>> UpdateStatus(string token, Guid ticketId);
-        Task<ResultResponse<TicketDTO>> CancelTicket(string token, Guid ticketId);
-        Task<ResultResponse<TicketDTO>> CloseTicket(string token, TicketCancelDTO dto);
+        Task<ResultResponse<TicketDTO>> RejectTicket(string token, Guid ticketId, string rejectReason);
+        Task<ResultResponse<IEnumerable<TicketDTO>>> SearchTicket(string filter);
     }
 }

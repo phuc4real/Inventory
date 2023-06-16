@@ -11,6 +11,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -20,6 +21,7 @@ namespace Inventory.API.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
@@ -33,6 +35,7 @@ namespace Inventory.API.Controllers
                     Ok(result.Messages) : BadRequest(result.Messages);
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
@@ -47,6 +50,7 @@ namespace Inventory.API.Controllers
         }
 
         //Change to HttpPost if have front-end
+        [AllowAnonymous]
         [HttpGet("external-login")]
         public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/home")
         {
@@ -55,6 +59,7 @@ namespace Inventory.API.Controllers
         }
 
         //Change to HttpPost if have front-end
+        [AllowAnonymous]
         [HttpGet("external-login-callback")]
         [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
@@ -66,7 +71,6 @@ namespace Inventory.API.Controllers
                     Ok(result) : BadRequest(result.Messages);
         }
 
-        [Authorize]
         [HttpDelete("logout")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
@@ -80,7 +84,6 @@ namespace Inventory.API.Controllers
                     Ok(result.Messages) : BadRequest(result.Messages);
         }
 
-        [Authorize]
         [HttpPost("refresh")]
         [EnableRateLimiting("LimitRequestPer5Minutes")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]

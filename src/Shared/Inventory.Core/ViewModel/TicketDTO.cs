@@ -11,11 +11,11 @@ namespace Inventory.Core.ViewModel
     public class TicketDTO
     {
         public Guid Id { get; set; }
-        public TicketPurpose Purpose { get; set; }
+        public string? Purpose { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public TicketStatus PMApprove { get; set; }
-        public TicketStatus Status { get; set; }
+        public string? PMStatus { get; set; }
+        public string? Status { get; set; }
         public string? RejectReason { get; set; }
 
         public bool IsClosed { get; set; }
@@ -34,11 +34,5 @@ namespace Inventory.Core.ViewModel
         public string? Title { get; set; }
         public string? Description { get; set; }
         public IList<TicketDetailCreateDTO>? Details { get; set; }
-    }
-
-    public class TicketCancelDTO
-    {
-        public Guid Id { get; set; }
-        public string? RejectReason { get; set; }
     }
 }

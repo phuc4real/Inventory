@@ -16,6 +16,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<ItemDetailDTO>> CreateItem(string jwtToken, ItemEditDTO dto);
         Task<ResultResponse<ItemDetailDTO>> UpdateItem(string jwtToken, Guid id, ItemEditDTO dto);
         Task<ResultResponse<ItemDetailDTO>> DeleteItem(string jwtToken, Guid id);
-
+        Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetItemInUse();
     }
 }

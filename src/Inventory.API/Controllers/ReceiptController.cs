@@ -41,7 +41,7 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : NotFound(result.Messages);
         }
 
-        [HttpGet("by-item/{id:Guid}")]
+        [HttpGet("by-item/{itemId:Guid}")]
         [ProducesResponseType(typeof(List<ReceiptDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ReceiptsByItemId(Guid itemId)

@@ -3,12 +3,14 @@ using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ExportController : ControllerBase
     {
         private readonly IExportService _exportService;
@@ -67,7 +69,7 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : NotFound(result.Messages);
         }
 
-        [HttpDelete("cancel/{id:int}")]
+        [HttpDelete("{id:int}/cancel")]
         [ProducesResponseType(typeof(ResultResponse<ExportDTO>),StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CancelExport(int id)

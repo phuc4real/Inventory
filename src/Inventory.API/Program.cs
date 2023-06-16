@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 using Inventory.API.RateLimits;
 using Microsoft.OpenApi.Models;
 using Inventory.API.Filters;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,8 +53,11 @@ builder.Services.AddAuthentication(options =>
         }
     );
 
-builder.Services.AddControllers(options => 
-    options.Conventions.Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer())))
+builder.Services.AddControllers(options =>
+    {
+        options.Conventions
+            .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -74,8 +79,7 @@ builder.Services.AddControllers(options =>
 builder.Services.AddRateLimiter(option =>
     {
         option.AddPolicy<string, LimitRequestPerMinutesPolicy>("LimitRequestPer5Minutes");
-    } 
-);
+    } );
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

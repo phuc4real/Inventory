@@ -8,6 +8,11 @@ namespace Inventory.API.Filters
     {
         public void Apply(OpenApiOperation operation, OperationFilterContext context)
         {
+            if (context.MethodInfo.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).Any())
+            {
+                return;
+            }
+
             var attributes = context.MethodInfo.DeclaringType!.GetCustomAttributes(true)
                 .Union(context.MethodInfo.GetCustomAttributes(true))
                 .OfType<AuthorizeAttribute>();

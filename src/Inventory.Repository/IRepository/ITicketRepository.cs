@@ -10,6 +10,7 @@ namespace Inventory.Repository.IRepository
     public interface ITicketRepository : IRepository<Ticket>
     {
         Task<IEnumerable<Ticket>> GetAllAsync();
+        Task<IEnumerable<Ticket>> GetWithFilter(string filter);
         Task<IEnumerable<Ticket>> TicketsByItem(Item item);
         Task<Ticket> GetById(Guid id);
     }

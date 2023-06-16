@@ -27,10 +27,9 @@ namespace Inventory.Services.Mapping
             CreateMap<Item, ItemDetailDTO>();
 
             CreateMap<Order, OrderDTO>()
-                .ForMember(src => src.Status, opt => opt
+                .ForMember(dest => dest.Status, opt => opt
                     .MapFrom(src => src.Status
-                        .ToDescriptionString()
-                     )
+                        .ToDescriptionString())
                  );
             CreateMap<OrderDetail, OrderDetailDTO>();
 
@@ -40,8 +39,16 @@ namespace Inventory.Services.Mapping
             CreateMap<Receipt, ReceiptDTO>();
             CreateMap<ReceiptDetail, ReceiptDetailDTO>();
 
-            CreateMap<Ticket, TicketDTO>();
-            CreateMap<TicketDetail, TicketDetailDTO>();
+            CreateMap<Ticket, TicketDTO>()
+                .ForMember(dest => dest.Purpose, opt => opt
+                    .MapFrom(src => src.Purpose.ToDescriptionString()))
+                .ForMember(dest => dest.PMStatus, opt => opt
+                    .MapFrom(src => src.PMStatus.ToDescriptionString()))
+                .ForMember(dest => dest.Status, opt => opt
+                    .MapFrom(src => src.Status.ToDescriptionString()));
+            CreateMap<TicketDetail, TicketDetailDTO>()
+                .ForMember(dest =>dest.Type, opt => opt
+                    .MapFrom(src => src.Type.ToDescriptionString()));
         }
     }
 }

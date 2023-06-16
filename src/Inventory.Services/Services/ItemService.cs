@@ -123,6 +123,27 @@ namespace Inventory.Services.Services
             return response;
         }
 
+        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetItemInUse()
+        {
+            ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
+            { Messages = new List<ResponseMessage>() };
+
+            var items = await _item.GetInUseItem();
+
+            if (items.Any())
+            {
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Item", "There is no record"));
+            }
+
+            return response;
+        }
+
         public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> SearchByName(string name)
         {
             ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
