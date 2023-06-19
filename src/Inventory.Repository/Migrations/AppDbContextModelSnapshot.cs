@@ -58,6 +58,9 @@ namespace Inventory.Repository.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsCancel")
+                        .HasColumnType("bit");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedBy");
@@ -73,14 +76,19 @@ namespace Inventory.Repository.Migrations
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ForUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
                     b.HasKey("ExportId", "ItemId");
 
+                    b.HasIndex("ForUserId");
+
                     b.HasIndex("ItemId");
 
-                    b.ToTable("ExportDetail");
+                    b.ToTable("ExportDetails");
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
@@ -152,6 +160,9 @@ namespace Inventory.Repository.Migrations
 
                     b.Property<double>("OrderTotal")
                         .HasColumnType("float");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -254,14 +265,29 @@ namespace Inventory.Repository.Migrations
                     b.Property<DateTime>("ClosedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("PMApprove")
+                    b.Property<bool>("IsClosed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Purpose")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("LastModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PMStatus")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int");
 
                     b.Property<string>("RejectReason")
                         .HasColumnType("nvarchar(max)");
@@ -269,13 +295,14 @@ namespace Inventory.Repository.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("TicketNumber")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("LastModifiedBy");
 
                     b.ToTable("Tickets");
                 });
@@ -289,6 +316,9 @@ namespace Inventory.Repository.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
                         .HasColumnType("int");
 
                     b.HasKey("ItemId", "TicketId");
@@ -340,8 +370,8 @@ namespace Inventory.Repository.Migrations
                         new
                         {
                             Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
-                            Name = "Depot Manager",
-                            NormalizedName = "DEPOT MANAGER"
+                            Name = "Inventory Manager",
+                            NormalizedName = "INVENTORY MANAGER"
                         });
                 });
 
@@ -534,6 +564,9 @@ namespace Inventory.Repository.Migrations
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime?>("RefreshTokenExpireTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid?>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
@@ -553,17 +586,27 @@ namespace Inventory.Repository.Migrations
 
             modelBuilder.Entity("Inventory.Repository.Model.ExportDetail", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Export", null)
+                    b.HasOne("Inventory.Repository.Model.Export", "Export")
                         .WithMany("Details")
                         .HasForeignKey("ExportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Inventory.Repository.Model.Item", null)
+                    b.HasOne("Inventory.Repository.Model.AppUser", "ForUser")
+                        .WithMany()
+                        .HasForeignKey("ForUserId");
+
+                    b.HasOne("Inventory.Repository.Model.Item", "Item")
                         .WithMany("ExportDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Export");
+
+                    b.Navigation("ForUser");
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
@@ -600,7 +643,7 @@ namespace Inventory.Repository.Migrations
 
             modelBuilder.Entity("Inventory.Repository.Model.OrderDetail", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Item", null)
+                    b.HasOne("Inventory.Repository.Model.Item", "Item")
                         .WithMany("OrderDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -611,6 +654,8 @@ namespace Inventory.Repository.Migrations
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Receipt", b =>
@@ -624,7 +669,7 @@ namespace Inventory.Repository.Migrations
 
             modelBuilder.Entity("Inventory.Repository.Model.ReceiptDetail", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Item", null)
+                    b.HasOne("Inventory.Repository.Model.Item", "Item")
                         .WithMany("ReceiptDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -635,6 +680,8 @@ namespace Inventory.Repository.Migrations
                         .HasForeignKey("ReceiptId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Team", b =>
@@ -646,9 +693,24 @@ namespace Inventory.Repository.Migrations
                     b.Navigation("Leader");
                 });
 
+            modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
+                {
+                    b.HasOne("Inventory.Repository.Model.AppUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy");
+
+                    b.HasOne("Inventory.Repository.Model.AppUser", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("LastModifiedBy");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ModifiedByUser");
+                });
+
             modelBuilder.Entity("Inventory.Repository.Model.TicketDetail", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Item", null)
+                    b.HasOne("Inventory.Repository.Model.Item", "Item")
                         .WithMany("TicketDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -659,6 +721,8 @@ namespace Inventory.Repository.Migrations
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Item");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -20,17 +20,16 @@ namespace Inventory.Services.Services
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
-        private readonly JWTOption _option;
+        private readonly ITokenService _tokenService;
 
         public AuthService(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
-            IOptionsSnapshot<JWTOption> option
-            )
+            ITokenService tokenService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _option = option.Value;
+            _tokenService = tokenService;
         }
 
         public async Task<ResultResponse<TokenModel>> ExternalLoginAsync()
@@ -104,8 +103,12 @@ namespace Inventory.Services.Services
 
                 if (result.Succeeded)
                 {
-                    response.Data = await GetTokens(user);
-                    response.Messages!.Add(new ResponseMessage("UserId",user.Id));
+                    var tokens =  await GetTokens(user);
+                    var refreshTokenExpireTime = DateTime.UtcNow.AddMinutes(30);
+                    user.RefreshTokenExpireTime = refreshTokenExpireTime;
+                    await _userManager.UpdateAsync(user);
+
+                    response.Data = tokens;
                     response.Status = ResponseStatus.STATUS_SUCCESS;
                 }
                 else
@@ -154,12 +157,15 @@ namespace Inventory.Services.Services
             return properties;
         }
 
-        public async Task<ResultResponse<TokenModel>> SignOutAsync(string id)
+        public async Task<ResultResponse<TokenModel>> SignOutAsync(string token)
         {
             ResultResponse<TokenModel> response = new() { 
                 Messages = new List<ResponseMessage>()
             };
-            var user = await _userManager.FindByIdAsync(id);
+
+            var userid = _tokenService.GetUserId(token);
+            var user = await _userManager.FindByIdAsync(userid);
+
             if (user == null)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
@@ -168,6 +174,8 @@ namespace Inventory.Services.Services
             else
             {
                 await _userManager.RemoveAuthenticationTokenAsync(user, "Inventory", "RefreshToken");
+                user.RefreshTokenExpireTime = DateTime.UtcNow;
+                await _userManager.UpdateAsync(user);
                 await _userManager.UpdateSecurityStampAsync(user);
                 response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Messages.Add(new ResponseMessage("User", "User logout!"));
@@ -176,13 +184,13 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TokenModel>> RefreshToken(TokenModel tokens)
+        public async Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken)
         {
             ResultResponse<TokenModel> response = new() { Messages = new List<ResponseMessage>() };
 
             try
             {
-                var principal = GetPrincipalFromExpiredToken(tokens.AccessToken!);
+                var principal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
                 
                 if (principal == null)
                 {
@@ -191,12 +199,20 @@ namespace Inventory.Services.Services
                 }
                 else
                 {
-                    var username = principal.Identity!.Name;
-                    var user = await _userManager.FindByNameAsync(username!);
+                    //var username = principal.Identity!.Name;
+
+                    var userid = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+                    var user = await _userManager.FindByIdAsync(userid!);
 
                     var storedToken = await _userManager.GetAuthenticationTokenAsync(user!, "Inventory", "RefreshToken");
 
-                    var isValid = await _userManager.VerifyUserTokenAsync(user!, "Inventory", "RefreshToken", tokens.RefreshToken!); 
+                    var refreshTokenValid = await _userManager.VerifyUserTokenAsync(user!, "Inventory", "RefreshToken", refreshToken);
+
+                    var curDateTime = DateTime.UtcNow;
+
+                    bool isValid = refreshTokenValid
+                                   && curDateTime < user!.RefreshTokenExpireTime
+                                   && storedToken == refreshToken;
 
                     if (isValid)
                     {
@@ -216,13 +232,7 @@ namespace Inventory.Services.Services
             catch (Exception)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
-
                 response.Messages.Add(new ResponseMessage("AccessToken", "Token Invalid!"));
-                //response.Messages.Add(new ResponseMessage()
-                //{
-                //    Key = "SecurityTokenException",
-                //    Value = ex.Message
-                //});
                 return response;
             }
         }
@@ -245,33 +255,10 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
-        {
-            var tokenValidateParameter = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = _option.ValidIssuer,
-                ValidateAudience = true,
-                ValidAudience = _option.ValidAudience,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_option.SecretKey)),
-                ValidateLifetime = false
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            SecurityToken securityToken;
-            var principal = tokenHandler.ValidateToken(token, tokenValidateParameter, out securityToken);
-
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
-            return principal;
-        }
-
         private async Task<TokenModel> GetTokens(AppUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
-            var token = GenerateToken(user, userRoles, 10);
+            var token = _tokenService.GenerateToken(user, userRoles,expireMinutes: 5);
             var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory", "RefreshToken");
             await _userManager.SetAuthenticationTokenAsync(user, "Inventory", "RefreshToken", refreshToken);
 
@@ -283,33 +270,6 @@ namespace Inventory.Services.Services
             };
 
             return res;
-        }
-
-        private SecurityToken GenerateToken(AppUser user, IList<string> userRoles, int expireMinutes)
-        {
-            var authClaims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, user.UserName!),
-                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    };
-
-            foreach (var role in userRoles)
-            {
-                authClaims.Add(new Claim(ClaimTypes.Role, role));
-            }
-
-            var secretKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_option.SecretKey));
-
-            var token = new JwtSecurityToken(
-                 audience: _option.ValidAudience,
-                 issuer: _option.ValidIssuer,
-                 expires: DateTime.Now.AddMinutes(expireMinutes),
-                 claims: authClaims,
-                 signingCredentials: new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256)
-                 );
-
-            return token;
         }
 
         private static bool IsEmail(string email) => new EmailAddressAttribute().IsValid(email);

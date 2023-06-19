@@ -10,6 +10,6 @@ namespace Inventory.Core.Common
     {
         public const string Employee = "Employee";
         public const string PM = "Project Manager";
-        public const string DM = "Depot Manager";
+        public const string IM = "Inventory Manager";
     }
 }

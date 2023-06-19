@@ -23,12 +23,21 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<CatalogDTO>> response = new();
+            ResultResponse<IEnumerable<CatalogDTO>> response = new()
+            { Messages = new List<ResponseMessage>()};
 
             var catalogs = await _catalog.GetAsync();
 
-            response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
-            response.Status = ResponseStatus.STATUS_SUCCESS;
+            if(catalogs.Any())
+            {
+                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Catalog", "There is no record"));
+            }
 
             return response;
         }
@@ -56,7 +65,7 @@ namespace Inventory.Services.Services
         public async Task<ResultResponse<CatalogDTO>> CreateCatalog(CatalogEditDTO dto)
         {
             ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
-            Catalog catalog = new() { Name = dto.Name };
+            Catalog catalog = _mapper.Map<Catalog>(dto);
 
             await _catalog.AddAsync(catalog);
             await _unitOfWork.SaveAsync();
@@ -73,7 +82,7 @@ namespace Inventory.Services.Services
             ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
 
             var catalog = await _catalog.FindById(id);
-            if (catalog == null)
+            if (catalog == null || catalog.IsDeleted)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Catalog", "Catalog not exists!"));
@@ -95,14 +104,14 @@ namespace Inventory.Services.Services
             ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
 
             var catalog = await _catalog.FindById(id);
-            if (catalog == null)
+            if (catalog == null || catalog.IsDeleted)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Catalog", "Catalog not exists!"));
             }
             else
             {
-                catalog.IsDeleted = !catalog.IsDeleted;
+                catalog.IsDeleted = true;
                 _catalog.Update(catalog);
                 await _unitOfWork.SaveAsync();
 

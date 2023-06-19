@@ -8,11 +8,16 @@ namespace Inventory.Core.Enums
 {
     public enum TicketStatus
     {
-        Pending,
-        PMApprove,
-        Approve,
-        Reject,
-        Processing,
-        Done
+        Pending = 1,
+        Processing = 2,
+        Done = 3, 
+        Reject = 4
+    }
+
+    public enum TicketPMStatus
+    {
+        Pending = 1,
+        Approve = 2,
+        Reject = 3
     }
 }

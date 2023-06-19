@@ -26,11 +26,7 @@ namespace Inventory.Services.Services
             ResultResponse<TeamDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            Team team = new() 
-            {
-                Name = dto.Name,
-                LeaderId = dto.LeaderId,
-            };
+            Team team = _mapper.Map<Team>(dto);
 
             await _team.AddAsync(team);
             await _unitOfWork.SaveAsync();
@@ -39,7 +35,6 @@ namespace Inventory.Services.Services
             response.Status = ResponseStatus.STATUS_SUCCESS;
             response.Messages.Add(new ResponseMessage("Team", "Team created!"));
             return response;
-
         }
 
         public async Task<ResultResponse<TeamDTO>> DeleteTeam(Guid id)
@@ -68,12 +63,21 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<TeamDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<TeamDTO>> response = new();
+            ResultResponse<IEnumerable<TeamDTO>> response = new()
+            { Messages = new List<ResponseMessage>() };
 
             var teams = await _team.GetAllWithPropertyAsync();
 
-            response.Data = _mapper.Map<IEnumerable<TeamDTO>>(teams);
-            response.Status = ResponseStatus.STATUS_SUCCESS;
+            if (teams.Any())
+            {
+                response.Data = _mapper.Map<IEnumerable<TeamDTO>>(teams);
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Team", "There is no record"));
+            }
 
             return response;
         }

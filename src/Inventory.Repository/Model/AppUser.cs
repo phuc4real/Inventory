@@ -16,5 +16,7 @@ namespace Inventory.Repository.Model
         public Guid? TeamId { get; set; }
         [ForeignKey(nameof(TeamId))]
         public Team? Team { get; set; }
+
+        public DateTime? RefreshTokenExpireTime { get; set; }
     }
 }

@@ -3,11 +3,15 @@ using Inventory.Core.Common;
 using Inventory.Core.Response;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Inventory.Core.Extensions;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -17,6 +21,7 @@ namespace Inventory.API.Controllers
             _authService = authService;
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
@@ -26,27 +31,26 @@ namespace Inventory.API.Controllers
 
             var result = await _authService.SignUpAsync(dto);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result.Messages);
-            else 
-                return BadRequest(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Messages) : BadRequest(result.Messages);
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var result = await _authService.SignInAsync(dto);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result);
-            else
-                return BadRequest(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Data) : BadRequest(result.Messages);
         }
 
+        //Change to HttpPost if have front-end
+        [AllowAnonymous]
         [HttpGet("external-login")]
         public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/home")
         {
@@ -54,51 +58,48 @@ namespace Inventory.API.Controllers
             return new ChallengeResult(provider!, properties);
         }
 
+        //Change to HttpPost if have front-end
+        [AllowAnonymous]
         [HttpGet("external-login-callback")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ExternalLoginCallback()
         {
             var result = await _authService.ExternalLoginAsync();
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                return Ok(result);
-            else
-                return BadRequest(result.Messages);
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result) : BadRequest(result.Messages);
         }
 
-        [HttpDelete("logout/{id}")]
+        [HttpDelete("logout")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Logout(string id)
+        public async Task<IActionResult> Logout()
         {
-            var result = await _authService.SignOutAsync(id);
+            string token = await HttpContext.GetAccessToken();
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-            {
-                return Ok(result.Messages);
-            }
-            else
-            {
-                return BadRequest(result.Messages);
-            }
+            var result = await _authService.SignOutAsync(token);
+
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                    Ok(result.Messages) : BadRequest(result.Messages);
         }
 
         [HttpPost("refresh")]
+        [EnableRateLimiting("LimitRequestPer5Minutes")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> RefreshToken(TokenModel tokens)
+        public async Task<IActionResult> RefreshToken()
         {
-            var result = await _authService.RefreshToken(tokens);
+            var accessToken = await HttpContext.GetAccessToken();
+            var refreshToken = HttpContext.GetRefreshToken();
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-            {
-                return Ok(result.Data);
-            }
-            else
-            {
-                return BadRequest(result.Messages);
-            }
+            if (refreshToken == "") 
+                return BadRequest(new ResponseMessage("RefreshToken","Cannot get refresh token!"));
+
+            var result = await _authService.RefreshToken(accessToken, refreshToken);
+
+            return result.Status == ResponseStatus.STATUS_SUCCESS ? 
+                    Ok(result.Data) : BadRequest(result.Messages);
         }
     }
 }
