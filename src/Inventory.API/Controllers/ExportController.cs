@@ -21,7 +21,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(List<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ExportWithDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAll()
         {
@@ -32,7 +32,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("by-item/{itemId:Guid}")]
-        [ProducesResponseType(typeof(List<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ExportWithDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetExportByItemId(Guid itemId)
         {
@@ -43,7 +43,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(ExportDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ExportWithDetailDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetExport(int id)
         {
@@ -54,7 +54,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ResultResponse<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<ExportWithDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateExport(ExportCreateDTO dto)
@@ -70,7 +70,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:int}/cancel")]
-        [ProducesResponseType(typeof(ResultResponse<ExportDTO>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<ExportWithDetailDTO>),StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CancelExport(int id)
         {

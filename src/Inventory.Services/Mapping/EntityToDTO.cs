@@ -33,8 +33,11 @@ namespace Inventory.Services.Mapping
                  );
             CreateMap<OrderDetail, OrderDetailDTO>();
 
+
             CreateMap<Export, ExportDTO>();
+            CreateMap<Export, ExportWithDetailDTO>();
             CreateMap<ExportDetail, ExportDetailDTO>();
+            CreateMap<ExportDetail, UsingItemDTO>();
 
             CreateMap<Receipt, ReceiptDTO>();
             CreateMap<ReceiptDetail, ReceiptDetailDTO>();
@@ -49,6 +52,7 @@ namespace Inventory.Services.Mapping
             CreateMap<TicketDetail, TicketDetailDTO>()
                 .ForMember(dest =>dest.Type, opt => opt
                     .MapFrom(src => src.Type.ToDescriptionString()));
+
         }
     }
 }

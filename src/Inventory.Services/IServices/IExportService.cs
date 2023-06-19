@@ -10,10 +10,10 @@ namespace Inventory.Services.IServices
 {
     public interface IExportService
     {
-        Task<ResultResponse<IEnumerable<ExportDTO>>> GetAll();
-        Task<ResultResponse<IEnumerable<ExportDTO>>> GetExportByItemId(Guid id);
-        Task<ResultResponse<ExportDTO>> GetById(int id);
-        Task<ResultResponse<ExportDTO>> CreateExport(string token,ExportCreateDTO dto);
-        Task<ResultResponse<ExportDTO>> CancelExport(int id);
+        Task<ResultResponse<IEnumerable<ExportWithDetailDTO>>> GetAll();
+        Task<ResultResponse<IEnumerable<ExportWithDetailDTO>>> GetExportByItemId(Guid id);
+        Task<ResultResponse<ExportWithDetailDTO>> GetById(int id);
+        Task<ResultResponse<ExportWithDetailDTO>> CreateExport(string token,ExportCreateDTO dto);
+        Task<ResultResponse<ExportWithDetailDTO>> CancelExport(int id);
     }
 }

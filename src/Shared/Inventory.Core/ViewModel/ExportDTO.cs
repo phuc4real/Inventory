@@ -13,6 +13,10 @@ namespace Inventory.Core.ViewModel
         public string? Description { get; set; }
         public DateTime CreatedDate { get; set; }
         public AppUserDTO? CreatedByUser { get; set; }
+    }
+
+    public class ExportWithDetailDTO : ExportDTO
+    {
         public IList<ExportDetailDTO>? Details { get; set; }
     }
 

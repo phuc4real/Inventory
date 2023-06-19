@@ -4,6 +4,7 @@ using Inventory.Repository.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230619031755_addcolumn2exportdetail")]
+    partial class addcolumn2exportdetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -88,7 +91,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("ItemId");
 
-                    b.ToTable("ExportDetails");
+                    b.ToTable("ExportDetail");
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
@@ -586,7 +589,7 @@ namespace Inventory.Repository.Migrations
 
             modelBuilder.Entity("Inventory.Repository.Model.ExportDetail", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Export", "Export")
+                    b.HasOne("Inventory.Repository.Model.Export", null)
                         .WithMany("Details")
                         .HasForeignKey("ExportId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -601,8 +604,6 @@ namespace Inventory.Repository.Migrations
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Export");
 
                     b.Navigation("ForUser");
 

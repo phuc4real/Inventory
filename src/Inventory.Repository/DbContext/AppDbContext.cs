@@ -21,6 +21,7 @@ namespace Inventory.Repository.DbContext
         public DbSet<Item> Items { get; set; }
         public DbSet<Catalog> Catalogs { get; set; }
         public DbSet<Export> Exports { get; set; }
+        public DbSet<ExportDetail> ExportDetails { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<Receipt> Receipts { get; set; }
         public DbSet<Team> Teams { get; set; }
@@ -62,7 +63,7 @@ namespace Inventory.Repository.DbContext
                 .WithMany(e => e.Exports)
                 .UsingEntity<ExportDetail>(
                     l => l.HasOne<Item>(e => e.Item).WithMany(e => e.ExportDetails),
-                    r => r.HasOne<Export>().WithMany(e => e.Details)
+                    r => r.HasOne<Export>(e => e.Export).WithMany(e => e.Details)
                 );
 
             builder.Entity<Receipt>()

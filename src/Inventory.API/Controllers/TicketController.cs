@@ -13,12 +13,10 @@ namespace Inventory.API.Controllers
     public class TicketController : ControllerBase
     {
         private readonly ITicketService _ticketService;
-        private readonly IItemService _itemService;
 
-        public TicketController(ITicketService ticketService, IItemService itemService)
+        public TicketController(ITicketService ticketService)
         {
             _ticketService = ticketService;
-            _itemService = itemService;
         }
 
         [HttpGet]
@@ -134,6 +132,20 @@ namespace Inventory.API.Controllers
         public async Task<IActionResult> SearchTicket(string filter)
         {
             var result = await _ticketService.SearchTicket(filter);
+
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                Ok(result.Data) : NotFound(result.Messages);
+        }
+
+
+        [HttpGet("my-ticket")]
+        [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> MyTicket()
+        {
+            var token = await HttpContext.GetAccessToken();
+
+            var result = await _ticketService.ListTicketOfUser(token);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                 Ok(result.Data) : NotFound(result.Messages);

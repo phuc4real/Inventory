@@ -14,5 +14,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<TicketDTO>> UpdateStatus(string token, Guid ticketId);
         Task<ResultResponse<TicketDTO>> RejectTicket(string token, Guid ticketId, string rejectReason);
         Task<ResultResponse<IEnumerable<TicketDTO>>> SearchTicket(string filter);
+        Task<ResultResponse<IEnumerable<TicketDTO>>> ListTicketOfUser(string token);
     }
 }

@@ -40,6 +40,16 @@ namespace Inventory.Repository.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
+        public async Task<IEnumerable<Ticket>> GetTicketOfUser(string userid)
+        {
+            IQueryable<Ticket> query = _context.Tickets;
+            query = query.Where(x=> x.CreatedBy == userid)
+                .Include(x => x.Details)!
+                .ThenInclude(d => d.Item);
+
+            return await query.ToListAsync();
+        }
+
         public async Task<IEnumerable<Ticket>> GetWithFilter(string filter)
         {
             IQueryable<Ticket> query = _context.Tickets;

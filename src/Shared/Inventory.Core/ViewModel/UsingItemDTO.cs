@@ -7,16 +7,11 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.ViewModel
 {
-    public class ExportDetailDTO
+    public class UsingItemDTO
     {
+        public ExportDTO? Export { get; set; }
         public ItemDTO? Item { get; set; }
         public int Quantity { get; set; }
         public AppUserDTO? ForUser { get; set; }
-    }
-    public class ExportDetailCreateDTO
-    {
-        public Guid ItemId { get; set; }
-        public int Quantity { get; set; }
-        public string? ForUserId { get; set; }
     }
 }

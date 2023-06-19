@@ -76,12 +76,15 @@ namespace Inventory.Services.Services
 
             foreach (var detail in dto.Details!)
             {
-                var itemExists = await _item.AnyAsync(x => x.Id == detail.ItemId);
+                var item = await _item.GetById(detail.ItemId);
 
-                if (!itemExists)
+                if (item == null || item.InStock < detail.Quantity)
                 {
                     response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                    if (item == null)
+                        response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                    else
+                        response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
 
                     return response;
                 }
@@ -250,6 +253,22 @@ namespace Inventory.Services.Services
             {
                 if (ticket.PMStatus == TicketPMStatus.Approve)
                 {
+                    foreach(var detail in ticket.Details!)
+                    {
+                        var item = await _item.GetById(detail.ItemId);
+
+                        if (item == null || item.InStock < detail.Quantity)
+                        {
+                            response.Status = ResponseStatus.STATUS_FAILURE;
+                            if (item == null)
+                                response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                            else
+                                response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
+
+                            return response;
+                        }
+                    }
+
                     switch (ticket.Status)
                     {
                         case TicketStatus.Pending:
@@ -265,7 +284,7 @@ namespace Inventory.Services.Services
                         case TicketStatus.Processing:
                             ticket.IsClosed = true;
                             ticket.ClosedDate = DateTime.UtcNow;
-                             goto case TicketStatus.Pending;
+                            goto case TicketStatus.Pending;
 
                         case TicketStatus.Done:
                             response.Status = ResponseStatus.STATUS_FAILURE;
@@ -314,16 +333,17 @@ namespace Inventory.Services.Services
             }
             else
             {
-               
-
                 foreach (var detail in dto.Details!)
                 {
-                    var itemExists = await _item.AnyAsync(x => x.Id == detail.ItemId);
+                    var item = await _item.GetById(detail.ItemId);
 
-                    if (!itemExists)
+                    if (item == null || item.InStock < detail.Quantity)
                     {
                         response.Status = ResponseStatus.STATUS_FAILURE;
-                        response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                        if (item == null)
+                            response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                        else
+                            response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
 
                         return response;
                     }
@@ -367,6 +387,29 @@ namespace Inventory.Services.Services
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
                 response.Messages.Add(new ResponseMessage("Ticket", "There is no record!"));
+            }
+
+            return response;
+        }
+
+        public async Task<ResultResponse<IEnumerable<TicketDTO>>> ListTicketOfUser(string token)
+        {
+            ResultResponse<IEnumerable<TicketDTO>> response = new()
+            { Messages = new List<ResponseMessage>() };
+
+            var userId = _tokenService.GetUserId(token);
+
+            var tickets = await _ticket.GetTicketOfUser(userId);
+
+            if (tickets.Any())
+            {
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Data = _mapper.Map<IEnumerable<TicketDTO>>(tickets);
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Ticket", "User have no ticket!"));
             }
 
             return response;

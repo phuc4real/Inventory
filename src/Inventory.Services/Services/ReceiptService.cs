@@ -44,9 +44,9 @@ namespace Inventory.Services.Services
 
             foreach (var detail in dto.Details!)
             {
-                var itemExists = await _item.AnyAsync(x => x.Id == detail.ItemId);
+                var item = await _item.GetById(detail.ItemId);
 
-                if (!itemExists)
+                if (item == null)
                 {
                     response.Status = ResponseStatus.STATUS_FAILURE;
                     response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
@@ -54,6 +54,8 @@ namespace Inventory.Services.Services
                     return response;
                 }
 
+                item.InStock += detail.Quantity;
+                _item.Update(item);
                 details.Add(_mapper.Map<ReceiptDetail>(detail));
             }
 

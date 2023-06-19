@@ -36,9 +36,9 @@ namespace Inventory.Services.Services
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<ExportDTO>> CancelExport(int id)
+        public async Task<ResultResponse<ExportWithDetailDTO>> CancelExport(int id)
         {
-            ResultResponse<ExportDTO> response = new()
+            ResultResponse<ExportWithDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var export = await _export.GetById(id);
@@ -50,20 +50,29 @@ namespace Inventory.Services.Services
             }
             else
             {
+                foreach(var detail in export.Details!)
+                {
+                    var item =await _item.GetById(detail.ItemId);
+                    item.Used -= detail.Quantity;
+                    item.InStock += detail.Quantity;
+
+                    _item.Update(item);
+                }
+
                 export.IsCancel = true;
                 _export.Update(export);
                 await _unitOfWork.SaveAsync();
 
                 response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Messages.Add(new ResponseMessage("Export", "Export canceled!"));
-                response.Data = _mapper.Map<ExportDTO>(export);
+                response.Data = _mapper.Map<ExportWithDetailDTO>(export);
             }
             return response;
         }
 
-        public async Task<ResultResponse<ExportDTO>> CreateExport(string token, ExportCreateDTO dto)
+        public async Task<ResultResponse<ExportWithDetailDTO>> CreateExport(string token, ExportCreateDTO dto)
         {
-            ResultResponse<ExportDTO> response = new()
+            ResultResponse<ExportWithDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var userid = _tokenService.GetUserId(token);
@@ -71,15 +80,23 @@ namespace Inventory.Services.Services
 
             foreach (var detail in dto.Details!)
             {
-                var itemExists = await _item.AnyAsync(x => x.Id == detail.ItemId);
+                var item = await _item.GetById(detail.ItemId);
 
-                if (!itemExists)
+                if (item == null || item.InStock < detail.Quantity)
                 {
                     response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+
+                    if (item == null)
+                        response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                    else
+                        response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
 
                     return response;
                 }
+
+                item.Used += detail.Quantity;
+                item.InStock -= detail.Quantity;
+                _item.Update(item);
 
                 exportDetails.Add(_mapper.Map<ExportDetail>(detail));
             }
@@ -96,16 +113,16 @@ namespace Inventory.Services.Services
             await _export.AddAsync(export);
             await _unitOfWork.SaveAsync();
 
-            response.Data = _mapper.Map<ExportDTO>(export);
+            response.Data = _mapper.Map<ExportWithDetailDTO>(export);
             response.Status = ResponseStatus.STATUS_SUCCESS;
             response.Messages.Add(new ResponseMessage("Export", "Export created!"));
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ExportDTO>>> GetAll()
+        public async Task<ResultResponse<IEnumerable<ExportWithDetailDTO>>> GetAll()
         {
-            ResultResponse<IEnumerable<ExportDTO>> response = new()
+            ResultResponse<IEnumerable<ExportWithDetailDTO>> response = new()
             {  Messages = new List<ResponseMessage>() };
 
             var exports = await _export.GetAllAsync();
@@ -113,7 +130,7 @@ namespace Inventory.Services.Services
             if (exports.Any())
             {
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<ExportDTO>>(exports);
+                response.Data = _mapper.Map<IEnumerable<ExportWithDetailDTO>>(exports);
             }
             else
             {
@@ -124,9 +141,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<ExportDTO>> GetById(int id)
+        public async Task<ResultResponse<ExportWithDetailDTO>> GetById(int id)
         {
-            ResultResponse<ExportDTO> response = new()
+            ResultResponse<ExportWithDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var export = await _export.GetById(id);
@@ -139,15 +156,15 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<ExportDTO>(export);
+                response.Data = _mapper.Map<ExportWithDetailDTO>(export);
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ExportDTO>>> GetExportByItemId(Guid id)
+        public async Task<ResultResponse<IEnumerable<ExportWithDetailDTO>>> GetExportByItemId(Guid id)
         {
-            ResultResponse<IEnumerable<ExportDTO>> response = new()
+            ResultResponse<IEnumerable<ExportWithDetailDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var item = await _item.GetById(id);
@@ -162,7 +179,7 @@ namespace Inventory.Services.Services
                 var exports = await _export.ExportByItem(item);
 
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<ExportDTO>>(exports);
+                response.Data = _mapper.Map<IEnumerable<ExportWithDetailDTO>>(exports);
             }
 
             return response;

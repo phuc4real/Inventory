@@ -32,17 +32,6 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : NotFound(result.Messages);
         }
 
-        [HttpGet("in-use")]
-        [ProducesResponseType(typeof(IEnumerable<ItemDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetItemInUse()
-        {
-            var result = await _itemService.GetItemInUse();
-
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
-        }
-
         [HttpGet("{id:Guid}")]
         [ProducesResponseType(typeof(ItemDetailDTO),StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]

@@ -13,5 +13,6 @@ namespace Inventory.Repository.IRepository
         Task<IEnumerable<Ticket>> GetWithFilter(string filter);
         Task<IEnumerable<Ticket>> TicketsByItem(Item item);
         Task<Ticket> GetById(Guid id);
+        Task<IEnumerable<Ticket>> GetTicketOfUser(string userid);
     }
 }

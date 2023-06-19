@@ -24,17 +24,5 @@ namespace Inventory.Repository.Repositories
             return await _context.Items.FindAsync(id);
 #pragma warning restore CS8603 // Possible null reference return.
         }
-
-        public async Task<IEnumerable<Item>> GetInUseItem()
-        {
-            IQueryable<Item> items = _context.Items;
-            //IQueryable<int> exports = _context.Exports.Where(x=>x.IsCancel == false).Select(x=>x.Id);
-
-            //items = items.Where(x => x.Exports!.Any(e => exports.Contains(e.Id)));
-
-            items = items.Where(x => x.Exports!.Any(e => e.IsCancel == false));
-
-            return await items.ToListAsync();
-        }
     }
 }
