@@ -6,7 +6,10 @@ using Inventory.Repository.Model;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
+using Serilog.Core;
 
 namespace Inventory.API.Controllers
 {
@@ -48,7 +51,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateItem(ItemEditDTO item)
         {
-            if(!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
+            if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
 
             var accessToken = await HttpContext.GetAccessToken();
 

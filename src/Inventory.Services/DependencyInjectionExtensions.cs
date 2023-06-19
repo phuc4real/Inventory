@@ -6,6 +6,7 @@ using Inventory.Services.IServices;
 using Inventory.Services.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,9 +17,12 @@ namespace Inventory.Services
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<AppDbContext>(
-                options => options.UseSqlServer(
-                    configuration.GetConnectionString("Inventory"))
-                );
+                options =>
+                {
+                    options.UseSqlServer(configuration.GetConnectionString("Inventory"));
+                    options.ConfigureWarnings(builder => 
+                        builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
+                });
 
             services.AddIdentity<AppUser, IdentityRole>(
             options =>

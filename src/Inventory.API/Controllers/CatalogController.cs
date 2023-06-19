@@ -52,7 +52,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCatalog(CatalogEditDTO dto)
         {
@@ -61,7 +61,7 @@ namespace Inventory.API.Controllers
 
             var result = await _catalogServices.CreateCatalog(dto);
             
-            return Ok(result);
+            return Created("catalog/"+result.Data!.Id,result.Messages);
         }
 
         [HttpPut("{id:int}")]
