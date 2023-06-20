@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Serilog;
 using Inventory.API.Middleware;
+using System.Threading.RateLimiting;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,8 +82,45 @@ builder.Services.AddControllers(options =>
 
 builder.Services.AddRateLimiter(option =>
     {
-        option.AddPolicy<string, LimitRequestPerMinutesPolicy>("LimitRequestPer5Minutes");
-    } );
+        option.AddPolicy<string, RefreshTokenLimitPolicy>("RefresshTokenLimit");
+        option.OnRejected = (context, _) =>
+        {
+            if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            {
+                context.HttpContext.Response.Headers.RetryAfter =
+                    ((int)retryAfter.TotalSeconds).ToString(NumberFormatInfo.InvariantInfo);
+            }
+
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.HttpContext.Response
+                .WriteAsync(new ResponseMessage("Too many request", "Please try again later!!").ToString());
+
+            return new ValueTask();
+        };
+        option.GlobalLimiter = PartitionedRateLimiter.CreateChained(
+            PartitionedRateLimiter.Create<HttpContext, string>(HttpContext =>
+            {
+                var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+                return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(1)
+                });
+            }),
+            PartitionedRateLimiter.Create<HttpContext, string>(HttpContext =>
+            {
+                var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+                return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 300,
+                    Window = TimeSpan.FromMinutes(60)
+                });
+            })
+        );
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -112,6 +151,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseRateLimiter();
 
 app.UseSerilogRequestLogging();
 

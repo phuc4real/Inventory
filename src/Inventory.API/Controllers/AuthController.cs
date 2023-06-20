@@ -91,7 +91,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("refresh")]
-        [EnableRateLimiting("LimitRequestPer5Minutes")]
+        [EnableRateLimiting("RefresshTokenLimit")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RefreshToken()
