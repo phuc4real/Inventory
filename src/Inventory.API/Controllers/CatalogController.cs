@@ -4,11 +4,13 @@ using Inventory.Core.Response;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CatalogController : ControllerBase
     {
         private readonly ICatalogServices _catalogServices;
@@ -52,12 +54,15 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles =InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCatalog(CatalogEditDTO dto)
         {
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var result = await _catalogServices.CreateCatalog(dto);
             
@@ -65,25 +70,32 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateCatalog(int id, CatalogEditDTO dto)
         {
             if (!ModelState.IsValid)
+            {
                 return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var result = await _catalogServices.UpdateCatalog(id, dto);
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            {
                 return Ok(result);
+            }
             else
+            {
                 return NotFound(result.Messages);
+            }
         }
 
 
         [HttpDelete("{id:int}")]
-
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
@@ -92,9 +104,13 @@ namespace Inventory.API.Controllers
             var result = await _catalogServices.DeleteCatalog(id);
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            {
                 return Ok(result.Messages);
+            }
             else
+            {
                 return NotFound(result.Messages);
+            }
         }
     }
 }

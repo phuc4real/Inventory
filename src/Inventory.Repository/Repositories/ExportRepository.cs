@@ -20,33 +20,27 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Export>> ExportByItem(Item item)
-        {
-            IQueryable<Export> query = _context.Exports;
-            query = query.Where(x=>x.Items!.Contains(item))
+        private IQueryable<Export> GetAllWithProperty => _context.Exports
                 .Include(x => x.Details)!
                 .ThenInclude(x => x.Item);
+
+        public async Task<IEnumerable<Export>> ExportByItem(Item item)
+        {
+            var query = GetAllWithProperty
+                .Where(x => x.Items!.Contains(item));
 
             return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<Export>> GetAllAsync(Expression<Func<Export, bool>>? filter = null)
+        public async Task<IEnumerable<Export>> GetAllAsync()
         {
-            IQueryable<Export> query = _context.Exports;
-            query = query.Include(x => x.Details)!
-                .ThenInclude(x => x.Item);
-
-            if (filter != null) query = query.Where(filter);
-
-            return await query.ToListAsync();
+            return await GetAllWithProperty.ToListAsync();
         }
 
         public async Task<Export> GetById(int id)
         {
-            IQueryable<Export> query = _context.Exports;
-            query = query.Where(x => x.Id == id)
-                .Include(x=> x.Details)!
-                .ThenInclude(x=>x.Item);
+            var query = GetAllWithProperty
+                .Where(x => x.Id == id);
 
 #pragma warning disable CS8603 // Possible null reference return.
             return await query.FirstOrDefaultAsync();

@@ -19,21 +19,19 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
+        private IQueryable<Receipt> GetAllWithProperty => _context.Receipts
+            .Include(x => x.Details)!
+            .ThenInclude(d => d.Item);
+
         public async Task<IEnumerable<Receipt>> GetAllAsync()
         {
-            IQueryable<Receipt> query = _context.Receipts;
-            query = query.Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
-
-            return await query.ToListAsync();
+            return await GetAllWithProperty.ToListAsync();
         }
 
         public async Task<Receipt> GetById(int id)
         {
-            IQueryable<Receipt> query = _context.Receipts;
-            query = query.Where(x => x.Id == id)
-                .Include(x => x.Details)!
-                .ThenInclude(x => x.Item);
+            var query = GetAllWithProperty
+                .Where(x => x.Id == id);
 
 #pragma warning disable CS8603 // Possible null reference return.
             return await query.FirstOrDefaultAsync();
@@ -42,10 +40,8 @@ namespace Inventory.Repository.Repositories
 
         public async Task<IEnumerable<Receipt>> ReceiptByItem(Item item)
         {
-            IQueryable<Receipt> query = _context.Receipts;
-            query = query.Where(x=>x.Items!.Contains(item))
-                .Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
+            var query = GetAllWithProperty
+                .Where(x=>x.Items!.Contains(item));
 
             return await query.ToListAsync();
         }

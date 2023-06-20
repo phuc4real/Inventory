@@ -15,6 +15,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = InventoryRoles.IM)]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -36,6 +37,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateOrder(OrderCreateDTO dto)
@@ -51,6 +53,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(OrderDetailDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetOrder(int id)
@@ -62,6 +65,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:int}/update-status")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateStatus(int id)
@@ -73,6 +77,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:int}/cancel")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CancelOrder(int id)

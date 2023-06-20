@@ -8,8 +8,9 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<TeamDTO>>> GetAll();
         Task<ResultResponse<TeamWithMembersDTO>> GetById(Guid id);
         Task<ResultResponse<IEnumerable<TeamDTO>>> SearchTeamByName(string name);
-        Task<ResultResponse<TeamDTO>> CreateTeam(TeamEditDTO dto);
-        Task<ResultResponse<TeamDTO>> UpdateTeam(Guid id, TeamEditDTO dto);
-        Task<ResultResponse<TeamDTO>> DeleteTeam(Guid id);
+        Task<ResultResponse<TeamDTO>> CreateTeam(string token, TeamEditDTO dto);
+        Task<ResultResponse<TeamDTO>> UpdateTeam(string token, Guid id, TeamEditDTO dto);
+        Task<ResultResponse<TeamDTO>> DeleteTeam(string token, Guid id);
+        Task<ResultResponse<TeamDTO>> AddMember(string token, Guid teamId, string memberId);
     }
 }

@@ -128,9 +128,13 @@ namespace Inventory.Services.Services
             IEnumerable<Catalog> catalogs;
 
             if (int.TryParse(filter, out int id))
+            {
                 catalogs = await _catalog.GetAsync(x => x.Name!.Contains(filter) || x.Id == id);
+            }
             else
+            {
                 catalogs = await _catalog.GetAsync(x => x.Name!.Contains(filter));
+            }
 
             if (catalogs.Any())
             {

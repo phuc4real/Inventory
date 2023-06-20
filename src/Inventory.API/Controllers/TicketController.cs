@@ -3,13 +3,14 @@ using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class TicketController : ControllerBase
     {
         private readonly ITicketService _ticketService;
@@ -24,7 +25,9 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListTicket() 
         {
-            var result = await _ticketService.GetAll();
+            var token = await HttpContext.GetAccessToken();
+
+            var result = await _ticketService.GetAllByRole(token);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Data) : NotFound(result.Messages);
@@ -58,7 +61,10 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateTicket(TicketCreateDTO dto)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var token = await HttpContext.GetAccessToken();
 
@@ -75,7 +81,10 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateTicketInfo(Guid id, TicketCreateDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var token = await HttpContext.GetAccessToken();
 
@@ -145,7 +154,7 @@ namespace Inventory.API.Controllers
         {
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _ticketService.ListTicketOfUser(token);
+            var result = await _ticketService.GetMyTickets(token);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                 Ok(result.Data) : NotFound(result.Messages);

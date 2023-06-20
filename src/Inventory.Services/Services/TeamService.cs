@@ -5,6 +5,7 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Identity;
 
 namespace Inventory.Services.Services
 {
@@ -13,20 +14,82 @@ namespace Inventory.Services.Services
         private readonly ITeamRepository _team;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ITokenService _tokenService;
+        private readonly UserManager<AppUser> _userManager;
 
-        public TeamService(ITeamRepository team, IUnitOfWork unitOfWork, IMapper mapper)
+        public TeamService(
+            ITeamRepository team,
+            IUnitOfWork unitOfWork,
+            IMapper mapper,
+            ITokenService tokenService,
+            UserManager<AppUser> userManager)
         {
             _team = team;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _tokenService = tokenService;
+            _userManager = userManager;
         }
 
-        public async Task<ResultResponse<TeamDTO>> CreateTeam(TeamEditDTO dto)
+        public async Task<ResultResponse<TeamDTO>> AddMember(string token, Guid teamId, string memberId)
+        {
+            ResultResponse<TeamDTO> response = new ()
+            { Messages = new List<ResponseMessage>() };
+
+            var userIdfromToken = _tokenService.GetUserId(token);
+            var newMember = await _userManager.FindByIdAsync(memberId);
+
+            var team = await _team.GetTeamById(teamId);
+
+            if (team == null)
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Team", "Team not exists!"));
+            }
+            else
+            {
+                if (userIdfromToken == team.LeaderId)
+                {
+
+                    if (team.Members != null)
+                    {
+                        team.Members!.Add(newMember!);
+                    }
+                    else
+                    {
+                        team.Members = new List<AppUser>
+                        {
+                            newMember!
+                        };
+                    }
+
+                    _team.Update(team);
+                    await _unitOfWork.SaveAsync();
+                    response.Status = ResponseStatus.STATUS_SUCCESS;
+                    response.Messages.Add(new ResponseMessage("Team", "Add new member to team successfully!"));
+                }
+                else
+                {
+
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                }
+            }
+
+
+
+            return response;
+        }
+
+        public async Task<ResultResponse<TeamDTO>> CreateTeam(string token, TeamEditDTO dto)
         {
             ResultResponse<TeamDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
+            var userId = _tokenService.GetUserId(token);
+
             Team team = _mapper.Map<Team>(dto);
+            team.LeaderId = userId;
 
             await _team.AddAsync(team);
             await _unitOfWork.SaveAsync();
@@ -37,10 +100,12 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TeamDTO>> DeleteTeam(Guid id)
+        public async Task<ResultResponse<TeamDTO>> DeleteTeam(string token, Guid id)
         {
             ResultResponse<TeamDTO> response = new()
             { Messages = new List<ResponseMessage>() };
+            
+            var userId = _tokenService.GetUserId(token);
 
             var team = await _team.GetTeamById(id);
 
@@ -51,11 +116,20 @@ namespace Inventory.Services.Services
             }
             else
             {
-                _team.Remove(team);
-                await _unitOfWork.SaveAsync();
+                if(userId == team.LeaderId)
+                {
+                    _team.Remove(team);
+                    await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("Team", "Team deleted!"));
+                    response.Status = ResponseStatus.STATUS_SUCCESS;
+                    response.Messages.Add(new ResponseMessage("Team", "Team deleted!"));
+                }
+                else
+                {
+
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                }
             }
 
             return response;
@@ -124,10 +198,12 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TeamDTO>> UpdateTeam(Guid id, TeamEditDTO dto)
+        public async Task<ResultResponse<TeamDTO>> UpdateTeam(string token, Guid id, TeamEditDTO dto)
         {
             ResultResponse<TeamDTO> response = new() 
             { Messages = new List<ResponseMessage>() };
+
+            var userId = _tokenService.GetUserId(token);
 
             var team = await _team.GetTeamById(id);
 
@@ -138,12 +214,21 @@ namespace Inventory.Services.Services
             }
             else
             {
-                team.Name = dto.Name;
-                team.LeaderId = dto.LeaderId;
-                _team.Update(team);
-                await _unitOfWork.SaveAsync();
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("Team", "Team updated!"));
+                if (userId == team.LeaderId)
+                {
+                    team.Name = dto.Name;
+                    team.LeaderId = dto.LeaderId;
+                    _team.Update(team);
+                    await _unitOfWork.SaveAsync();
+                    response.Status = ResponseStatus.STATUS_SUCCESS;
+                    response.Messages.Add(new ResponseMessage("Team", "Team updated!"));
+                }
+                else
+                {
+
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                }
             }
 
             return response;

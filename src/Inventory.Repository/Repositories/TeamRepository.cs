@@ -19,19 +19,22 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
+        private IQueryable<Team> GetAllWithProperty => _context.Teams
+                .Include(x => x.Leader)
+                .Include(x => x.Members);
+
         public async Task<IEnumerable<Team>> GetAllWithPropertyAsync()
         {
-            var teams = _context.Teams.Include(x => x.Leader);
-
-            return await teams.ToListAsync();
+            return await GetAllWithProperty.ToListAsync();
         }
 
         public async Task<Team> GetTeamById(Guid id)
         {
-#pragma warning disable CS8603 // Possible null reference return.
+            var query = GetAllWithProperty
+                .Where(x=>x.Id ==id);
 
-            var team = await _context.Teams.Where(x=> x.Id == id).Include(x=> x.Leader).FirstOrDefaultAsync();
-            return team;
+#pragma warning disable CS8603 // Possible null reference return.
+            return await query.FirstOrDefaultAsync();
 #pragma warning restore CS8603 // Possible null reference return.
         }
     }

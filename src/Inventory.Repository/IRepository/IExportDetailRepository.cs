@@ -9,8 +9,9 @@ namespace Inventory.Repository.IRepository
 {
     public interface IExportDetailRepository : IRepository<ExportDetail>
     {
-        Task<IEnumerable<ExportDetail>> GetAllAsync();
-        //Search by Itemid, item name ,exportid ,username, userid, email
+        Task<IEnumerable<ExportDetail>> GetUsingItem();
+        Task<IEnumerable<ExportDetail>> GetUsingItemByTeam(Guid teamId);
+        Task<IEnumerable<ExportDetail>> GetUsingItemByUser(string userId);
         Task<IEnumerable<ExportDetail>> SearchAsync(string filter);
 
     }

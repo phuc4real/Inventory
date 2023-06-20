@@ -75,7 +75,8 @@ namespace Inventory.Services.Services
             ResultResponse<ExportWithDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var userid = _tokenService.GetUserId(token);
+            var userId = _tokenService.GetUserId(token);
+
             var exportDetails = new List<ExportDetail>();
 
             foreach (var detail in dto.Details!)
@@ -87,9 +88,13 @@ namespace Inventory.Services.Services
                     response.Status = ResponseStatus.STATUS_FAILURE;
 
                     if (item == null)
+                    {
                         response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                    }
                     else
+                    {
                         response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
+                    }
 
                     return response;
                 }
@@ -105,7 +110,7 @@ namespace Inventory.Services.Services
             {
                 Description = dto.Description,
                 CreatedDate = DateTime.UtcNow,
-                CreatedBy = userid,
+                CreatedBy = userId,
                 Details = exportDetails,
                 IsCancel = false
             };

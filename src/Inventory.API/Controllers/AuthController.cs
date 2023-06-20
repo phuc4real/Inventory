@@ -27,7 +27,10 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var result = await _authService.SignUpAsync(dto);
 
@@ -41,7 +44,10 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var result = await _authService.SignInAsync(dto);
 
@@ -93,8 +99,10 @@ namespace Inventory.API.Controllers
             var accessToken = await HttpContext.GetAccessToken();
             var refreshToken = HttpContext.GetRefreshToken();
 
-            if (refreshToken == "") 
+            if (refreshToken == "")
+            {
                 return BadRequest(new ResponseMessage("RefreshToken","Cannot get refresh token!"));
+            }
 
             var result = await _authService.RefreshToken(accessToken, refreshToken);
 

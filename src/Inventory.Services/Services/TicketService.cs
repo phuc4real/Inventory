@@ -7,6 +7,7 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Identity;
 
 namespace Inventory.Services.Services
 {
@@ -17,19 +18,22 @@ namespace Inventory.Services.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
+        private readonly UserManager<AppUser> _userManager;
 
         public TicketService(
             ITicketRepository ticket,
             IItemRepository item,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            UserManager<AppUser> userManager)
         {
             _ticket = ticket;
             _item = item;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _tokenService = tokenService;
+            _userManager = userManager;
         }
 
         public async Task<ResultResponse<TicketDTO>> RejectTicket(string token, Guid ticketId, string rejectReason)
@@ -82,9 +86,13 @@ namespace Inventory.Services.Services
                 {
                     response.Status = ResponseStatus.STATUS_FAILURE;
                     if (item == null)
+                    {
                         response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                    }
                     else
+                    {
                         response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
+                    }
 
                     return response;
                 }
@@ -117,17 +125,34 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<TicketDTO>>> GetAll()
+        public async Task<ResultResponse<IEnumerable<TicketDTO>>> GetAllByRole(string token)
         {
             ResultResponse<IEnumerable<TicketDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var tickets = await _ticket.GetAllAsync();
+            var userId = _tokenService.GetUserId(token);
+            var user = await _userManager.FindByIdAsync(userId);
+            var userRoles = await _userManager.GetRolesAsync(user!);
 
-            if (tickets.Any())
+            IEnumerable<Ticket>? listTicket;
+
+            if (userRoles.Contains(InventoryRoles.IM))
+            {
+                listTicket = await _ticket.GetTickets();
+            }
+            else if(userRoles.Contains(InventoryRoles.PM))
+            {
+                listTicket = await _ticket.GetTicketByTeam(user!.TeamId!.Value);
+            }
+            else
+            {
+                listTicket = await _ticket.GetTicketByUser(userId);
+            }
+
+            if (listTicket!.Any())
             {
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<TicketDTO>>(tickets);
+                response.Data = _mapper.Map<IEnumerable<TicketDTO>>(listTicket);
             }
             else
             {
@@ -218,7 +243,7 @@ namespace Inventory.Services.Services
             }
             else
             {
-                var tickets = await _ticket.TicketsByItem(item);
+                var tickets = await _ticket.GetTicketByItem(item);
 
                 if (tickets.Any())
                 {
@@ -261,9 +286,13 @@ namespace Inventory.Services.Services
                         {
                             response.Status = ResponseStatus.STATUS_FAILURE;
                             if (item == null)
+                            {
                                 response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                            }
                             else
+                            {
                                 response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
+                            }
 
                             return response;
                         }
@@ -307,7 +336,10 @@ namespace Inventory.Services.Services
                     response.Status = ResponseStatus.STATUS_FAILURE;
 
                     if(ticket.PMStatus == TicketPMStatus.Reject)
+                    {
                         response.Messages.Add(new ResponseMessage("Ticket", "Ticket is reject by Project Manager!"));
+                    }
+
                     response.Messages.Add(new ResponseMessage("Ticket", "Project Manager still not approve the ticket!"));
                 }
             }
@@ -341,9 +373,13 @@ namespace Inventory.Services.Services
                     {
                         response.Status = ResponseStatus.STATUS_FAILURE;
                         if (item == null)
+                        {
                             response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                        }
                         else
+                        {
                             response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
+                        }
 
                         return response;
                     }
@@ -376,7 +412,7 @@ namespace Inventory.Services.Services
             ResultResponse<IEnumerable<TicketDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var tickets = await _ticket.GetWithFilter(filter);
+            var tickets = await _ticket.FindTickets(filter);
 
             if (tickets.Any())
             {
@@ -392,16 +428,16 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<TicketDTO>>> ListTicketOfUser(string token)
+        public async Task<ResultResponse<IEnumerable<TicketDTO>>> GetMyTickets(string token)
         {
             ResultResponse<IEnumerable<TicketDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
             var userId = _tokenService.GetUserId(token);
 
-            var tickets = await _ticket.GetTicketOfUser(userId);
+            var tickets = await _ticket.GetTicketByUser(userId);
 
-            if (tickets.Any())
+            if (tickets!.Any())
             {
                 response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Data = _mapper.Map<IEnumerable<TicketDTO>>(tickets);
@@ -409,7 +445,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Ticket", "User have no ticket!"));
+                response.Messages.Add(new ResponseMessage("Ticket", "There is no record!"));
             }
 
             return response;

@@ -20,28 +20,21 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Order>> GetAllAsync(Expression<Func<Order, bool>>? filter = null)
+        private IQueryable<Order> GetAllWithProperty => _context.Orders
+            .IgnoreQueryFilters()
+            .Include(x => x.OrderByUser)
+            .Include(x => x.Details)!
+            .ThenInclude(x => x.Item);
+
+        public async Task<IEnumerable<Order>> GetAllAsync()
         {
-            IQueryable<Order> query = _context.Orders.IgnoreQueryFilters();
-
-            query = query
-                .Include(x=>x.OrderByUser)
-                .Include(x => x.Details)!
-                .ThenInclude(x => x.Item);
-
-            if (filter != null) query = query.Where(filter);
-
-            return await query.ToListAsync();
+            return await GetAllWithProperty.ToListAsync();
         }
 
         public async Task<Order> GetById(int id)
         {
-            IQueryable<Order> query = _context.Orders.IgnoreQueryFilters().Where(x=> x.Id == id);
-
-            query = query
-                .Include(x => x.OrderByUser)
-                .Include(x => x.Details)!
-                .ThenInclude(x => x.Item);
+            var query = GetAllWithProperty
+                .Where(x=> x.Id == id);
 
 #pragma warning disable CS8603 // Possible null reference return.
             return await query.FirstOrDefaultAsync();
@@ -50,8 +43,8 @@ namespace Inventory.Repository.Repositories
 
         public async Task<IEnumerable<Order>> OrdersByItem(Item item)
         {
-            IQueryable<Order> query = _context.Orders.IgnoreQueryFilters();
-            query = query.Where(x => x.Items!.Contains(item));
+            var query = GetAllWithProperty
+                .Where(x => x.Items!.Contains(item));
 
             return await query.ToListAsync();
         }

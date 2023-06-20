@@ -1,4 +1,5 @@
-﻿using Inventory.Repository.Model;
+﻿using Inventory.Core.Response;
+using Inventory.Repository.Model;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,8 @@ namespace Inventory.Services.IServices
     public interface ITokenService
     {
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
-        SecurityToken GenerateToken(AppUser user, IList<string> userRoles, int expireMinutes);
+        SecurityToken GenerateToken(AppUser user, IList<string> userRoles);
         string GetUserId(string token);
+        bool TryGetUserId(string token, out ResponseMessage result);
     }
 }

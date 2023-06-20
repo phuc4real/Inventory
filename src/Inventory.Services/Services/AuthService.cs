@@ -88,9 +88,13 @@ namespace Inventory.Services.Services
             AppUser? user;
 
             if (IsEmail(dto.Username!))
+            {
                 user = await _userManager.FindByEmailAsync(dto.Username!);
+            }
             else
+            {
                 user = await _userManager.FindByNameAsync(dto.Username!);
+            }
 
             if (user == null)
             {
@@ -258,7 +262,7 @@ namespace Inventory.Services.Services
         private async Task<TokenModel> GetTokens(AppUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
-            var token = _tokenService.GenerateToken(user, userRoles,expireMinutes: 5);
+            var token = _tokenService.GenerateToken(user, userRoles);
             var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory", "RefreshToken");
             await _userManager.SetAuthenticationTokenAsync(user, "Inventory", "RefreshToken", refreshToken);
 

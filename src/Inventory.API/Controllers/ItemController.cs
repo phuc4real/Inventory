@@ -5,6 +5,7 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
@@ -47,6 +49,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles =InventoryRoles.IM)]
         [ProducesResponseType(typeof(ItemDetailDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateItem(ItemEditDTO item)
@@ -61,6 +64,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
@@ -77,6 +81,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteItem(Guid id)

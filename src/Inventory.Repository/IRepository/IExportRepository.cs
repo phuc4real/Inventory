@@ -12,6 +12,6 @@ namespace Inventory.Repository.IRepository
     {
         Task<Export> GetById(int id);
         Task<IEnumerable<Export>> ExportByItem(Item item);
-        Task<IEnumerable<Export>> GetAllAsync(Expression<Func<Export, bool>>? filter = null);
+        Task<IEnumerable<Export>> GetAllAsync();
     }
 }

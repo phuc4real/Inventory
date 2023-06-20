@@ -18,59 +18,56 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<Ticket>> GetAllAsync()
+        private IQueryable<Ticket> GetAllWithProperty => _context.Tickets
+            .Include(x => x.Details)!
+            .ThenInclude(d => d.Item);
+
+        public async Task<IEnumerable<Ticket>> GetTickets()
         {
-            IQueryable<Ticket> query = _context.Tickets;
-            query = query.Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
+            return await GetAllWithProperty.ToListAsync();
+        }
+        
+        public async Task<IEnumerable<Ticket>> GetTicketByTeam(Guid teamId)
+        {
+            var query = GetAllWithProperty
+                .Where(x=>x.CreatedByUser!.TeamId == teamId);
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<IEnumerable<Ticket>> GetTicketByUser(string userid)
+        {
+            var query = GetAllWithProperty
+                .Where(x => x.CreatedBy == userid);
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<IEnumerable<Ticket>> GetTicketByItem(Item item)
+        {
+            var query = GetAllWithProperty
+                .Where(x => x.Items!.Contains(item));
 
             return await query.ToListAsync();
         }
 
         public async Task<Ticket> GetById(Guid id)
         {
-            IQueryable<Ticket> query = _context.Tickets;
-
-            query = query.Where(x => x.Id == id)
-                .Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
+            var query = GetAllWithProperty
+                .Where(x => x.Id == id);
 
 #pragma warning disable CS8603 // Possible null reference return.
             return await query.FirstOrDefaultAsync();
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<IEnumerable<Ticket>> GetTicketOfUser(string userid)
+        public async Task<IEnumerable<Ticket>> FindTickets(string filter)
         {
-            IQueryable<Ticket> query = _context.Tickets;
-            query = query.Where(x=> x.CreatedBy == userid)
-                .Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Ticket>> GetWithFilter(string filter)
-        {
-            IQueryable<Ticket> query = _context.Tickets;
-            query = query.Where(x => 
-                x.Id.Equals(filter) ||
-                x.Title!.Contains(filter) ||
-                x.Description!.Contains(filter)
+            var query = GetAllWithProperty
+                .Where(x => x.Id.Equals(filter) ||
+                            x.Title!.Contains(filter) ||
+                            x.Description!.Contains(filter)
                 );
-
-            query = query.Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Ticket>> TicketsByItem(Item item)
-        {
-            IQueryable<Ticket> query = _context.Tickets;
-            query = query.Where(x=> x.Items!.Contains(item))
-                .Include(x => x.Details)!
-                .ThenInclude(d => d.Item);
 
             return await query.ToListAsync();
         }

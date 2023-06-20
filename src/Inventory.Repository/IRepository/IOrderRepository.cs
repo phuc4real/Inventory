@@ -11,7 +11,7 @@ namespace Inventory.Repository.IRepository
     public interface IOrderRepository : IRepository<Order>
     {
         Task<Order> GetById(int id);
-        Task<IEnumerable<Order>> GetAllAsync(Expression<Func<Order, bool>>? filter = null);
+        Task<IEnumerable<Order>> GetAllAsync();
         Task<IEnumerable<Order>> OrdersByItem(Item item);
     }
 }

@@ -9,10 +9,12 @@ namespace Inventory.Repository.IRepository
 {
     public interface ITicketRepository : IRepository<Ticket>
     {
-        Task<IEnumerable<Ticket>> GetAllAsync();
-        Task<IEnumerable<Ticket>> GetWithFilter(string filter);
-        Task<IEnumerable<Ticket>> TicketsByItem(Item item);
+        Task<IEnumerable<Ticket>> GetTickets();
+        Task<IEnumerable<Ticket>> GetTicketByTeam(Guid teamId);
+        Task<IEnumerable<Ticket>> GetTicketByUser(string userid);
+        Task<IEnumerable<Ticket>> GetTicketByItem(Item item);
+        Task<IEnumerable<Ticket>> FindTickets(string filter);
         Task<Ticket> GetById(Guid id);
-        Task<IEnumerable<Ticket>> GetTicketOfUser(string userid);
+
     }
 }

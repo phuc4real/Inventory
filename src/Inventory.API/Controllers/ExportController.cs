@@ -10,7 +10,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = InventoryRoles.IM)]
     public class ExportController : ControllerBase
     {
         private readonly IExportService _exportService;
@@ -59,7 +59,10 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateExport(ExportCreateDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var token = await HttpContext.GetAccessToken();
 

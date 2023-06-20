@@ -11,7 +11,8 @@ namespace Inventory.Services.IServices
 {
     public interface IUsingItemService
     {
-        Task<ResultResponse<IEnumerable<UsingItemDTO>>> GetAllUsingItemAsync();
+        Task<ResultResponse<IEnumerable<UsingItemDTO>>> GetUsingItemByRole(string token);
+        Task<ResultResponse<IEnumerable<UsingItemDTO>>> MyUsingItem(string token);
         Task<ResultResponse<IEnumerable<UsingItemDTO>>> SearchForUsingItemAsync(string filter);
     }
 }
