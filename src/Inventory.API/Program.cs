@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Inventory.API.RateLimits;
 using Microsoft.OpenApi.Models;
 using Inventory.API.Filters;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Serilog;
 using Inventory.API.Middleware;
 using System.Threading.RateLimiting;

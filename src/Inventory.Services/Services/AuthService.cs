@@ -1,14 +1,12 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
-using Inventory.Core.Options;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -277,5 +275,39 @@ namespace Inventory.Services.Services
         }
 
         private static bool IsEmail(string email) => new EmailAddressAttribute().IsValid(email);
+
+        public async Task<ResultResponse<AppUserDTO>> GrantPermission(GrantRoleDTO dto)
+        {
+            ResultResponse<AppUserDTO> response = new()
+            {
+                Messages = new List<ResponseMessage>()
+            };
+
+            var user = await _userManager.FindByIdAsync(dto.UserId!);
+            if (user == null)
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("User", "User not found!"));
+            }
+            else
+            {
+                var role = dto.Role.ToDescriptionString();
+                var hasRole = await _userManager.IsInRoleAsync(user,role!);
+                if (!hasRole)
+                {
+                    response.Status = ResponseStatus.STATUS_SUCCESS;
+                    await _userManager.AddToRoleAsync(user, role!);
+                    response.Messages.Add(new ResponseMessage("User", $"Grant role {role} to {user.UserName}"));
+                }
+                else
+                {
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("User", $"User already has role {role}!"));
+                }
+
+            }
+
+            return response;
+        }
     }
 }
