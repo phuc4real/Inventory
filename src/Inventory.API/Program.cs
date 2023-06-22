@@ -103,7 +103,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 5,
+                    PermitLimit = 20,
                     Window = TimeSpan.FromMinutes(1)
                 });
             }),
@@ -113,7 +113,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 300,
+                    PermitLimit = 1000,
                     Window = TimeSpan.FromMinutes(60)
                 });
             })
@@ -147,11 +147,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger");
-        options.RoutePrefix = string.Empty;
-    });
+    app.UseSwaggerUI(
+        options => {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger");
+            options.RoutePrefix = string.Empty;
+        });
 }
 
 app.UseRateLimiter();
