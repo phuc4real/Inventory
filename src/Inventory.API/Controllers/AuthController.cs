@@ -74,7 +74,7 @@ namespace Inventory.API.Controllers
             var result = await _authService.ExternalLoginAsync();
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : BadRequest(result.Messages);
+                    Ok(result.Data) : BadRequest(result.Messages);
         }
 
         [HttpDelete("logout")]
