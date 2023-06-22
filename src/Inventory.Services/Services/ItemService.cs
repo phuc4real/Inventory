@@ -32,12 +32,12 @@ namespace Inventory.Services.Services
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<ItemDetailDTO>> CreateItem(string jwtToken, ItemEditDTO dto)
+        public async Task<ResultResponse<ItemDetailDTO>> CreateItem(string token, ItemEditDTO dto)
         {
             ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var userid = _tokenService.GetUserId(jwtToken);
+            var userid = _tokenService.GetUserId(token);
 
             Item item = _mapper.Map<Item>(dto);
             item.CreatedBy = userid;
@@ -53,12 +53,12 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<ItemDetailDTO>> DeleteItem(string jwtToken, Guid id)
+        public async Task<ResultResponse<ItemDetailDTO>> DeleteItem(string token, Guid id)
         {
             ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var userid = _tokenService.GetUserId(jwtToken);
+            var userid = _tokenService.GetUserId(token);
             var item = await _item.GetById(id);
 
             if (item == null || item.IsDeleted)
@@ -142,12 +142,12 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<ItemDetailDTO>> UpdateItem(string jwtToken, Guid id, ItemEditDTO dto)
+        public async Task<ResultResponse<ItemDetailDTO>> UpdateItem(string token, Guid id, ItemEditDTO dto)
         {
             ResultResponse<ItemDetailDTO> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var userid = _tokenService.GetUserId(jwtToken);
+            var userid = _tokenService.GetUserId(token);
             var item = await _item.GetById(id);
 
             if (item == null || item.IsDeleted)

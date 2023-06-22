@@ -55,13 +55,13 @@ namespace Inventory.Services.Services
         }
 
 
-        public async Task<ResultResponse<OrderDTO>> CreateOrder(string jwtToken, OrderCreateDTO dto)
+        public async Task<ResultResponse<OrderDTO>> CreateOrder(string token, OrderCreateDTO dto)
         {
             ResultResponse<OrderDTO> response = new()
             { Messages = new List<ResponseMessage>() };
             IList<OrderDetail> orderDetails = new List<OrderDetail>();
 
-            var userid = _tokenService.GetUserId(jwtToken);
+            var userid = _tokenService.GetUserId(token);
 
             foreach (var detail in dto.Details!)
             {

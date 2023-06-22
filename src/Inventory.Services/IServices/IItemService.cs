@@ -13,8 +13,8 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll();
         Task<ResultResponse<ItemDetailDTO>> GetById(Guid id);
         Task<ResultResponse<IEnumerable<ItemDetailDTO>>> SearchByName(string name);
-        Task<ResultResponse<ItemDetailDTO>> CreateItem(string jwtToken, ItemEditDTO dto);
-        Task<ResultResponse<ItemDetailDTO>> UpdateItem(string jwtToken, Guid id, ItemEditDTO dto);
-        Task<ResultResponse<ItemDetailDTO>> DeleteItem(string jwtToken, Guid id);
+        Task<ResultResponse<ItemDetailDTO>> CreateItem(string token, ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> UpdateItem(string token, Guid id, ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> DeleteItem(string token, Guid id);
     }
 }

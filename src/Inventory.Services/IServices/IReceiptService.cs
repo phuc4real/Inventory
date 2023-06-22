@@ -13,6 +13,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<ReceiptDTO>>> GetAll();
         Task<ResultResponse<IEnumerable<ReceiptDTO>>> ReceiptByItemId(Guid itemId);
         Task<ResultResponse<ReceiptDTO>> ReceiptById(int id);
-        Task<ResultResponse<ReceiptDTO>> CreateReceipt(string token,ReceiptCreateDTO dto);
+        Task<ResultResponse<ReceiptDTO>> CreateReceipt(string token, ReceiptCreateDTO dto);
     }
 }
