@@ -1,0 +1,18 @@
+version: '3.4'
+name: inventory-backend
+
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443
+      - ASPNETCORE_HTTPS_PORT=5001
+      - OAuth__Google__Secret=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
+      - OAuth__Google__ClientID=78464108702-tij5mnnevcg3hjsn0i9dquruj33b46bt.apps.googleusercontent.com
+      - JWTBearer__SecretKey=JWT___YROTNEVNIDNEKCABIPA0106#@#ROFCUHP3202___TWJ
+      - Kestrel__Certificates__Development__Password=9d75edf0-770c-40a1-99c2-77e241a5069e
+    ports:
+      - "5001:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
