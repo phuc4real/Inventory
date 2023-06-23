@@ -13,6 +13,6 @@ namespace Inventory.Services.IServices
     {
         Task<ResultResponse<IEnumerable<UsingItemDTO>>> GetUsingItemByRole(string token);
         Task<ResultResponse<IEnumerable<UsingItemDTO>>> MyUsingItem(string token);
-        Task<ResultResponse<IEnumerable<UsingItemDTO>>> SearchForUsingItemAsync(string filter);
+        Task<ResultResponse<IEnumerable<UsingItemDTO>>> SearchForUsingItem(string token, string filter);
     }
 }

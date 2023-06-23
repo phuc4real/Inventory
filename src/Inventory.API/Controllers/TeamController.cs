@@ -4,10 +4,7 @@ using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Data;
 
 namespace Inventory.API.Controllers
 {
@@ -17,10 +14,13 @@ namespace Inventory.API.Controllers
     public class TeamController : ControllerBase
     {
         private readonly ITeamServices _teamServices;
+        private readonly IRedisCacheService _cacheService;
+        private const string redisKey = "team";
 
-        public TeamController(ITeamServices teamServices)
+        public TeamController(ITeamServices teamServices, IRedisCacheService cacheService)
         {
             _teamServices = teamServices;
+            _cacheService = cacheService;
         }
 
         [HttpGet]
@@ -28,26 +28,50 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListTeam()
         {
-            var result = await _teamServices.GetAll();
+            if (_cacheService.TryGetCacheAsync(redisKey,out IEnumerable<TeamDTO> teams))
+            {
+                return Ok(teams);
+            }
+            else 
+            {
+                var result = await _teamServices.GetAll();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey,result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpGet("{id:Guid}")]
         [ProducesResponseType(typeof(List<TeamWithMembersDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetTeamById(Guid id)
+        public async Task<IActionResult> GetTeam(Guid id)
         {
-            var result = await _teamServices.GetById(id);
+            if (_cacheService.TryGetCacheAsync(redisKey + id, out TeamWithMembersDTO team))
+            {
+                return Ok(team);
+            }
+            else
+            {
+                var result = await _teamServices.GetById(id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + id, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpPost]
         [Authorize(Roles = InventoryRoles.PM)]
-        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateTeam(TeamEditDTO dto)
         {
@@ -59,13 +83,14 @@ namespace Inventory.API.Controllers
             var token = await HttpContext.GetAccessToken();
 
             var result = await _teamServices.CreateTeam(token, dto);
+            await _cacheService.RemoveCacheAsync(redisKey);
 
-            return Ok(result);
+            return Created("team/"+result.Data!.Id,result.Messages);
         }
 
         [HttpPut("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.PM)]
-        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateTeam(Guid id, TeamEditDTO dto)
@@ -79,8 +104,10 @@ namespace Inventory.API.Controllers
 
             var result = await _teamServices.UpdateTeam(token, id, dto);
 
+            await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : NotFound(result.Messages);
+                    Ok(result.Messages) : NotFound(result.Messages);
         }
 
         [HttpDelete("{id:Guid}")]
@@ -93,32 +120,46 @@ namespace Inventory.API.Controllers
 
             var result = await _teamServices.DeleteTeam(token, id);
 
+            await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Messages) : NotFound(result.Messages);
         }
-
 
         [HttpGet("search")]
         [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SearchByName(string name)
         {
-            var result = await _teamServices.SearchTeamByName(name);
+            if (_cacheService.TryGetCacheAsync(redisKey + name, out IEnumerable<TeamDTO> teams))
+            {
+                return Ok(teams);
+            }
+            else
+            {
+                var result = await _teamServices.SearchTeamByName(name);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + name, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
-
 
         [HttpPost("{id:Guid}/add-member")]
         [Authorize(Roles = InventoryRoles.PM)]
-        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddMembers(Guid id, string memberId)
         {
             var token = await HttpContext.GetAccessToken();
 
             var result = await _teamServices.AddMember(token, id, memberId);
+
+            await _cacheService.RemoveCacheAsync(redisKey+id);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Messages) : NotFound(result.Messages);

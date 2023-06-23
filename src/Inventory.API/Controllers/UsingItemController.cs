@@ -6,6 +6,7 @@ using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
 
 namespace Inventory.API.Controllers
 {
@@ -27,10 +28,15 @@ namespace Inventory.API.Controllers
         public async Task<IActionResult> ListUsingItem()
         {
             var token = await HttpContext.GetAccessToken();
+
             var result = await _usingItemService.GetUsingItemByRole(token);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            {
+                return Ok(result.Data);
+            }
+
+            return NotFound(result.Messages);
         }
 
         [HttpGet("my-list")]
@@ -39,10 +45,15 @@ namespace Inventory.API.Controllers
         public async Task<IActionResult> MyUsingItem()
         {
             var token = await HttpContext.GetAccessToken();
+
             var result = await _usingItemService.MyUsingItem(token);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            {
+                return Ok(result.Data);
+            }
+
+            return NotFound(result.Messages);
         }
 
         [HttpGet("search")]
@@ -50,10 +61,16 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SearchUsingItem(string filter)
         {
-            var result = await _usingItemService.SearchForUsingItemAsync(filter);
+            var token = await HttpContext.GetAccessToken();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            var result = await _usingItemService.SearchForUsingItem(token, filter);
+
+            if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            {
+                return Ok(result.Data);
+            }
+
+            return NotFound(result.Messages);
         }
     }
 }

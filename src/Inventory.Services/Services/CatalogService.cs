@@ -94,7 +94,7 @@ namespace Inventory.Services.Services
                 await _unitOfWork.SaveAsync();
 
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<CatalogDTO>(catalog);
+                response.Messages.Add(new ResponseMessage("Catalog", "Catalog updated!"));
             }
             return response;
         }

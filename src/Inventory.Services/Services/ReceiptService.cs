@@ -39,7 +39,7 @@ namespace Inventory.Services.Services
             ResultResponse<ReceiptDTO> response = new()
                 { Messages = new List<ResponseMessage>() };
 
-            var userid = _tokenService.GetUserId(token);
+            var userId = _tokenService.GetUserId(token);
             List<ReceiptDetail> details = new();
 
             foreach (var detail in dto.Details!)
@@ -63,7 +63,7 @@ namespace Inventory.Services.Services
             {
                 ItemCount = dto.ItemCount,
                 CreatedDate = DateTime.UtcNow,
-                CreatedBy = userid,
+                CreatedBy = userId,
                 Details = details
             };
             

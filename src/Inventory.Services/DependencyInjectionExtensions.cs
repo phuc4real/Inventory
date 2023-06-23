@@ -7,8 +7,10 @@ using Inventory.Services.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace Inventory.Services
 {
@@ -42,6 +44,15 @@ namespace Inventory.Services
             return services;
         }
 
+        public static IServiceCollection AddRedisCache(this IServiceCollection services, IConfiguration configuration)
+        {
+
+            services.AddSingleton<IConnectionMultiplexer>(options =>
+                ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+
+            return services;
+        }
+        
         public static IServiceCollection AddRepository(this IServiceCollection services)
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -70,6 +81,7 @@ namespace Inventory.Services
             services.AddScoped<IReceiptService, ReceiptService>();
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IUsingItemService, UsingItemService>();
+            services.AddScoped<IRedisCacheService, RedisCacheService>();
 
             return services;
         }

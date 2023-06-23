@@ -36,7 +36,7 @@ namespace Inventory.Services.Services
             ResultResponse<TeamDTO> response = new ()
             { Messages = new List<ResponseMessage>() };
 
-            var userIdfromToken = _tokenService.GetUserId(token);
+            var userIdFromToken = _tokenService.GetUserId(token);
             var newMember = await _userManager.FindByIdAsync(memberId);
 
             var team = await _team.GetTeamById(teamId);
@@ -48,9 +48,13 @@ namespace Inventory.Services.Services
             }
             else
             {
-                if (userIdfromToken == team.LeaderId)
+                if (userIdFromToken != team.LeaderId)
                 {
-
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                }
+                else
+                {
                     if (team.Members != null)
                     {
                         team.Members!.Add(newMember!);
@@ -68,15 +72,8 @@ namespace Inventory.Services.Services
                     response.Status = ResponseStatus.STATUS_SUCCESS;
                     response.Messages.Add(new ResponseMessage("Team", "Add new member to team successfully!"));
                 }
-                else
-                {
 
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
-                }
             }
-
-
 
             return response;
         }
@@ -116,19 +113,18 @@ namespace Inventory.Services.Services
             }
             else
             {
-                if(userId == team.LeaderId)
+                if(userId != team.LeaderId)
+                {
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                }
+                else
                 {
                     _team.Remove(team);
                     await _unitOfWork.SaveAsync();
 
                     response.Status = ResponseStatus.STATUS_SUCCESS;
                     response.Messages.Add(new ResponseMessage("Team", "Team deleted!"));
-                }
-                else
-                {
-
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
                 }
             }
 
@@ -214,20 +210,21 @@ namespace Inventory.Services.Services
             }
             else
             {
-                if (userId == team.LeaderId)
+                if (userId != team.LeaderId)
                 {
-                    team.Name = dto.Name;
-                    team.LeaderId = dto.LeaderId;
-                    _team.Update(team);
-                    await _unitOfWork.SaveAsync();
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
-                    response.Messages.Add(new ResponseMessage("Team", "Team updated!"));
+                    response.Status = ResponseStatus.STATUS_FAILURE;
+                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
                 }
                 else
                 {
+                    team.Name = dto.Name;
+                    team.LeaderId = dto.LeaderId;
 
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                    _team.Update(team);
+                    await _unitOfWork.SaveAsync();
+
+                    response.Status = ResponseStatus.STATUS_SUCCESS;
+                    response.Messages.Add(new ResponseMessage("Team", "Team updated!"));
                 }
             }
 

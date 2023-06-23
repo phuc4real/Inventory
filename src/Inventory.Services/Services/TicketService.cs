@@ -163,14 +163,36 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TicketDTO>> GetTicketById(Guid id)
+        public async Task<ResultResponse<TicketDTO>> GetTicketById(string token, Guid id)
         {
             ResultResponse<TicketDTO> response = new()
             {
                 Messages = new List<ResponseMessage>()
             };
 
-            var ticket = await _ticket.GetById(id);
+            var userId = _tokenService.GetUserId(token);
+            var user = await _userManager.FindByIdAsync(userId);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            Ticket? ticket = await _ticket.GetById(id);
+
+            if (!userRoles.Contains(InventoryRoles.IM))
+            {
+                if (userRoles.Contains(InventoryRoles.PM))
+                {
+                    if(ticket.CreatedByUser!.TeamId != user!.TeamId)
+                    {
+                        ticket = null;
+                    }
+                }
+                else
+                {
+                    if(ticket.CreatedBy != userId)
+                    {
+                        ticket = null;
+                    }
+                }
+            }
 
             if(ticket == null)
             {

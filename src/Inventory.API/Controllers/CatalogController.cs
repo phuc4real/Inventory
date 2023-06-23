@@ -5,6 +5,7 @@ using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.Authorization;
+using Serilog;
 
 namespace Inventory.API.Controllers
 {
@@ -14,48 +15,87 @@ namespace Inventory.API.Controllers
     public class CatalogController : ControllerBase
     {
         private readonly ICatalogServices _catalogServices;
+        private readonly IRedisCacheService _cacheService;
+        private const string redisKey = "catalog";
 
-        public CatalogController(ICatalogServices catalogServices)
+        public CatalogController(ICatalogServices catalogServices, IRedisCacheService cacheService)
         {
             _catalogServices = catalogServices;
+            _cacheService = cacheService;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<CatalogDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListCatalog()
         {
-            var result = await _catalogServices.GetAll();
-            
-            return result.Status == ResponseStatus.STATUS_SUCCESS ? 
-                Ok(result.Data) : NotFound(result.Messages);
+            if(_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<CatalogDTO> catalogs)) 
+            {
+                return Ok(catalogs);
+            }
+            else
+            {
+                var result = await _catalogServices.GetAll();
+
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(CatalogDTO), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCatalog(int id)
         {
-            var result = await _catalogServices.GetById(id);
+            if(_cacheService.TryGetCacheAsync(redisKey+id,out CatalogDTO catalog))
+            {
+                return Ok(catalog);
+            }
+            else
+            {
+                var result = await _catalogServices.GetById(id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey+id, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpGet("search")]
-        [ProducesResponseType(typeof(IEnumerable<CatalogDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CatalogByName(string value)
+        [ProducesResponseType(typeof(List<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ListCatalogByName(string value)
         {
-            var result = await _catalogServices.SearchCatalog(value);
+            if (_cacheService.TryGetCacheAsync(redisKey + value, out IEnumerable<CatalogDTO> catalogs))
+            {
+                return Ok(catalogs);
+            }
+            else
+            {
+                var result = await _catalogServices.SearchCatalog(value);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + value, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpPost]
         [Authorize(Roles =InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateCatalog(CatalogEditDTO dto)
         {
@@ -65,15 +105,16 @@ namespace Inventory.API.Controllers
             }
 
             var result = await _catalogServices.CreateCatalog(dto);
+            await _cacheService.RemoveCacheAsync(redisKey);
             
             return Created("catalog/"+result.Data!.Id,result.Messages);
         }
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateCatalog(int id, CatalogEditDTO dto)
         {
             if (!ModelState.IsValid)
@@ -85,7 +126,8 @@ namespace Inventory.API.Controllers
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
-                return Ok(result);
+                await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
+                return Ok(result.Messages);
             }
             else
             {
@@ -96,15 +138,16 @@ namespace Inventory.API.Controllers
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteCatalog(int id)
         {
             var result = await _catalogServices.DeleteCatalog(id);
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
+                await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
                 return Ok(result.Messages);
             }
             else

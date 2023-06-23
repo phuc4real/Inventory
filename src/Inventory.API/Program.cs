@@ -25,6 +25,7 @@ builder.Services
 
 builder.Services
     .AddDatabase(builder.Configuration)
+    .AddRedisCache(builder.Configuration)
     .AddRepository()
     .AddServices();
 

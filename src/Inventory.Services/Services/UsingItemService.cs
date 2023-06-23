@@ -6,6 +6,7 @@ using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Identity;
+using Newtonsoft.Json.Linq;
 
 namespace Inventory.Services.Services
 {
@@ -89,12 +90,29 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> SearchForUsingItemAsync(string filter)
+        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> SearchForUsingItem(string token, string filter)
         {
             ResultResponse<IEnumerable<UsingItemDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var result = await _exportDetail.SearchAsync(filter);
+            var userId = _tokenService.GetUserId(token);
+            var user = await _userManager.FindByIdAsync(userId);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            IEnumerable<ExportDetail>? result;
+
+            if (userRoles.Contains(InventoryRoles.IM))
+            {
+                result = await _exportDetail.SearchAsync(filter);
+            }
+            else if (userRoles.Contains(InventoryRoles.PM))
+            {
+                result = await _exportDetail.SearchInTeamAsync(user!.TeamId!.Value, filter);
+            }
+            else
+            {
+                result = await _exportDetail.SearchMyItemAsync(userId, filter);
+            }
 
             if (result.Any())
             {

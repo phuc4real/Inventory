@@ -61,7 +61,7 @@ namespace Inventory.Services.Services
             { Messages = new List<ResponseMessage>() };
             IList<OrderDetail> orderDetails = new List<OrderDetail>();
 
-            var userid = _tokenService.GetUserId(token);
+            var userId = _tokenService.GetUserId(token);
 
             foreach (var detail in dto.Details!)
             {
@@ -84,7 +84,7 @@ namespace Inventory.Services.Services
                 OrderTotal = dto.OrderTotal,
                 Status = OrderStatus.Pending,
                 Details = orderDetails,
-                OrderBy = userid,
+                OrderBy = userId,
                 OrderDate = DateTime.Now
             };
             
@@ -118,7 +118,7 @@ namespace Inventory.Services.Services
             return response;
         }
 
-         public async Task<ResultResponse<OrderDTO>> UpdateStatus(int id)
+         public async Task<ResultResponse<OrderDTO>> UpdateOrderStatus(int id)
         {
             ResultResponse<OrderDTO> response = new() { Messages = new List<ResponseMessage>() };
 

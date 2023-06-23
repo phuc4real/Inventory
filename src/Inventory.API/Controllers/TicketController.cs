@@ -38,13 +38,15 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTicketById(Guid id)
         {
-            var result = await _ticketService.GetTicketById(id);
+            var token = await HttpContext.GetAccessToken();
+            var result = await _ticketService.GetTicketById(token, id);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Data) : NotFound(result.Messages);
         }
 
         [HttpGet("by-item/{itemId:Guid}")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> TicketsByItemId(Guid itemId)
@@ -95,6 +97,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}/update-status")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus(Guid id)
@@ -108,6 +111,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}/reject")]
+        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RejectTicket(Guid id, string rejectReason)
@@ -122,6 +126,7 @@ namespace Inventory.API.Controllers
 
         [HttpPut("{id:Guid}/pm-approve")]
         [HttpPut("{id:Guid}/pm-reject")]
+        [Authorize(Roles = InventoryRoles.PM)]
         [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PMStatus(Guid id, string? rejectReason)

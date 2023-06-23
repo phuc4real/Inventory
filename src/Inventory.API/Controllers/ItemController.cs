@@ -20,38 +20,66 @@ namespace Inventory.API.Controllers
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
+        private readonly IRedisCacheService _cacheService;
+        private const string redisKey = "Item";
 
-        public ItemController(IItemService itemService)
+        public ItemController(IItemService itemService, IRedisCacheService cacheService)
         {
             _itemService = itemService;
+            _cacheService = cacheService;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<ItemDetailDTO>),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ItemDetailDTO>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListItem()
         {
-            var result = await _itemService.GetAll();
+            if (_cacheService.TryGetCacheAsync(redisKey,out IEnumerable<ItemDetailDTO> items))
+            {
+                return Ok(items);
+            }
+            else
+            {
+                var result = await _itemService.GetAll();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpGet("{id:Guid}")]
         [ProducesResponseType(typeof(ItemDetailDTO),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetItem(Guid id)
         {
-            var result = await _itemService.GetById(id);
+            if (_cacheService.TryGetCacheAsync(redisKey + id, out ItemDetailDTO items))
+            {
+                return Ok(items);
+            }
+            else
+            {
+                var result = await _itemService.GetById(id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + id, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpPost]
         [Authorize(Roles =InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ItemDetailDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateItem(ItemEditDTO item)
         {
             if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
@@ -60,14 +88,17 @@ namespace Inventory.API.Controllers
 
             var result = await _itemService.CreateItem(accessToken, item);
 
-            return Ok(result);
+            await _cacheService.RemoveCacheAsync(redisKey);
+
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
+                Created("item/" + result.Data!.Id, result.Messages) : NotFound(result.Messages);
         }
 
         [HttpPut("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateItem(Guid id, ItemEditDTO item)
         {
             if(!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
@@ -82,8 +113,8 @@ namespace Inventory.API.Controllers
 
         [HttpDelete("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
             var accessToken = await HttpContext.GetAccessToken();
@@ -91,18 +122,18 @@ namespace Inventory.API.Controllers
             var result = await _itemService.DeleteItem(accessToken, id);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : NotFound(result.Messages);
+                    Ok(result.Messages) : NotFound(result.Messages);
         }
 
         [HttpGet("search")]
-        [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ItemDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SearchByName(string name)
         {
             var result = await _itemService.SearchByName(name);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ? 
-                    Ok(result) : NotFound(result.Messages);
+                    Ok(result.Data) : NotFound(result.Messages);
         }
     }
 }

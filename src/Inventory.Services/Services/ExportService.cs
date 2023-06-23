@@ -65,7 +65,6 @@ namespace Inventory.Services.Services
 
                 response.Status = ResponseStatus.STATUS_SUCCESS;
                 response.Messages.Add(new ResponseMessage("Export", "Export canceled!"));
-                response.Data = _mapper.Map<ExportWithDetailDTO>(export);
             }
             return response;
         }

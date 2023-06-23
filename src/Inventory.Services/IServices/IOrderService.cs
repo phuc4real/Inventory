@@ -15,7 +15,7 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<OrderDTO>>> GetOrdersByItemId(Guid id);
         Task<ResultResponse<OrderDTO>> GetById(int id);
         Task<ResultResponse<OrderDTO>> CreateOrder(string token, OrderCreateDTO dto);
-        Task<ResultResponse<OrderDTO>> UpdateStatus(int id);
+        Task<ResultResponse<OrderDTO>> UpdateOrderStatus(int id);
         Task<ResultResponse<OrderDTO>> CancelOrder(int id);
     }
 }

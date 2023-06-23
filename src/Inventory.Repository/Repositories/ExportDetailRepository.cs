@@ -60,5 +60,38 @@ namespace Inventory.Repository.Repositories
 
             return await query.ToListAsync();
         }
+
+        public async Task<IEnumerable<ExportDetail>> SearchInTeamAsync(Guid teamId, string filter)
+        {
+            _ = int.TryParse(filter, out int eid);
+            _ = Guid.TryParse(filter, out Guid iid);
+
+            var query = GetAllWithProperty
+                .Where(x => x.ForUser!.TeamId == teamId)
+                .Where(x => x.ItemId.Equals(iid) ||
+                            x.Item!.Name!.Contains(filter) ||
+                            x.ExportId.Equals(eid) ||
+                            x.ForUser!.UserName!.Contains(filter) ||
+                            x.ForUser.Id.Equals(filter) ||
+                            x.ForUser.Email!.Equals(filter)
+                );
+
+            return await query.ToListAsync();
+        }
+
+        public async Task<IEnumerable<ExportDetail>> SearchMyItemAsync(string userId, string filter)
+        {
+            _ = int.TryParse(filter, out int eid);
+            _ = Guid.TryParse(filter, out Guid iid);
+
+            var query = GetAllWithProperty
+                .Where(x => x.ForUserId == userId)
+                .Where(x => x.ItemId.Equals(iid) ||
+                            x.Item!.Name!.Contains(filter) ||
+                            x.ExportId.Equals(eid)
+                );
+
+            return await query.ToListAsync();
+        }
     }
 }

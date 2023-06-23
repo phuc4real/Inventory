@@ -15,10 +15,13 @@ namespace Inventory.API.Controllers
     public class ReceiptController : ControllerBase
     {
         private readonly IReceiptService _receiptService;
+        private readonly IRedisCacheService _cacheService;
+        private const string redisKey = "receipt";
 
-        public ReceiptController(IReceiptService receiptService)
+        public ReceiptController(IReceiptService receiptService, IRedisCacheService cacheService)
         {
             _receiptService = receiptService;
+            _cacheService = cacheService;
         }
 
         [HttpGet]
@@ -26,10 +29,21 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListReceipt() 
         {
-            var result = await _receiptService.GetAll();
+            if (_cacheService.TryGetCacheAsync(redisKey,out IEnumerable<ReceiptDTO> receipts))
+            {
+                return Ok(receipts);
+            }
+            else
+            {
+                var result = await _receiptService.GetAll();
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey, result.Data);
+                    return Ok(result.Data);
+                }
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpGet("{id:int}")]
@@ -37,10 +51,22 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ReceiptById(int id)
         {
-            var result = await _receiptService.ReceiptById(id);
+            if (_cacheService.TryGetCacheAsync(redisKey + id,out ReceiptDTO receipt))
+            {
+                return Ok(receipt);
+            }
+            else
+            {
+                var result = await _receiptService.ReceiptById(id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + id, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpGet("by-item/{itemId:Guid}")]
@@ -48,15 +74,26 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ReceiptsByItemId(Guid itemId)
         {
-            var result = await _receiptService.ReceiptByItemId(itemId);
+            if (_cacheService.TryGetCacheAsync(redisKey + itemId, out IEnumerable<ReceiptDTO> receipts))
+            {
+                return Ok(receipts);
+            }
+            else
+            {
+                var result = await _receiptService.ReceiptByItemId(itemId);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + itemId, result.Data);
+                    return Ok(result.Data);
+                }
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpPost]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(List<ReceiptDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateReceipt(ReceiptCreateDTO dto)
@@ -70,8 +107,10 @@ namespace Inventory.API.Controllers
 
             var result = await _receiptService.CreateReceipt(token, dto);
 
+            await _cacheService.RemoveCacheAsync(redisKey);
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result.Data) : NotFound(result.Messages);
+                Created("receipt/"+result.Data!.Id,result.Messages) : NotFound(result.Messages);
         }
     }
 }

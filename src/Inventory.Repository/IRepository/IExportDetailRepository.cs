@@ -13,6 +13,8 @@ namespace Inventory.Repository.IRepository
         Task<IEnumerable<ExportDetail>> GetUsingItemByTeam(Guid teamId);
         Task<IEnumerable<ExportDetail>> GetUsingItemByUser(string userId);
         Task<IEnumerable<ExportDetail>> SearchAsync(string filter);
+        Task<IEnumerable<ExportDetail>> SearchInTeamAsync(Guid teamId, string filter);
+        Task<IEnumerable<ExportDetail>> SearchMyItemAsync(string userId, string filter);
 
     }
 }

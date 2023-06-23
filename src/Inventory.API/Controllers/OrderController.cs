@@ -19,27 +19,42 @@ namespace Inventory.API.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly IRedisCacheService _cacheService;
+        private const string redisKey = "order";
 
-        public OrderController(IOrderService orderService)
+        public OrderController(IOrderService orderService, IRedisCacheService cacheService)
         {
             _orderService = orderService;
+            _cacheService = cacheService;
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(List<OrderDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<OrderDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListOrder()
         {
-            var result = await _orderService.GetAll();
+            if (_cacheService.TryGetCacheAsync(redisKey,out IEnumerable<OrderDTO> orders))
+            {
+                return Ok(orders);
+            }
+            else
+            {
+                var result = await _orderService.GetAll();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey, result.Data);
+                    return Ok(result.Data);
+                }
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpPost]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateOrder(OrderCreateDTO dto)
         {
             if(!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
@@ -48,8 +63,10 @@ namespace Inventory.API.Controllers
 
             var result = await _orderService.CreateOrder(token, dto);
 
+            await _cacheService.RemoveCacheAsync(redisKey);
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : NotFound(result.Messages);
+                    Created("order/"+result.Data!.Id,result.Messages) : NotFound(result.Messages);
         }
 
         [HttpGet("{id:int}")]
@@ -58,34 +75,49 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetOrder(int id)
         {
-            var result = await _orderService.GetById(id);
+            if (_cacheService.TryGetCacheAsync(redisKey + id,out OrderDTO order))
+            {
+                return Ok(order);
+            }
+            else
+            {
+                var result = await _orderService.GetById(id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + id, result.Data);
+                    return Ok(result.Data);
+                }
+                return NotFound(result.Messages);
+            }
         }
 
         [HttpPut("{id:int}/update-status")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateStatus(int id)
+        public async Task<IActionResult> UpdateOrderStatus(int id)
         {
-            var result = await _orderService.UpdateStatus(id);
+            var result = await _orderService.UpdateOrderStatus(id);
+
+            await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : BadRequest(result.Messages);
+                    Ok(result.Messages) : BadRequest(result.Messages);
         }
 
         [HttpDelete("{id:int}/cancel")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<OrderDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CancelOrder(int id)
         {
             var result = await _orderService.CancelOrder(id);
 
+            await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : BadRequest(result.Messages);
+                    Ok(result.Messages) : BadRequest(result.Messages);
         }
 
         [HttpGet("by-item/{itemId:Guid}")]
@@ -93,10 +125,21 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> OrdersByItemId(Guid itemId)
         {
-            var result = await _orderService.GetOrdersByItemId(itemId);
+            if (_cacheService.TryGetCacheAsync(redisKey + itemId, out IEnumerable<OrderDTO> orders))
+            {
+                return Ok(orders);
+            }
+            else
+            {
+                var result = await _orderService.GetOrdersByItemId(itemId);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + itemId, result.Data);
+                    return Ok(result.Data);
+                }
+                return NotFound(result.Messages);
+            }
         }
     }
 }
