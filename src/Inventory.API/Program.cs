@@ -16,6 +16,8 @@ using Serilog;
 using Inventory.API.Middleware;
 using System.Threading.RateLimiting;
 using System.Globalization;
+using Microsoft.EntityFrameworkCore;
+using Inventory.Repository.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -166,5 +168,16 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AppDbContext>();
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        context.Database.Migrate();
+    }
+}
 
 app.Run();

@@ -58,7 +58,7 @@ namespace Inventory.API.Controllers
         //Change to HttpPost if have front-end
         [AllowAnonymous]
         [HttpGet("external-login")]
-        public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/home")
+        public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/")
         {
             var properties = _authService.CreateAuthenticationProperties(provider!, returnUrl!);
             return new ChallengeResult(provider!, properties);
@@ -69,12 +69,14 @@ namespace Inventory.API.Controllers
         [HttpGet("external-login-callback")]
         [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ExternalLoginCallback()
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl)
         {
             var result = await _authService.ExternalLoginAsync();
 
+            HttpContext.Response.Headers.Location = returnUrl;
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Data) : BadRequest(result.Messages);
+
         }
 
         [HttpDelete("logout")]

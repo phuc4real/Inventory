@@ -7,9 +7,9 @@ using Inventory.Services.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 using StackExchange.Redis;
 
 namespace Inventory.Services
@@ -21,7 +21,8 @@ namespace Inventory.Services
             services.AddDbContext<AppDbContext>(
                 options =>
                 {
-                    options.UseSqlServer(configuration.GetConnectionString("Inventory"));
+                    //options.UseSqlServer(configuration.GetConnectionString("Inventory"));
+                    options.UseNpgsql(configuration.GetConnectionString("InventoryPostgres"));
                     options.ConfigureWarnings(builder => 
                         builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });
@@ -47,8 +48,15 @@ namespace Inventory.Services
         public static IServiceCollection AddRedisCache(this IServiceCollection services, IConfiguration configuration)
         {
 
-            services.AddSingleton<IConnectionMultiplexer>(options =>
-                ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+            try
+            {
+                services.AddSingleton<IConnectionMultiplexer>(options =>
+                    ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
 
             return services;
         }
