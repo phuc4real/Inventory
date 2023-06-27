@@ -5,7 +5,7 @@ namespace Inventory.Core.ViewModel
     public class LoginDTO
     {
         [Required]
-        public string? UsernameOrEmail { get; set; }
+        public string? Username { get; set; }
         [Required]
         public string? Password { get; set; }
     }

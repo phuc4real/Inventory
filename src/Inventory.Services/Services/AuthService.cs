@@ -102,9 +102,9 @@ namespace Inventory.Services.Services
 
             //TOD0: sử dụng "toán tử điều kiện" cho ngắn gọn hơn vì trong if else cùng làm 1 công việc.
 
-            var user = IsEmail(dto.UsernameOrEmail!) ?
-                await _userManager.FindByEmailAsync(dto.UsernameOrEmail!) :
-                await _userManager.FindByNameAsync(dto.UsernameOrEmail!);
+            var user = IsEmail(dto.Username!) ?
+                await _userManager.FindByEmailAsync(dto.Username!) :
+                await _userManager.FindByNameAsync(dto.Username!);
 
             if (user == null)
             {

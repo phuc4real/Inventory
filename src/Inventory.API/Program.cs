@@ -67,14 +67,14 @@ builder.Services.AddControllers(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     })
-    .ConfigureApiBehaviorOptions(options=>
+    .ConfigureApiBehaviorOptions(options =>
     {
         options.InvalidModelStateResponseFactory = (errorContext) =>
         {
             var errors = errorContext.ModelState
                 .Where(m => m.Value!.Errors.Any())
                 .Select(m => new ResponseMessage(
-                    m.Key, 
+                    m.Key,
                     m.Value!.Errors.FirstOrDefault()!.ErrorMessage))
                 .ToList();
             return new BadRequestObjectResult(errors);
@@ -141,8 +141,18 @@ builder.Services.AddSwaggerGen(
     }
 );
 
-builder.Host.UseSerilog((context,configuration)=>
+builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(builder.Configuration["Client:Origin"]!)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -151,7 +161,8 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(
-        options => {
+        options =>
+        {
             options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger");
             options.RoutePrefix = string.Empty;
         });
@@ -164,6 +175,8 @@ app.UseSerilogRequestLogging();
 app.UseExceptionMiddleware();
 
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 

@@ -10,7 +10,6 @@ services:
       - OAuth__Google__Secret=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
       - OAuth__Google__ClientID=78464108702-tij5mnnevcg3hjsn0i9dquruj33b46bt.apps.googleusercontent.com
       - JWTBearer__SecretKey=JWT___YROTNEVNIDNEKCABIPA0106#@#ROFCUHP3202___TWJ
-      - Kestrel__Certificates__Development__Password=473d261c-a68f-4dc4-9164-c50b92c6ed71
     ports:
       - "5001:443"
     volumes:
