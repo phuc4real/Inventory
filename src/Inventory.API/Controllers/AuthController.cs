@@ -55,7 +55,6 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : BadRequest(result.Messages);
         }
 
-        //Change to HttpPost if have front-end
         [AllowAnonymous]
         [HttpGet("external-login")]
         public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/")
@@ -64,7 +63,6 @@ namespace Inventory.API.Controllers
             return new ChallengeResult(provider!, properties);
         }
 
-        //Change to HttpPost if have front-end
         [AllowAnonymous]
         [HttpGet("external-login-callback")]
         [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status200OK)]
@@ -103,18 +101,18 @@ namespace Inventory.API.Controllers
 
             if (refreshToken == "")
             {
-                return BadRequest(new ResponseMessage("RefreshToken","Cannot get refresh token!"));
+                return BadRequest(new ResponseMessage("RefreshToken", "Cannot get refresh token!"));
             }
 
             var result = await _authService.RefreshToken(accessToken, refreshToken);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ? 
+            return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Data) : BadRequest(result.Messages);
         }
 
 
         [HttpPost("grant-role")]
-        [Authorize(Roles =InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GrantPermission(GrantRoleDTO dto)

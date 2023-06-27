@@ -110,9 +110,9 @@ namespace Inventory.Services.Services
                 Status = TicketStatus.Pending,
                 IsClosed = false,
                 CreatedBy = userId,
-                CreatedDate = DateTime.Now,
+                CreatedDate = DateTime.UtcNow,
                 LastModifiedBy = userId,
-                LastModifiedDate = DateTime.Now
+                LastModifiedDate = DateTime.UtcNow
             };
 
             await _ticket.AddAsync(ticket);

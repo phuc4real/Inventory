@@ -85,7 +85,7 @@ namespace Inventory.Services.Services
                 Status = OrderStatus.Pending,
                 Details = orderDetails,
                 OrderBy = userId,
-                OrderDate = DateTime.Now
+                OrderDate = DateTime.UtcNow
             };
             
             await _order.AddAsync(order);

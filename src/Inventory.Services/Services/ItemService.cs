@@ -51,9 +51,9 @@ namespace Inventory.Services.Services
             {
                 Item item = _mapper.Map<Item>(dto);
                 item.CreatedBy = userId;
-                item.CreatedDate = DateTime.Now;
+                item.CreatedDate = DateTime.UtcNow;
                 item.LastModifiedBy = userId;
-                item.LastModifiedDate = DateTime.Now;
+                item.LastModifiedDate = DateTime.UtcNow;
 
                 await _item.AddAsync(item);
                 await _unitOfWork.SaveAsync();
@@ -83,7 +83,7 @@ namespace Inventory.Services.Services
             {
                 item.IsDeleted = true;
                 item.LastModifiedBy = userId;
-                item.LastModifiedDate = DateTime.Now;
+                item.LastModifiedDate = DateTime.UtcNow;
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
 
@@ -175,7 +175,7 @@ namespace Inventory.Services.Services
                 item.ImageUrl = dto.ImageUrl;
                 item.CatalogId = dto.CatalogId;
                 item.LastModifiedBy = userid;
-                item.LastModifiedDate = DateTime.Now;
+                item.LastModifiedDate = DateTime.UtcNow;
 
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
