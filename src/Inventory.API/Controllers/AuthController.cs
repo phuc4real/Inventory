@@ -91,6 +91,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("refresh")]
+        [AllowAnonymous]
         [EnableRateLimiting("RefresshTokenLimit")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
