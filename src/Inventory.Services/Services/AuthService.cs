@@ -118,7 +118,7 @@ namespace Inventory.Services.Services
                 if (result.Succeeded)
                 {
                     var tokens = await GetTokens(user);
-                    var refreshTokenExpireTime = DateTime.UtcNow.AddMinutes(30);
+                    var refreshTokenExpireTime = DateTime.UtcNow.AddMinutes(60);
                     user.RefreshTokenExpireTime = refreshTokenExpireTime;
                     await _userManager.UpdateAsync(user);
 
@@ -215,7 +215,7 @@ namespace Inventory.Services.Services
                 if (principal == null)
                 {
                     response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("AccessToken", "Token Invalid!"));
+                    response.Messages.Add(new ResponseMessage("AccessToken", "Access Token Invalid!"));
                 }
                 else
                 {
@@ -243,7 +243,7 @@ namespace Inventory.Services.Services
                     else
                     {
                         response.Status = ResponseStatus.STATUS_FAILURE;
-                        response.Messages.Add(new ResponseMessage("RefreshToken", "Token Invalid!"));
+                        response.Messages.Add(new ResponseMessage("RefreshToken", "Refresh token Invalid!"));
                     }
                 }
 
@@ -252,7 +252,7 @@ namespace Inventory.Services.Services
             catch (Exception)
             {
                 response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("AccessToken", "Token Invalid!"));
+                response.Messages.Add(new ResponseMessage("AccessToken", "Access token Invalid!"));
                 return response;
             }
         }

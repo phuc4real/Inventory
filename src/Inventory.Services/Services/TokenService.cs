@@ -70,7 +70,7 @@ namespace Inventory.Services.Services
                 !jwtSecurityToken.Header.Alg
                     .Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new SecurityTokenException("Invalid token");
+                throw new SecurityTokenException("Invalid access token");
             }
 
             return principal;

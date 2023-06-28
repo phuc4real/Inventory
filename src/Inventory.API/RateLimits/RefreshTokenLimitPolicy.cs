@@ -15,7 +15,7 @@ namespace Inventory.API.RateLimits
         {
             return RateLimitPartition.GetFixedWindowLimiter(string.Empty, options => new()
             {
-                PermitLimit = 1,
+                PermitLimit = 2,
                 Window = TimeSpan.FromMinutes(6)
             });
         }

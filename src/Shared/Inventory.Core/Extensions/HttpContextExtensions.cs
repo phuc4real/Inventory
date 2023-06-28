@@ -7,7 +7,13 @@ namespace Inventory.Core.Extensions
     {
         public static async Task<string> GetAccessToken(this HttpContext context)
         {
-            var token = await context.GetTokenAsync("access_token");
+            string token;
+            token = await context.GetTokenAsync("access_token");
+            if (token == null) 
+            { 
+                context.Request.Headers.TryGetValue("Authorization", out var tokenFromHeaders);
+                token = tokenFromHeaders.ToString().Replace("Bearer ", "");
+            }
             return token!;
         }
 
