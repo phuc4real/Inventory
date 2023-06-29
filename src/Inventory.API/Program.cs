@@ -168,7 +168,7 @@ if (app.Environment.IsDevelopment())
         });
 }
 
-app.UseRateLimiter();
+//app.UseRateLimiter();
 
 app.UseSerilogRequestLogging();
 

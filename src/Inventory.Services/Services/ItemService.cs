@@ -99,7 +99,7 @@ namespace Inventory.Services.Services
             ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
             { Messages = new List<ResponseMessage>() };
 
-            var items = await _item.GetAsync();
+            var items = await _item.GetListItem();
 
             if (items.Any())
             {

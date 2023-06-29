@@ -2,11 +2,6 @@
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
@@ -18,11 +13,25 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
+        private IQueryable<Item> GetAllWithProperty => _context.Items
+            .Include(x => x.Catalog)
+            .Include(x => x.CreatedByUser)
+            .Include(x => x.ModifiedByUser);
+
         public async Task<Item> GetById(Guid id)
         {
 #pragma warning disable CS8603 // Possible null reference return.
             return await _context.Items.FindAsync(id);
 #pragma warning restore CS8603 // Possible null reference return.
+        }
+
+        public async Task<IEnumerable<Item>> GetListItem()
+        {
+            var query = GetAllWithProperty;
+                //.Skip(requestParams.PageIndex*requestParams.PageSize)
+                //.Take(requestParams.PageSize);
+
+            return await query.ToListAsync();
         }
     }
 }

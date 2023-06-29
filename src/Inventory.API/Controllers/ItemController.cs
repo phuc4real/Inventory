@@ -34,7 +34,8 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListItem()
         {
-            if (_cacheService.TryGetCacheAsync(redisKey,out IEnumerable<ItemDetailDTO> items))
+            //var queryString = this.Request.QueryString.ToString();
+            if (_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<ItemDetailDTO> items))
             {
                 return Ok(items);
             }
