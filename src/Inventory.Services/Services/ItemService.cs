@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
@@ -94,17 +95,23 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll()
+        public async Task<ItemResponse> GetAll(ListItemRequest requestParams)
         {
-            ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
-
-            var items = await _item.GetListItem();
-
-            if (items.Any())
+            ItemResponse response = new()
             {
+                PageIndex = requestParams.PageIndex,
+                PageSize = requestParams.PageSize,
+                Messages = new List<ResponseMessage>() 
+            };
+
+            var items = await _item.GetListItem(requestParams);
+
+            if (items.Data!.Any())
+            {
+                response.TotalPages = items.TotalPages;
+                response.TotalRecords = items.TotalRecords;
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
+                response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items.Data);
             }
             else
             {

@@ -1,5 +1,6 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Core.Extensions;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
@@ -30,23 +31,23 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(List<ItemDetailDTO>),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ItemResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ListItem()
+        public async Task<IActionResult> ListItem([FromQuery] ListItemRequest requestParams)
         {
-            //var queryString = this.Request.QueryString.ToString();
-            if (_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<ItemDetailDTO> items))
+            var queryString = this.Request.QueryString.ToString();
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out ItemResponse response))
             {
-                return Ok(items);
+                return Ok(response);
             }
             else
             {
-                var result = await _itemService.GetAll();
+                var result = await _itemService.GetAll(requestParams);
 
                 if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 {
-                    await _cacheService.SetCacheAsync(redisKey, result.Data);
-                    return Ok(result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
+                    return Ok(result);
                 }
 
                 return NotFound(result.Messages);

@@ -1,4 +1,7 @@
-﻿using Inventory.Repository.DbContext;
+﻿using Inventory.Core.Request;
+using Inventory.Core.Response;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
@@ -25,13 +28,27 @@ namespace Inventory.Repository.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<IEnumerable<Item>> GetListItem()
+        public async Task<PaginationList<Item>> GetListItem(ListItemRequest requestParams)
         {
+            PaginationList<Item> items = new();
             var query = GetAllWithProperty;
-                //.Skip(requestParams.PageIndex*requestParams.PageSize)
-                //.Take(requestParams.PageSize);
 
-            return await query.ToListAsync();
+            if (requestParams.SearchKeyword != null)
+            {
+                query = query.Where(x =>
+                    x.Name!.Contains(requestParams.SearchKeyword) ||
+                    x.Catalog!.Name!.Contains(requestParams.SearchKeyword)
+                    );
+            }
+
+            items.TotalRecords = query.Count();
+            items.TotalPages = items.TotalRecords / requestParams.PageSize;
+
+            query = query.Skip(requestParams.PageIndex * requestParams.PageSize)
+                .Take(requestParams.PageSize);
+            items.Data = await query.ToListAsync();
+
+            return items;
         }
     }
 }
