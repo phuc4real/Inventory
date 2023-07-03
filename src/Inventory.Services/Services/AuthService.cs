@@ -68,7 +68,7 @@ namespace Inventory.Services.Services
                             LastName = info.Principal.FindFirstValue(ClaimTypes.Surname)
                         };
 
-                        var res = await CreateUser(newUser, PasswordGenerator.Generate(16));
+                        var res = await CreateUser(newUser, StringHelper.PasswordGenerate(16));
 
                         if (res.Status == ResponseStatus.STATUS_SUCCESS)
                         {

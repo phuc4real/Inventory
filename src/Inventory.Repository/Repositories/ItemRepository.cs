@@ -1,5 +1,6 @@
-﻿using Inventory.Core.Request;
-using Inventory.Core.Response;
+﻿using Inventory.Core.Extensions;
+using Inventory.Core.Helper;
+using Inventory.Core.Request;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
@@ -36,13 +37,22 @@ namespace Inventory.Repository.Repositories
             if (requestParams.SearchKeyword != null)
             {
                 query = query.Where(x =>
-                    x.Name!.Contains(requestParams.SearchKeyword) ||
-                    x.Catalog!.Name!.Contains(requestParams.SearchKeyword)
+                    x.Name!.ToLower().Contains(requestParams.SearchKeyword.ToLower()) ||
+                    x.Catalog!.Name!.ToLower().Contains(requestParams.SearchKeyword.ToLower())
                     );
             }
 
             items.TotalRecords = query.Count();
             items.TotalPages = items.TotalRecords / requestParams.PageSize;
+
+            if( requestParams.SortField != null && requestParams.SortField != "undefined")
+            {
+                string columnName = StringHelper.CapitalizeFirstLetter(requestParams.SortField);
+
+                var desc = requestParams.SortDirection == "desc";
+
+                query = query.OrderByField(columnName, !desc);
+            }
 
             query = query.Skip(requestParams.PageIndex * requestParams.PageSize)
                 .Take(requestParams.PageSize);

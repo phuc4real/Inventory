@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Helper
 {
-    public static class PasswordGenerator
+    public static class StringHelper
     {
-        public static string Generate(int length)
+        public static string PasswordGenerate(int length)
         {
             const string validChars = "qwertyuiopasdfghjklzxcvbnmMNBVCXZLKJHGFDSAPOIUYTREWQ1234567890!@#$%^&*()";
 
@@ -22,6 +22,19 @@ namespace Inventory.Core.Helper
             }
 
             return result.ToString();
+        }
+
+        public static string CapitalizeFirstLetter(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return input;
+            }
+
+            char[] characters = input.ToCharArray();
+            characters[0] = char.ToUpper(characters[0]);
+
+            return new string(characters);
         }
     }
 }

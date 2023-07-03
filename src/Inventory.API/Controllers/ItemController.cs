@@ -22,7 +22,7 @@ namespace Inventory.API.Controllers
     {
         private readonly IItemService _itemService;
         private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "Item";
+        private const string redisKey = "Inventory.Item";
 
         public ItemController(IItemService itemService, IRedisCacheService cacheService)
         {
