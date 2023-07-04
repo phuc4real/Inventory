@@ -24,8 +24,10 @@ namespace Inventory.Repository.Repositories
 
         public async Task<Item> GetById(Guid id)
         {
+            var query = GetAllWithProperty
+                .Where(x => x.Id == id);
 #pragma warning disable CS8603 // Possible null reference return.
-            return await _context.Items.FindAsync(id);
+            return await query.FirstOrDefaultAsync();
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
