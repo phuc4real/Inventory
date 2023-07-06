@@ -35,7 +35,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListItem([FromQuery] ListItemRequest requestParams)
         {
-            var queryString = this.Request.QueryString.ToString();
+            var queryString = Request.QueryString.ToString();
             if (_cacheService.TryGetCacheAsync(redisKey + queryString, out ItemResponse response))
             {
                 return Ok(response);
@@ -59,7 +59,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetItem(Guid id)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + id, out ItemDetailDTO items))
+            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out ItemDetailDTO items))
             {
                 return Ok(items);
             }
@@ -69,7 +69,7 @@ namespace Inventory.API.Controllers
 
                 if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 {
-                    await _cacheService.SetCacheAsync(redisKey + id, result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
                     return Ok(result.Data);
                 }
 
@@ -90,7 +90,7 @@ namespace Inventory.API.Controllers
 
             var result = await _itemService.CreateItem(accessToken, item);
 
-            await _cacheService.RemoveCacheAsync(redisKey);
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                 Created("item/" + result.Data!.Id, result.Messages) : NotFound(result.Messages);
@@ -109,6 +109,8 @@ namespace Inventory.API.Controllers
 
             var result = await _itemService.UpdateItem(accessToken, id, item);
 
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result) : NotFound(result.Messages);
         }
@@ -123,19 +125,10 @@ namespace Inventory.API.Controllers
 
             var result = await _itemService.DeleteItem(accessToken, id);
 
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
+
             return result.Status == ResponseStatus.STATUS_SUCCESS ?
                     Ok(result.Messages) : NotFound(result.Messages);
-        }
-
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(List<ItemDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SearchByName(string name)
-        {
-            var result = await _itemService.SearchByName(name);
-
-            return result.Status == ResponseStatus.STATUS_SUCCESS ? 
-                    Ok(result.Data) : NotFound(result.Messages);
         }
     }
 }
