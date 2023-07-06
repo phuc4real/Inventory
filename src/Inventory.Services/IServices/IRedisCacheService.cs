@@ -6,5 +6,6 @@
         Task SetCacheAsync<T>(string key, T value);
         Task RemoveCacheAsync(string key);
         Task RemoveCacheAsync(string[] keys);
+        Task RemoveCacheTreeAsync(string treeKey);
     }
 }

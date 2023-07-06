@@ -32,6 +32,16 @@ namespace Inventory.Services.Services
             }
         }
 
+        public async Task RemoveCacheTreeAsync(string treeKey)
+        {
+            var endPoints = _conn.GetEndPoints();
+            var server = _conn.GetServer(endPoints[0]);
+
+            foreach (var key in server.Keys(pattern: treeKey + "*")){
+                await RemoveCacheAsync(key);
+            }
+        }
+
         public async Task SetCacheAsync<T>(string key, T value)
         {
             var redis = _conn.GetDatabase();
