@@ -8,6 +8,6 @@ namespace Inventory.Repository.IRepository
     public interface IItemRepository : IRepository<Item>
     {
         Task<Item> GetById(Guid id);
-        Task<PaginationList<Item>> GetListItem(ListItemRequest requestParams);
+        Task<PaginationList<Item>> GetListItem(PaginationRequest requestParams);
     }
 }

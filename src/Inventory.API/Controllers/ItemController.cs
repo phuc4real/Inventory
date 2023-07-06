@@ -31,12 +31,12 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(ItemResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginationResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ListItem([FromQuery] ListItemRequest requestParams)
+        public async Task<IActionResult> ListItem([FromQuery] PaginationRequest requestParams)
         {
             var queryString = Request.QueryString.ToString();
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out ItemResponse response))
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<ItemDetailDTO> response))
             {
                 return Ok(response);
             }

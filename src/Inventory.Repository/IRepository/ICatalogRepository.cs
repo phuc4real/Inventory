@@ -1,4 +1,6 @@
-﻿using Inventory.Repository.Model;
+﻿using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +12,7 @@ namespace Inventory.Repository.IRepository
     public interface ICatalogRepository : IRepository<Catalog>
     {
         Task<Catalog> FindById(int id);
+
+        Task<PaginationList<Catalog>> GetPagination(PaginationRequest request);
     }
 }

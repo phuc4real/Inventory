@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Serilog;
+using Inventory.Core.Request;
 
 namespace Inventory.API.Controllers
 {
@@ -16,7 +17,7 @@ namespace Inventory.API.Controllers
     {
         private readonly ICatalogServices _catalogServices;
         private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "catalog";
+        private const string redisKey = "Inventory.Catalog";
 
         public CatalogController(ICatalogServices catalogServices, IRedisCacheService cacheService)
         {
@@ -25,11 +26,36 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(PaginationResponse<CatalogDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> PaginationCatalog([FromQuery]PaginationRequest request)
+        {
+            var queryString = Request.QueryString.ToString();
+
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<CatalogDTO> catalogs)) 
+            {
+                return Ok(catalogs);
+            }
+            else
+            {
+                var result = await _catalogServices.GetPagination(request);
+
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
+                    return Ok(result);
+                }
+
+                return NotFound(result.Messages);
+            }
+        }
+
+        [HttpGet("list")]
         [ProducesResponseType(typeof(List<CatalogDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListCatalog()
         {
-            if(_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<CatalogDTO> catalogs)) 
+            if (_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<CatalogDTO> catalogs))
             {
                 return Ok(catalogs);
             }
@@ -52,7 +78,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCatalog(int id)
         {
-            if(_cacheService.TryGetCacheAsync(redisKey+id,out CatalogDTO catalog))
+            if(_cacheService.TryGetCacheAsync(redisKey + "." + id,out CatalogDTO catalog))
             {
                 return Ok(catalog);
             }
@@ -62,30 +88,7 @@ namespace Inventory.API.Controllers
 
                 if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 {
-                    await _cacheService.SetCacheAsync(redisKey+id, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return NotFound(result.Messages);
-            }
-        }
-
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(List<CatalogDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ListCatalogByName(string value)
-        {
-            if (_cacheService.TryGetCacheAsync(redisKey + value, out IEnumerable<CatalogDTO> catalogs))
-            {
-                return Ok(catalogs);
-            }
-            else
-            {
-                var result = await _catalogServices.SearchCatalog(value);
-
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + value, result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
                     return Ok(result.Data);
                 }
 
@@ -105,7 +108,8 @@ namespace Inventory.API.Controllers
             }
 
             var result = await _catalogServices.CreateCatalog(dto);
-            await _cacheService.RemoveCacheAsync(redisKey);
+
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
             
             return Created("catalog/"+result.Data!.Id,result.Messages);
         }
@@ -126,7 +130,7 @@ namespace Inventory.API.Controllers
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
-                await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
+                await _cacheService.RemoveCacheTreeAsync(redisKey);
                 return Ok(result.Messages);
             }
             else
@@ -147,7 +151,7 @@ namespace Inventory.API.Controllers
 
             if (result.Status == ResponseStatus.STATUS_SUCCESS)
             {
-                await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
+                await _cacheService.RemoveCacheTreeAsync(redisKey);
                 return Ok(result.Messages);
             }
             else

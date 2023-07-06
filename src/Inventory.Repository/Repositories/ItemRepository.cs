@@ -31,16 +31,19 @@ namespace Inventory.Repository.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<PaginationList<Item>> GetListItem(ListItemRequest requestParams)
+        public async Task<PaginationList<Item>> GetListItem(PaginationRequest requestParams)
         {
             PaginationList<Item> items = new();
             var query = GetAllWithProperty;
 
             if (requestParams.SearchKeyword != null)
             {
+                var searchKeyword = requestParams.SearchKeyword.ToLower();
                 query = query.Where(x =>
-                    x.Name!.ToLower().Contains(requestParams.SearchKeyword.ToLower()) ||
-                    x.Catalog!.Name!.ToLower().Contains(requestParams.SearchKeyword.ToLower())
+                    x.Id.ToString().ToLower().Contains(searchKeyword) ||
+                    x.Name!.ToLower().Contains(searchKeyword) ||
+                    x.Description!.ToLower().Contains(searchKeyword) ||
+                    x.Catalog!.Name!.ToLower().Contains(searchKeyword)
                     );
             }
 

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
@@ -121,25 +122,23 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> SearchCatalog(string filter)
+        public async Task<PaginationResponse<CatalogDTO>> GetPagination(PaginationRequest request)
         {
-            ResultResponse<IEnumerable<CatalogDTO>> response = new() { Messages = new List<ResponseMessage>() };
-
-            IEnumerable<Catalog> catalogs;
-
-            if (int.TryParse(filter, out int id))
+            PaginationResponse<CatalogDTO> response = new() 
             {
-                catalogs = await _catalog.GetAsync(x => x.Name!.Contains(filter) || x.Id == id);
-            }
-            else
-            {
-                catalogs = await _catalog.GetAsync(x => x.Name!.Contains(filter));
-            }
+                PageIndex = request.PageIndex,
+                PageSize = request.PageSize,
+                Messages = new List<ResponseMessage>() 
+            };
 
-            if (catalogs.Any())
+            var catalogs = await _catalog.GetPagination(request);
+
+            if (catalogs.Data!.Any())
             {
+                response.TotalRecords = catalogs.TotalRecords;
+                response.TotalPages = catalogs.TotalPages;
                 response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
+                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs.Data);
             }
             else
             {

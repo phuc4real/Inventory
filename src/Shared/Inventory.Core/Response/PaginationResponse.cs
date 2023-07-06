@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Response
 {
-    public class ItemResponse : ResultResponse<IEnumerable<ItemDetailDTO>>
+    public class PaginationResponse<T> : ResultResponse<IEnumerable<T>> where T: class
     {
         public int PageIndex { get; set; }
         public int PageSize { get; set; }

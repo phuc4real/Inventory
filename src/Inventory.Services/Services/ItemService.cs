@@ -95,9 +95,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ItemResponse> GetAll(ListItemRequest requestParams)
+        public async Task<PaginationResponse<ItemDetailDTO>> GetAll(PaginationRequest requestParams)
         {
-            ItemResponse response = new()
+            PaginationResponse<ItemDetailDTO> response = new()
             {
                 PageIndex = requestParams.PageIndex,
                 PageSize = requestParams.PageSize,

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Request
 {
-    public class ListItemRequest
+    public class PaginationRequest
     {
         public int PageIndex { get; set; }
         public int PageSize { get; set; }
