@@ -149,6 +149,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins(builder.Configuration["Client:Origin"]!)
+                .WithExposedHeaders(new []{ "Location" })
                 .AllowAnyHeader()
                 .AllowAnyMethod();
     });

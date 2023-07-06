@@ -21,8 +21,8 @@ namespace Inventory.Services
             services.AddDbContext<AppDbContext>(
                 options =>
                 {
-                    //options.UseSqlServer(configuration.GetConnectionString("Inventory"));
-                    options.UseNpgsql(configuration.GetConnectionString("InventoryPostgres"));
+                    options.UseSqlServer(configuration.GetConnectionString("InventorySQLServerAzure"));
+                    //options.UseNpgsql(configuration.GetConnectionString("InventoryPostgres"));
                     options.ConfigureWarnings(builder => 
                         builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });
@@ -51,7 +51,7 @@ namespace Inventory.Services
             try
             {
                 services.AddSingleton<IConnectionMultiplexer>(options =>
-                    ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis")));
+                    ConnectionMultiplexer.Connect(configuration.GetConnectionString("RedisCloud")));
             }
             catch (Exception ex)
             {

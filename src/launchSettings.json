@@ -7,9 +7,7 @@
       "composeLaunchServiceName": "api",
       "composeLaunchUrl": "{Scheme}://localhost:{ServicePort}",
       "serviceActions": {
-        "api": "StartDebugging",
-        "redis": "StartWithoutDebugging",
-        "db": "StartWithoutDebugging"
+        "api": "StartDebugging"
       }
     }
   }
