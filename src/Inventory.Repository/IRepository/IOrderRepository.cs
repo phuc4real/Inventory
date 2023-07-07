@@ -1,10 +1,6 @@
-﻿using Inventory.Repository.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 
 namespace Inventory.Repository.IRepository
 {
@@ -12,6 +8,6 @@ namespace Inventory.Repository.IRepository
     {
         Task<Order> GetById(int id);
         Task<IEnumerable<Order>> GetAllAsync();
-        Task<IEnumerable<Order>> OrdersByItem(Item item);
+        Task<PaginationList<Order>> GetPagination(PaginationRequest request);
     }
 }

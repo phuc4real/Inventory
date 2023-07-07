@@ -38,7 +38,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Catalogs");
+                    b.ToTable("Catalogs", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Export", b =>
@@ -65,7 +65,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("Exports");
+                    b.ToTable("Exports", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.ExportDetail", b =>
@@ -88,7 +88,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("ItemId");
 
-                    b.ToTable("ExportDetails");
+                    b.ToTable("ExportDetails", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
@@ -138,7 +138,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("LastModifiedBy");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Order", b =>
@@ -168,7 +168,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("OrderBy");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.OrderDetail", b =>
@@ -192,7 +192,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderDetail");
+                    b.ToTable("OrderDetail", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Receipt", b =>
@@ -216,7 +216,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("Receipts");
+                    b.ToTable("Receipts", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.ReceiptDetail", b =>
@@ -234,7 +234,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("ReceiptId");
 
-                    b.ToTable("ReceiptDetail");
+                    b.ToTable("ReceiptDetail", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Team", b =>
@@ -253,7 +253,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("LeaderId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
@@ -304,7 +304,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("LastModifiedBy");
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Tickets", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.TicketDetail", b =>
@@ -325,7 +325,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketDetail");
+                    b.ToTable("TicketDetail", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

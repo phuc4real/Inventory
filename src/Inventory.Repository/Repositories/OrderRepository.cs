@@ -1,13 +1,11 @@
-﻿using Inventory.Repository.DbContext;
+﻿using Inventory.Core.Extensions;
+using Inventory.Core.Helper;
+using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
@@ -41,12 +39,39 @@ namespace Inventory.Repository.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<IEnumerable<Order>> OrdersByItem(Item item)
+        public async Task<PaginationList<Order>> GetPagination(PaginationRequest request)
         {
-            var query = GetAllWithProperty
-                .Where(x => x.Items!.Contains(item));
+            PaginationList<Order> pagination = new();
 
-            return await query.ToListAsync();
+            var query = GetAllWithProperty;
+
+            if(request.SearchKeyword != null)
+            {
+                var searchKeyword = request.SearchKeyword.ToLower();
+                query = query.Where(x =>
+                    x.Id.ToString().Contains(searchKeyword) ||
+                    x.Items!.Any(i => i.Name!.ToLower().Contains(searchKeyword)) ||
+                    x.Items!.Any(i => i.Id!.ToString().ToLower().Contains(searchKeyword))
+                    );
+            }
+
+            pagination.TotalRecords = query.Count();
+            pagination.TotalPages = pagination.TotalRecords / request.PageSize;
+
+            if (request.SortField != null && request.SortField != "undefined")
+            {
+                string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
+
+                var desc = request.SortDirection == "desc";
+
+                query = query.OrderByField(columnName, !desc);
+            }
+
+            query = query.Skip(request.PageIndex * request.PageSize)
+                .Take(request.PageSize);
+            pagination.Data = await query.ToListAsync();
+
+            return pagination;
         }
     }
 }

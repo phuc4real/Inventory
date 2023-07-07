@@ -3,15 +3,9 @@ using Inventory.Core.Extensions;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using Inventory.Repository.Model;
 using Inventory.Services.IServices;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
-using Serilog.Core;
 
 namespace Inventory.API.Controllers
 {

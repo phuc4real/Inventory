@@ -1,5 +1,4 @@
 ﻿using Inventory.Services.IServices;
-using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
 using System;
 using System.Text;
@@ -49,7 +48,7 @@ namespace Inventory.Services.Services
             var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
 
             await redis.StringSetAsync(key, bytes);
-            await redis.KeyExpireAsync(key, TimeSpan.FromMinutes(5));
+            await redis.KeyExpireAsync(key, TimeSpan.FromMinutes(10));
         }
 
         public bool TryGetCacheAsync<T>(string key, out T value)
