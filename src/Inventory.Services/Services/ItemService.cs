@@ -117,6 +117,30 @@ namespace Inventory.Services.Services
             return response;
         }
 
+        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetList(string? name)
+        {
+            ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
+            { Messages = new List<ResponseMessage>() };
+
+            //var items = name == null ? await _item.GetAsync() :
+            //     await _item.GetAsync(x => x.Name!.ToLower().Contains(name.ToLower()));
+
+            var items = await _item.Search(name);
+
+            if (items.Any())
+            {
+                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
+            }
+            else
+            {
+                response.Status = ResponseStatus.STATUS_FAILURE;
+                response.Messages.Add(new ResponseMessage("Item", "There is no record"));
+            }
+
+            return response;
+        }
+
         public async Task<ResultResponse<ItemDetailDTO>> GetById(Guid id)
         {
             ResultResponse<ItemDetailDTO> response = new() 

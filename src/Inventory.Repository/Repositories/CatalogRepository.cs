@@ -67,5 +67,16 @@ namespace Inventory.Repository.Repositories
 
             return catalogs;
         }
+        public async Task<IEnumerable<Catalog>> Search(string name)
+        {
+            IQueryable<Catalog> query = _context.Catalogs;
+
+            if (name != null)
+            {
+                query = query.Where(x => x.Name!.ToLower().Contains(name.ToLower()));
+            }
+
+            return await query.Take(10).ToListAsync();
+        }
     }
 }

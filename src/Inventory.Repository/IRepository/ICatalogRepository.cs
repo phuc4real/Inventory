@@ -12,6 +12,7 @@ namespace Inventory.Repository.IRepository
     public interface ICatalogRepository : IRepository<Catalog>
     {
         Task<Catalog> FindById(int id);
+        Task<IEnumerable<Catalog>> Search(string name);
 
         Task<PaginationList<Catalog>> GetPagination(PaginationRequest request);
     }

@@ -43,7 +43,7 @@ namespace Inventory.API.Controllers
                 if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 {
                     await _cacheService.SetCacheAsync(redisKey + queryString, result);
-                    return Ok(result);
+                    return StatusCode(200, result);
                 }
 
                 return NotFound(result.Messages);
@@ -55,17 +55,19 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> ListCatalog()
         {
-            if (_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<CatalogDTO> catalogs))
+            var queryString = Request.QueryString.ToString();
+
+            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out IEnumerable<CatalogDTO> catalogs))
             {
                 return Ok(catalogs);
             }
             else
             {
-                var result = await _catalogServices.GetAll();
+                var result = await _catalogServices.GetList();
 
                 if (result.Status == ResponseStatus.STATUS_SUCCESS)
                 {
-                    await _cacheService.SetCacheAsync(redisKey, result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + ".List" + queryString, result.Data);
                     return Ok(result.Data);
                 }
 

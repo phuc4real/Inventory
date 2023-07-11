@@ -22,7 +22,7 @@ namespace Inventory.Services.Services
             _mapper = mapper;
         }
 
-        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetAll()
+        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetList()
         {
             ResultResponse<IEnumerable<CatalogDTO>> response = new()
             { Messages = new List<ResponseMessage>()};

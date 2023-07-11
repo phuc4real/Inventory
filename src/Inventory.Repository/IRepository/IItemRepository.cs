@@ -7,6 +7,7 @@ namespace Inventory.Repository.IRepository
 {
     public interface IItemRepository : IRepository<Item>
     {
+        Task<IEnumerable<Item>> Search(string name);
         Task<Item> GetById(Guid id);
         Task<PaginationList<Item>> GetListItem(PaginationRequest requestParams);
     }

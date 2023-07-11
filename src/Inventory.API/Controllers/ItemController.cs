@@ -24,10 +24,34 @@ namespace Inventory.API.Controllers
             _cacheService = cacheService;
         }
 
+        [HttpGet("list")]
+        [ProducesResponseType(typeof(List<ItemDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetList([FromQuery] string? name)
+        {
+            var queryString = Request.QueryString.ToString();
+            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out List<ItemDetailDTO> response))
+            {
+                return Ok(response);
+            }
+            else
+            {
+                var result = await _itemService.GetList(name);
+
+                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                {
+                    await _cacheService.SetCacheAsync(redisKey + ".List" + queryString, result.Data);
+                    return Ok(result.Data);
+                }
+
+                return NotFound(result.Messages);
+            }
+        }
+
         [HttpGet]
         [ProducesResponseType(typeof(PaginationResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ListItem([FromQuery] PaginationRequest requestParams)
+        public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest requestParams)
         {
             var queryString = Request.QueryString.ToString();
             if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<ItemDetailDTO> response))

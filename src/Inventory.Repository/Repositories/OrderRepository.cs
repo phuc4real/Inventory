@@ -55,9 +55,6 @@ namespace Inventory.Repository.Repositories
                     );
             }
 
-            pagination.TotalRecords = query.Count();
-            pagination.TotalPages = pagination.TotalRecords / request.PageSize;
-
             if (request.SortField != null && request.SortField != "undefined")
             {
                 string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
@@ -66,6 +63,9 @@ namespace Inventory.Repository.Repositories
 
                 query = query.OrderByField(columnName, !desc);
             }
+
+            pagination.TotalRecords = query.Count();
+            pagination.TotalPages = pagination.TotalRecords / request.PageSize;
 
             query = query.Skip(request.PageIndex * request.PageSize)
                 .Take(request.PageSize);

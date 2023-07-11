@@ -88,7 +88,7 @@ namespace Inventory.Services.Services
             IList<OrderDetail> orderDetails = new List<OrderDetail>();
 
             var userId = _tokenService.GetUserId(token);
-
+            double total = 0;
             foreach (var detail in dto.Details!)
             {
                 var itemExists = await _item.AnyAsync(x => x.Id == detail.ItemId);
@@ -100,8 +100,20 @@ namespace Inventory.Services.Services
 
                     return response;
                 }
-
+                double itemTotal = detail.Price * detail.Quantity;
+                
+                if(itemTotal != detail.Total) {
+                    response.Messages.Add(new ResponseMessage("OrderDetail", "Item total not match!"));
+                    return response;
+                }
+                total += itemTotal;
                 orderDetails.Add(_mapper.Map<OrderDetail>(detail));
+            }
+
+            if (total != dto.OrderTotal)
+            {
+                response.Messages.Add(new ResponseMessage("Order", "Order total not match!"));
+                return response;
             }
 
 
@@ -111,7 +123,8 @@ namespace Inventory.Services.Services
                 Status = OrderStatus.Pending,
                 Details = orderDetails,
                 OrderBy = userId,
-                OrderDate = DateTime.UtcNow
+                OrderDate = DateTime.UtcNow,
+                CompleteDate = default(DateTime)
             };
             
             await _order.AddAsync(order);
@@ -160,9 +173,21 @@ namespace Inventory.Services.Services
                 switch (order.Status)
                 {
                     case OrderStatus.Pending:
+                        {
+                            order.Status++;
+                            _order.Update(order);
+                            await _unitOfWork.SaveAsync();
+
+                            response.Status = ResponseStatus.STATUS_SUCCESS;
+                            response.Data = _mapper.Map<OrderDTO>(order);
+
+                            response.Messages.Add(new ResponseMessage("Order", "Order status changed!"));
+                            break;
+                        }
                     case OrderStatus.Processing:
                         {
                             order.Status++;
+                            order.CompleteDate = DateTime.UtcNow;
                             _order.Update(order);
                             await _unitOfWork.SaveAsync();
 

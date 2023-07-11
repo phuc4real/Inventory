@@ -65,5 +65,17 @@ namespace Inventory.Repository.Repositories
 
             return items;
         }
+
+        public async Task<IEnumerable<Item>> Search(string name)
+        {
+            IQueryable<Item> query = _context.Items;
+
+            if (name != null)
+            {
+                query = query.Where(x => x.Name!.ToLower().Contains(name.ToLower()));
+            }
+
+            return await query.Take(10).ToListAsync();
+        }
     }
 }
