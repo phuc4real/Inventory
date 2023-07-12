@@ -6,8 +6,9 @@ namespace Inventory.Repository.IRepository
 {
     public interface IOrderRepository : IRepository<Order>
     {
-        Task<Order> GetById(int id);
-        Task<IEnumerable<Order>> GetAllAsync();
         Task<PaginationList<Order>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<Order>> GetList();
+        Task<Order> GetById(int id);
+
     }
 }

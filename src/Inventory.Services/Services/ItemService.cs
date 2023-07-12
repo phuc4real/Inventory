@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
@@ -33,15 +33,14 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<ItemDetailDTO>> CreateItem(string token, ItemEditDTO dto)
         {
-            ResultResponse<ItemDetailDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ItemDetailDTO> response = new();
 
             var userId = _tokenService.GetUserId(token);
 
             if (!_catalog.AnyAsync(x=> x.Id == dto.CatalogId).Result)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", $"Catalog #{dto.CatalogId} not exist!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Catalog", $"Catalog #{dto.CatalogId} not exist!");
             }
             else
             {
@@ -56,24 +55,23 @@ namespace Inventory.Services.Services
 
                 response.Data = _mapper.Map<ItemDetailDTO>(item);
 
-                response.Messages.Add(new ResponseMessage("Item", $"Item created!"));
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Message = new("Item", $"Item created!");
+                response.Status = ResponseCode.Success;
             }
             return response;
         }
 
         public async Task<ResultResponse<ItemDetailDTO>> DeleteItem(string token, Guid id)
         {
-            ResultResponse<ItemDetailDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ItemDetailDTO> response = new();
 
             var userId = _tokenService.GetUserId(token);
             var item = await _item.GetById(id);
 
             if (item == null || item.IsDeleted)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Item", "Item not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Item", "Item not found!");
             }
             else
             {
@@ -83,35 +81,34 @@ namespace Inventory.Services.Services
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("Item", "Item deleted!"));
+                response.Status = ResponseCode.Success;
+                response.Message = new("Item", "Item deleted!");
             }
 
             return response;
         }
 
-        public async Task<PaginationResponse<ItemDetailDTO>> GetAll(PaginationRequest requestParams)
+        public async Task<PaginationResponse<ItemDetailDTO>> GetPagination(PaginationRequest requestParams)
         {
             PaginationResponse<ItemDetailDTO> response = new()
             {
                 PageIndex = requestParams.PageIndex,
-                PageSize = requestParams.PageSize,
-                Messages = new List<ResponseMessage>() 
+                PageSize = requestParams.PageSize
             };
 
-            var items = await _item.GetListItem(requestParams);
+            var items = await _item.GetPagination(requestParams);
 
             if (items.Data!.Any())
             {
                 response.TotalPages = items.TotalPages;
                 response.TotalRecords = items.TotalRecords;
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items.Data);
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Item", "There is no record"));
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Item", "There is no record");
             }
 
             return response;
@@ -119,23 +116,19 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetList(string? name)
         {
-            ResultResponse<IEnumerable<ItemDetailDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<IEnumerable<ItemDetailDTO>> response = new();
 
-            //var items = name == null ? await _item.GetAsync() :
-            //     await _item.GetAsync(x => x.Name!.ToLower().Contains(name.ToLower()));
-
-            var items = await _item.Search(name);
+            var items = await _item.GetList(name);
 
             if (items.Any())
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<ItemDetailDTO>>(items);
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Item", "There is no record"));
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Item", "There is no record");
             }
 
             return response;
@@ -143,19 +136,18 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<ItemDetailDTO>> GetById(Guid id)
         {
-            ResultResponse<ItemDetailDTO> response = new() 
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ItemDetailDTO> response = new();
 
             var item = await _item.GetById(id);
             
             if (item == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Item", "Item not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Item", "Item not found!");
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<ItemDetailDTO>(item);
             }
 
@@ -164,16 +156,15 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<ItemDetailDTO>> UpdateItem(string token, Guid id, ItemEditDTO dto)
         {
-            ResultResponse<ItemDetailDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ItemDetailDTO> response = new();
 
             var userid = _tokenService.GetUserId(token);
             var item = await _item.GetById(id);
 
             if (item == null || item.IsDeleted)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Item", "Item not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Item", "Item not found!");
             }
             else
             {
@@ -187,8 +178,8 @@ namespace Inventory.Services.Services
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("Item", "Item updated!"));
+                response.Status = ResponseCode.Success;
+                response.Message = new("Item", "Item updated!");
             }
 
             return response;

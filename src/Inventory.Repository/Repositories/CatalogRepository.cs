@@ -6,11 +6,6 @@ using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
@@ -25,7 +20,7 @@ namespace Inventory.Repository.Repositories
 
         private IQueryable<Catalog> GetAll => _context.Catalogs; 
 
-        public async Task<Catalog> FindById(int id)
+        public async Task<Catalog> GetById(int id)
         {
             var query = GetAll.Where(x => x.Id == id);
 #pragma warning disable CS8603 // Possible null reference return.
@@ -67,7 +62,7 @@ namespace Inventory.Repository.Repositories
 
             return catalogs;
         }
-        public async Task<IEnumerable<Catalog>> Search(string name)
+        public async Task<IEnumerable<Catalog>> GetList(string name)
         {
             IQueryable<Catalog> query = _context.Catalogs;
 

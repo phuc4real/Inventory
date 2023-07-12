@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Enums;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
@@ -29,10 +31,10 @@ namespace Inventory.Services.Services
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> GetUsingItemByRole(string token)
+        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> GetList(string token)
         {
             ResultResponse<IEnumerable<UsingItemDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ;
 
             var userId = _tokenService.GetUserId(token);
             var user = await _userManager.FindByIdAsync(userId);
@@ -42,87 +44,75 @@ namespace Inventory.Services.Services
 
             if (userRoles.Contains(InventoryRoles.IM))
             {
-                result = await _exportDetail.GetUsingItem();
+                result = await _exportDetail.GetList();
             }
             else if (userRoles.Contains(InventoryRoles.PM))
             {
-                result = await _exportDetail.GetUsingItemByTeam(user!.TeamId!.Value);
+                result = await _exportDetail.GetList(user!.TeamId!.Value);
             }
             else
             {
-                result = await _exportDetail.GetUsingItemByUser(userId);
+                result = await _exportDetail.GetList(userId);
             }
 
             if (result.Any())
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<UsingItemDTO>>(result);
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("UsingItem", "There is no record!"));
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("UsingItem", "There is no record!");
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> MyUsingItem(string token)
+        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> GetMyUsingItem(string token)
         {
             ResultResponse<IEnumerable<UsingItemDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ;
 
             var userId = _tokenService.GetUserId(token);
 
-            var result = await _exportDetail.GetUsingItemByUser(userId);
+            var result = await _exportDetail.GetList(userId);
 
             if (result.Any())
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<UsingItemDTO>>(result);
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("UsingItem", "There is no record!"));
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("UsingItem", "There is no record!");
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<UsingItemDTO>>> SearchForUsingItem(string token, string filter)
+        public async Task<PaginationResponse<UsingItemDTO>> GetPagination(string token, PaginationRequest request)
         {
-            ResultResponse<IEnumerable<UsingItemDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
-
-            var userId = _tokenService.GetUserId(token);
-            var user = await _userManager.FindByIdAsync(userId);
-            var userRoles = await _userManager.GetRolesAsync(user!);
-
-            IEnumerable<ExportDetail>? result;
-
-            if (userRoles.Contains(InventoryRoles.IM))
+            PaginationResponse<UsingItemDTO> response = new()
             {
-                result = await _exportDetail.SearchAsync(filter);
-            }
-            else if (userRoles.Contains(InventoryRoles.PM))
+                PageIndex = request.PageIndex,
+                PageSize = request.PageSize
+            };
+
+            var lists = await _exportDetail.GetPagination(request);
+
+            if (lists.Data!.Any())
             {
-                result = await _exportDetail.SearchInTeamAsync(user!.TeamId!.Value, filter);
+                response.TotalRecords = lists.TotalRecords;
+                response.TotalPages = lists.TotalPages;
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<IEnumerable<UsingItemDTO>>(lists.Data);
             }
             else
             {
-                result = await _exportDetail.SearchMyItemAsync(userId, filter);
-            }
-
-            if (result.Any())
-            {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<UsingItemDTO>>(result);
-            }
-            else
-            {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("UsingItem", "There is no record!"));
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Export", "No record!");
             }
 
             return response;

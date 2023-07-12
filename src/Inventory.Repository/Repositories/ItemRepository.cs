@@ -31,7 +31,7 @@ namespace Inventory.Repository.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<PaginationList<Item>> GetListItem(PaginationRequest requestParams)
+        public async Task<PaginationList<Item>> GetPagination(PaginationRequest requestParams)
         {
             PaginationList<Item> items = new();
             var query = GetAllWithProperty;
@@ -66,7 +66,7 @@ namespace Inventory.Repository.Repositories
             return items;
         }
 
-        public async Task<IEnumerable<Item>> Search(string name)
+        public async Task<IEnumerable<Item>> GetList(string name)
         {
             IQueryable<Item> query = _context.Items;
 

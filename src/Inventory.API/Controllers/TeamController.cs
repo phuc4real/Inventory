@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
@@ -34,15 +35,15 @@ namespace Inventory.API.Controllers
             }
             else 
             {
-                var result = await _teamServices.GetAll();
+                var result = await _teamServices.GetList();
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey,result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -59,13 +60,13 @@ namespace Inventory.API.Controllers
             {
                 var result = await _teamServices.GetById(id);
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey + id, result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -85,7 +86,7 @@ namespace Inventory.API.Controllers
             var result = await _teamServices.CreateTeam(token, dto);
             await _cacheService.RemoveCacheAsync(redisKey);
 
-            return Created("team/"+result.Data!.Id,result.Messages);
+            return Created("team/"+result.Data!.Id,result.Message);
         }
 
         [HttpPut("{id:Guid}")]
@@ -106,8 +107,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : NotFound(result.Message);
         }
 
         [HttpDelete("{id:Guid}")]
@@ -122,31 +123,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheAsync(new[] { redisKey, redisKey + id });
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : NotFound(result.Messages);
-        }
-
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(List<TeamDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SearchByName(string name)
-        {
-            if (_cacheService.TryGetCacheAsync(redisKey + name, out IEnumerable<TeamDTO> teams))
-            {
-                return Ok(teams);
-            }
-            else
-            {
-                var result = await _teamServices.SearchTeamByName(name);
-
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + name, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return NotFound(result.Messages);
-            }
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : NotFound(result.Message);
         }
 
         [HttpPost("{id:Guid}/add-member")]
@@ -161,8 +139,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheAsync(redisKey+id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : NotFound(result.Message);
         }
     }
 }

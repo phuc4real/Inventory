@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
@@ -29,14 +30,14 @@ namespace Inventory.API.Controllers
         {
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _usingItemService.GetUsingItemByRole(token);
+            var result = await _usingItemService.GetList(token);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseCode.Success)
             {
                 return Ok(result.Data);
             }
 
-            return NotFound(result.Messages);
+            return NotFound(result.Message);
         }
 
         [HttpGet("my-list")]
@@ -46,31 +47,14 @@ namespace Inventory.API.Controllers
         {
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _usingItemService.MyUsingItem(token);
+            var result = await _usingItemService.GetMyUsingItem(token);
 
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
+            if (result.Status == ResponseCode.Success)
             {
                 return Ok(result.Data);
             }
 
-            return NotFound(result.Messages);
-        }
-
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(IEnumerable<UsingItemDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SearchUsingItem(string filter)
-        {
-            var token = await HttpContext.GetAccessToken();
-
-            var result = await _usingItemService.SearchForUsingItem(token, filter);
-
-            if (result.Status == ResponseStatus.STATUS_SUCCESS)
-            {
-                return Ok(result.Data);
-            }
-
-            return NotFound(result.Messages);
+            return NotFound(result.Message);
         }
     }
 }

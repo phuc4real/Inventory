@@ -24,7 +24,7 @@ namespace Inventory.Repository.Repositories
             .Include(x => x.Details)!
             .ThenInclude(x => x.Item);
 
-        public async Task<IEnumerable<Order>> GetAllAsync()
+        public async Task<IEnumerable<Order>> GetList()
         {
             return await GetAllWithProperty.ToListAsync();
         }

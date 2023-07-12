@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
@@ -35,14 +36,14 @@ namespace Inventory.API.Controllers
             }
             else
             {
-                var result = await _orderService.GetAll();
+                var result = await _orderService.GetList();
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey + ".ListOrder", result.Data);
                     return Ok(result.Data);
                 }
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -61,12 +62,12 @@ namespace Inventory.API.Controllers
             {
                 var result = await _orderService.GetPagination(request);
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey + queryString, result);
                     return Ok(result);
                 }
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -85,8 +86,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Created("order/"+result.Data!.Id,result.Messages) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Created("order/"+result.Data!.Id,result.Message) : NotFound(result.Message);
         }
 
         [HttpGet("{id:int}")]
@@ -103,12 +104,12 @@ namespace Inventory.API.Controllers
             {
                 var result = await _orderService.GetById(id);
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
                     return Ok(result.Data);
                 }
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -122,8 +123,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : BadRequest(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : BadRequest(result.Message);
         }
 
         [HttpDelete("{id:int}/cancel")]
@@ -136,8 +137,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : BadRequest(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : BadRequest(result.Message);
         }
     }
 }

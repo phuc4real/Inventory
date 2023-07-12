@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Response;
@@ -32,18 +33,15 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<TokenModel>> ExternalLoginAsync()
         {
+            ResultResponse<TokenModel> response = new();
 
-            ResultResponse<TokenModel> response = new()
-            {
-                Messages = new List<ResponseMessage>()
-            };
             var info = await _signInManager.GetExternalLoginInfoAsync();
 
             //TODO: Kiểm tra ==null trước để tra ra lỗi ngay lập tức.
             if (info == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages!.Add(new ResponseMessage("Error", "Something went wrong!"));
+                response.Status = ResponseCode.BadRequest;
+                response.Message = new("Error", "Something went wrong!");
             }
             else
             {
@@ -55,8 +53,8 @@ namespace Inventory.Services.Services
                 {
                     if (user != null)
                     {
-                        response.Status = ResponseStatus.STATUS_FAILURE;
-                        response.Messages!.Add(new ResponseMessage("User", "Email already use!"));
+                        response.Status = ResponseCode.Conflict;
+                        response.Message = new("User", "Email already use!");
                     }
                     else
                     {
@@ -70,18 +68,17 @@ namespace Inventory.Services.Services
 
                         var res = await CreateUser(newUser, StringHelper.PasswordGenerate(16));
 
-                        if (res.Status == ResponseStatus.STATUS_SUCCESS)
+                        if (res)
                         {
-                            response.Status = ResponseStatus.STATUS_SUCCESS;
+                            response.Status = ResponseCode.Success;
                             await _userManager.AddToRoleAsync(newUser, InventoryRoles.Employee);
                             await _userManager.AddLoginAsync(newUser, info);
-                            response.Messages!.Add(new ResponseMessage("User", "User created successfully!"));
-                            
+                            response.Message = new("User", "User created successfully!");
                         }
                         else
                         {
-                            response.Status = ResponseStatus.STATUS_FAILURE;
-                            response.Messages!.Add(new ResponseMessage("User", "Cannot create user, please try again!"));
+                            response.Status = ResponseCode.BadRequest;
+                            response.Message = new("User", "User info invalid!");
                         }
                         //TODO: Chổ này có cần có else khum? nếu khum create user thành công thì return response luôn k làm cái dưới.
 
@@ -91,14 +88,14 @@ namespace Inventory.Services.Services
                 //TODO: FindByEmailAsync có email đã khởi tạo ở trên rồi, e nên dùng lại.
 
                 response.Data = await GetTokens(user!);
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
             }
             return response;
         }
 
         public async Task<ResultResponse<TokenModel>> SignInAsync(LoginDTO dto)
         {
-            ResultResponse<TokenModel> response = new() { Messages = new List<ResponseMessage>() };
+            ResultResponse<TokenModel> response = new();
 
             //TOD0: sử dụng "toán tử điều kiện" cho ngắn gọn hơn vì trong if else cùng làm 1 công việc.
 
@@ -108,8 +105,8 @@ namespace Inventory.Services.Services
 
             if (user == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages!.Add(new ResponseMessage("User", "User not exists!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("User", "User not exists!");
             }
             else
             {
@@ -123,12 +120,12 @@ namespace Inventory.Services.Services
                     await _userManager.UpdateAsync(user);
 
                     response.Data = tokens;
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
+                    response.Status = ResponseCode.Success;
                 }
                 else
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages!.Add(new ResponseMessage("User", "Wrong password!"));
+                    response.Status = ResponseCode.BadRequest;
+                    response.Message = new("User", "Wrong password!");
                 }
             }
             return response;
@@ -136,32 +133,36 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<TokenModel>> SignUpAsync(RegisterDTO dto)
         {
-            ResultResponse<TokenModel> response = new()
-            {
-                Messages = new List<ResponseMessage>()
-            };
+            ResultResponse<TokenModel> response = new();
             //TODO: following the C# naming conventions(EmailExist, UserNameExist).
             var emailExist = await _userManager.FindByEmailAsync(dto.Email!) is not null;
             var userNameExist = await _userManager.FindByNameAsync(dto.Username!) is not null;
+
             if (emailExist || userNameExist)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages!.Add(new ResponseMessage("User", "User already exists!"));
+                response.Status = ResponseCode.Conflict;
+                response.Message = new("User", "User already exists!");
             }
             else
             {
-                AppUser user = new() { UserName = dto.Username, Email = dto.Email };
+                AppUser user = new() 
+                { 
+                    UserName = dto.Username, 
+                    Email = dto.Email 
+                };
+
                 var res = await CreateUser(user, dto.Password!);
-                if (res.Status == ResponseStatus.STATUS_SUCCESS)
+
+                if (res)
                 {
                     await _userManager.AddToRoleAsync(user, InventoryRoles.Employee);
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
-                    response.Messages!.Add(new ResponseMessage("User", "User created successfully!"));
+                    response.Status = ResponseCode.Success;
+                    response.Message = new("User", "User created successfully!");
                 }
                 else
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages!.Add(new ResponseMessage("User", "Cannot create user, please try again!"));
+                    response.Status = ResponseCode.BadRequest;
+                    response.Message = new("User", "User info invalid!");
                 }
             }
 
@@ -178,18 +179,15 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<TokenModel>> SignOutAsync(string token)
         {
-            ResultResponse<TokenModel> response = new()
-            {
-                Messages = new List<ResponseMessage>()
-            };
+            ResultResponse<TokenModel> response = new();
 
             var userId = _tokenService.GetUserId(token);
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("User", "User not exist!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("User", "User not exist!");
             }
             else
             {
@@ -197,8 +195,9 @@ namespace Inventory.Services.Services
                 user.RefreshTokenExpireTime = DateTime.UtcNow;
                 await _userManager.UpdateAsync(user);
                 await _userManager.UpdateSecurityStampAsync(user);
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("User", "User logout!"));
+
+                response.Status = ResponseCode.Success;
+                response.Message = new("User", "User logout!");
             }
 
             return response;
@@ -206,7 +205,7 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken)
         {
-            ResultResponse<TokenModel> response = new() { Messages = new List<ResponseMessage>() };
+            ResultResponse<TokenModel> response = new();
 
             try
             {
@@ -214,8 +213,8 @@ namespace Inventory.Services.Services
 
                 if (principal == null)
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("AccessToken", "Access Token Invalid!"));
+                    response.Status = ResponseCode.BadRequest;
+                    response.Message = new("AccessToken", "Access Token Invalid!");
                 }
                 else
                 {
@@ -236,14 +235,14 @@ namespace Inventory.Services.Services
 
                     if (isValid)
                     {
-                        var newAccessToken = await GetTokens(user!);
-                        response.Status = ResponseStatus.STATUS_SUCCESS;
-                        response.Data = newAccessToken;
+                        var newToken = await GetTokens(user!);
+                        response.Status = ResponseCode.Success;
+                        response.Data = newToken;
                     }
                     else
                     {
-                        response.Status = ResponseStatus.STATUS_FAILURE;
-                        response.Messages.Add(new ResponseMessage("RefreshToken", "Refresh token Invalid!"));
+                        response.Status = ResponseCode.BadRequest;
+                        response.Message = new("RefreshToken", "Refresh token Invalid!");
                     }
                 }
 
@@ -251,28 +250,17 @@ namespace Inventory.Services.Services
             }
             catch (Exception)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("AccessToken", "Access token Invalid!"));
+                response.Status = ResponseCode.BadRequest;
+                response.Message = new("AccessToken", "Access token Invalid!");
+
                 return response;
             }
         }
 
-        private async Task<ResultResponse<TokenModel>> CreateUser(AppUser user, string password)
+        private async Task<bool> CreateUser(AppUser user, string password)
         {
-            ResultResponse<TokenModel> response = new();
             var result = await _userManager.CreateAsync(user, password);
-            if (result.Succeeded)
-            {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-            }
-            else
-            {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages = result.Errors
-                    .Select(x => new ResponseMessage(x.Code, x.Description))
-                    .ToList();
-            }
-            return response;
+            return result.Succeeded;
         }
 
         private async Task<TokenModel> GetTokens(AppUser user)
@@ -296,35 +284,30 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<AppUserDTO>> GrantPermission(GrantRoleDTO dto)
         {
-            ResultResponse<AppUserDTO> response = new()
-            {
-                Messages = new List<ResponseMessage>()
-            };
+            ResultResponse<AppUserDTO> response = new();
 
             var user = await _userManager.FindByIdAsync(dto.UserId!);
             if (user == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("User", "User not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("User", "User not found!");
             }
             else
             {
                 var role = dto.Role.ToDescriptionString();
                 var hasRole = await _userManager.IsInRoleAsync(user,role!);
-                if (!hasRole)
+                if (hasRole)
                 {
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
-                    await _userManager.AddToRoleAsync(user, role!);
-                    response.Messages.Add(new ResponseMessage("User", $"Grant role {role} to {user.UserName}"));
+                    response.Status = ResponseCode.Conflict;
+                    response.Message = new("User", $"User already has role {role}!");
                 }
                 else
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("User", $"User already has role {role}!"));
+                    response.Status = ResponseCode.Success;
+                    await _userManager.AddToRoleAsync(user, role!);
+                    response.Message = new("User", $"Grant role {role} to {user.UserName}");
                 }
-
             }
-
             return response;
         }
     }

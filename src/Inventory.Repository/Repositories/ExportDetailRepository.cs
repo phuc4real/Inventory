@@ -1,10 +1,15 @@
-﻿using Inventory.Repository.DbContext;
+﻿using Inventory.Core.Extensions;
+using Inventory.Core.Helper;
+using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -23,12 +28,14 @@ namespace Inventory.Repository.Repositories
             .Include(x => x.Export)
             .Include(x => x.ForUser);
 
-        public async Task<IEnumerable<ExportDetail>> GetUsingItem()
+        public async Task<IEnumerable<ExportDetail>> GetList()
         {
-            return await GetAllWithProperty.ToListAsync();
+            var query = GetAllWithProperty;
+
+            return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<ExportDetail>> GetUsingItemByTeam(Guid teamId)
+        public async Task<IEnumerable<ExportDetail>> GetList(Guid teamId)
         {
             var query = GetAllWithProperty
                 .Where(x => x.ForUser!.TeamId == teamId);
@@ -36,7 +43,7 @@ namespace Inventory.Repository.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<ExportDetail>> GetUsingItemByUser(string userId)
+        public async Task<IEnumerable<ExportDetail>> GetList(string userId)
         {
             var query = GetAllWithProperty
                 .Where(x=>x.ForUserId == userId);
@@ -44,54 +51,42 @@ namespace Inventory.Repository.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<IEnumerable<ExportDetail>> SearchAsync(string filter)
+        public async Task<PaginationList<ExportDetail>> GetPagination(PaginationRequest request)
         {
-            _ = int.TryParse(filter, out int eid);
-            _ = Guid.TryParse(filter, out Guid iid);
+            PaginationList<ExportDetail> pagination = new();
 
-            var query = GetAllWithProperty
-                .Where(x => x.ItemId.Equals(iid) ||
-                            x.Item!.Name!.Contains(filter) ||
-                            x.ExportId.Equals(eid) ||
-                            x.ForUser!.UserName!.Contains(filter) ||
-                            x.ForUser.Id.Equals(filter) ||
-                            x.ForUser.Email!.Equals(filter)
+            var query = GetAllWithProperty;
+
+            if (request.SearchKeyword != null)
+            {
+                var searchKeyword = request.SearchKeyword.ToLower();
+                query = query.Where(x =>
+                    x.ItemId.ToString().Contains(searchKeyword) ||
+                    x.Item!.Name!.Contains(searchKeyword) ||
+                    x.ExportId.Equals(searchKeyword) ||
+                    x.ForUser!.UserName!.Contains(searchKeyword) ||
+                    x.ForUser.Id.Equals(searchKeyword) ||
+                    x.ForUser.Email!.Equals(searchKeyword)
                 );
+            }
 
-            return await query.ToListAsync();
-        }
+            if (request.SortField != null && request.SortField != "undefined")
+            {
+                string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
 
-        public async Task<IEnumerable<ExportDetail>> SearchInTeamAsync(Guid teamId, string filter)
-        {
-            _ = int.TryParse(filter, out int eid);
-            _ = Guid.TryParse(filter, out Guid iid);
+                var desc = request.SortDirection == "desc";
 
-            var query = GetAllWithProperty
-                .Where(x => x.ForUser!.TeamId == teamId)
-                .Where(x => x.ItemId.Equals(iid) ||
-                            x.Item!.Name!.Contains(filter) ||
-                            x.ExportId.Equals(eid) ||
-                            x.ForUser!.UserName!.Contains(filter) ||
-                            x.ForUser.Id.Equals(filter) ||
-                            x.ForUser.Email!.Equals(filter)
-                );
+                query = query.OrderByField(columnName, !desc);
+            }
 
-            return await query.ToListAsync();
-        }
+            pagination.TotalRecords = query.Count();
+            pagination.TotalPages = pagination.TotalRecords / request.PageSize;
 
-        public async Task<IEnumerable<ExportDetail>> SearchMyItemAsync(string userId, string filter)
-        {
-            _ = int.TryParse(filter, out int eid);
-            _ = Guid.TryParse(filter, out Guid iid);
+            query = query.Skip(request.PageIndex * request.PageSize)
+                .Take(request.PageSize);
+            pagination.Data = await query.ToListAsync();
 
-            var query = GetAllWithProperty
-                .Where(x => x.ForUserId == userId)
-                .Where(x => x.ItemId.Equals(iid) ||
-                            x.Item!.Name!.Contains(filter) ||
-                            x.ExportId.Equals(eid)
-                );
-
-            return await query.ToListAsync();
+            return pagination;
         }
     }
 }

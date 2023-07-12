@@ -9,8 +9,8 @@ namespace Inventory.Services.IServices
     public interface ICatalogServices
     {
         Task<ResultResponse<IEnumerable<CatalogDTO>>> GetList();
-        Task<ResultResponse<CatalogDTO>> GetById(int id);
         Task<PaginationResponse<CatalogDTO>> GetPagination(PaginationRequest request);
+        Task<ResultResponse<CatalogDTO>> GetById(int id);
         Task<ResultResponse<CatalogDTO>> CreateCatalog(CatalogEditDTO dto);
         Task<ResultResponse<CatalogDTO>> UpdateCatalog(int id, CatalogEditDTO dto);
         Task<ResultResponse<CatalogDTO>> DeleteCatalog(int id);

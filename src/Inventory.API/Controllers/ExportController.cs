@@ -1,9 +1,12 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
+using Inventory.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +19,7 @@ namespace Inventory.API.Controllers
     {
         private readonly IExportService _exportService;
         private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "export";
+        private const string redisKey = "Inventory.Export";
 
         public ExportController(IExportService exportService, IRedisCacheService cacheService)
         {
@@ -25,57 +28,61 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(List<ExportWithDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ListExport()
+        [ProducesResponseType(typeof(PaginationResponse<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey, out IEnumerable<ExportWithDetailDTO> exports))
+            var queryString = Request.QueryString.ToString();
+
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<ExportDTO> catalogs))
             {
-                return Ok(exports);
+                return Ok(catalogs);
             }
             else
             {
-                var result = await _exportService.GetAll();
+                var result = await _exportService.GetPagination(request);
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
-                    await _cacheService.SetCacheAsync(redisKey, result.Data);
-                    return Ok(result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
+                    return Ok(result);
                 }
 
-                return NotFound(result.Messages);
+                return StatusCode((int)result.Status, result.Message);
             }
         }
 
-        [HttpGet("by-item/{itemId:Guid}")]
-        [ProducesResponseType(typeof(List<ExportWithDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ListExportByItemId(Guid itemId)
+        [HttpGet("list")]
+        [ProducesResponseType(typeof(IEnumerable<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> ListExport()
         {
-            if(_cacheService.TryGetCacheAsync(redisKey + itemId, out IEnumerable<ExportWithDetailDTO> exports))
+            var queryString = Request.QueryString.ToString();
+
+            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out IEnumerable<ExportDTO> exports))
             {
                 return Ok(exports);
             }
             else
             {
-                var result = await _exportService.GetExportByItemId(itemId);
+                var result = await _exportService.GetList();
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
-                    await _cacheService.SetCacheAsync(redisKey + itemId, result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + ".List" + queryString, result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Messages);
+                return StatusCode((int)result.Status, result.Message);
             }
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(ExportWithDetailDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ExportDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetExport(int id)
         {
-            if(_cacheService.TryGetCacheAsync(redisKey + id,out ExportWithDetailDTO export))
+            if(_cacheService.TryGetCacheAsync(redisKey + id,out ExportDTO export))
             {
                 return Ok(export);
             }
@@ -83,13 +90,13 @@ namespace Inventory.API.Controllers
             {
                 var result = await _exportService.GetById(id);
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey + id, result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -109,8 +116,8 @@ namespace Inventory.API.Controllers
             var result = await _exportService.CreateExport(token, dto);
             await _cacheService.RemoveCacheAsync(redisKey);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Created("export/" + result.Data!.Id, result.Messages) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Created("export/" + result.Data!.Id, result.Message) : NotFound(result.Message);
         }
 
         [HttpDelete("{id:int}/cancel")]
@@ -120,8 +127,8 @@ namespace Inventory.API.Controllers
         {
             var result = await _exportService.CancelExport(id);
             await _cacheService.RemoveCacheAsync(new [] { redisKey, redisKey + id });
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : NotFound(result.Message);
         }
     }
 }

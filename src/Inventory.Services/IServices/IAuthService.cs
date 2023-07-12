@@ -15,17 +15,11 @@ namespace Inventory.Services.IServices
     public interface IAuthService
     {
         Task<ResultResponse<TokenModel>> SignInAsync(LoginDTO dto);
-
         Task<ResultResponse<TokenModel>> SignUpAsync(RegisterDTO dto);
-
-        AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl);
-
         Task<ResultResponse<TokenModel>> ExternalLoginAsync();
-
         Task<ResultResponse<TokenModel>> SignOutAsync(string token);
-
         Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken);
-
         Task<ResultResponse<AppUserDTO>> GrantPermission(GrantRoleDTO dto);
+        AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl);
     }
 }

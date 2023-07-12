@@ -7,7 +7,7 @@ namespace Inventory.Services.IServices
     public interface IItemService
     {
         Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetList(string? name);
-        Task<PaginationResponse<ItemDetailDTO>> GetAll(PaginationRequest requestParams);
+        Task<PaginationResponse<ItemDetailDTO>> GetPagination(PaginationRequest request);
         Task<ResultResponse<ItemDetailDTO>> GetById(Guid id);
         Task<ResultResponse<ItemDetailDTO>> CreateItem(string token, ItemEditDTO dto);
         Task<ResultResponse<ItemDetailDTO>> UpdateItem(string token, Guid id, ItemEditDTO dto);

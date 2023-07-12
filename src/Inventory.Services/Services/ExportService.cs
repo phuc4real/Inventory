@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Enums;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
@@ -36,17 +38,16 @@ namespace Inventory.Services.Services
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<ExportWithDetailDTO>> CancelExport(int id)
+        public async Task<ResultResponse<ExportDTO>> CancelExport(int id)
         {
-            ResultResponse<ExportWithDetailDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ExportDTO> response = new();
 
             var export = await _export.GetById(id);
 
             if (export == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Export", "Export not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Export", "Export not found!");
             }
             else
             {
@@ -63,16 +64,15 @@ namespace Inventory.Services.Services
                 _export.Update(export);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("Export", "Export canceled!"));
+                response.Status = ResponseCode.Success;
+                response.Message = new ("Export", "Export canceled!");
             }
             return response;
         }
 
-        public async Task<ResultResponse<ExportWithDetailDTO>> CreateExport(string token, ExportCreateDTO dto)
+        public async Task<ResultResponse<ExportDTO>> CreateExport(string token, ExportCreateDTO dto)
         {
-            ResultResponse<ExportWithDetailDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ExportDTO> response = new();
 
             var userId = _tokenService.GetUserId(token);
 
@@ -84,15 +84,15 @@ namespace Inventory.Services.Services
 
                 if (item == null || item.InStock < detail.Quantity)
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-
                     if (item == null)
                     {
-                        response.Messages.Add(new ResponseMessage("Item", $"Item #{detail.ItemId} not exists!"));
+                        response.Status = ResponseCode.NotFound;
+                        response.Message = new ("Item", $"Item #{detail.ItemId} not exists!");
                     }
                     else
                     {
-                        response.Messages.Add(new ResponseMessage("Item", $"Out of stock!"));
+                        response.Status = ResponseCode.UnprocessableContent;
+                        response.Message = new ("Item", $"Out of stock!");
                     }
 
                     return response;
@@ -117,73 +117,74 @@ namespace Inventory.Services.Services
             await _export.AddAsync(export);
             await _unitOfWork.SaveAsync();
 
-            response.Data = _mapper.Map<ExportWithDetailDTO>(export);
-            response.Status = ResponseStatus.STATUS_SUCCESS;
-            response.Messages.Add(new ResponseMessage("Export", "Export created!"));
+            response.Data = _mapper.Map<ExportDTO>(export);
+            response.Status = ResponseCode.Success;
+            response.Message = new ("Export", "Export created!");
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ExportWithDetailDTO>>> GetAll()
+        public async Task<ResultResponse<ExportDTO>> GetById(int id)
         {
-            ResultResponse<IEnumerable<ExportWithDetailDTO>> response = new()
-            {  Messages = new List<ResponseMessage>() };
-
-            var exports = await _export.GetAllAsync();
-
-            if (exports.Any())
-            {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<ExportWithDetailDTO>>(exports);
-            }
-            else
-            {
-                response.Status =ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Export", "There is no record"));
-            }
-            
-            return response;
-        }
-
-        public async Task<ResultResponse<ExportWithDetailDTO>> GetById(int id)
-        {
-            ResultResponse<ExportWithDetailDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<ExportDTO> response = new();
 
             var export = await _export.GetById(id);
 
             if(export == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Export", "Export not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Export", "Export not found!");
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<ExportWithDetailDTO>(export);
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<ExportDTO>(export);
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ExportWithDetailDTO>>> GetExportByItemId(Guid id)
+        public async Task<ResultResponse<IEnumerable<ExportDTO>>> GetList()
         {
-            ResultResponse<IEnumerable<ExportWithDetailDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<IEnumerable<ExportDTO>> response = new();
 
-            var item = await _item.GetById(id);
+            var exports = await _export.GetList();
 
-            if (item == null)
+            if (exports.Any())
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Item", $"Item #{id} not exists!"));
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<IEnumerable<ExportDTO>>(exports);
             }
             else
             {
-                var exports = await _export.ExportByItem(item);
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Export", "There is no record");
+            }
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<ExportWithDetailDTO>>(exports);
+            return response;
+        }
+
+        public async Task<PaginationResponse<ExportDTO>> GetPagination(PaginationRequest request)
+        {
+            PaginationResponse<ExportDTO> response = new()
+            {
+                PageIndex = request.PageIndex,
+                PageSize = request.PageSize
+            };
+
+            var lists = await _export.GetPagination(request);
+
+            if (lists.Data!.Any())
+            {
+                response.TotalRecords = lists.TotalRecords;
+                response.TotalPages = lists.TotalPages;
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<IEnumerable<ExportDTO>>(lists.Data);
+            }
+            else
+            {
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Export", "No record!");
             }
 
             return response;

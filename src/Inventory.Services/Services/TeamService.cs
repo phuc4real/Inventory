@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Enums;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
@@ -33,25 +35,24 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<TeamDTO>> AddMember(string token, Guid teamId, string memberId)
         {
-            ResultResponse<TeamDTO> response = new ()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<TeamDTO> response = new ();
 
             var userIdFromToken = _tokenService.GetUserId(token);
             var newMember = await _userManager.FindByIdAsync(memberId);
 
-            var team = await _team.GetTeamById(teamId);
+            var team = await _team.GetById(teamId);
 
             if (team == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Team", "Team not exists!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Team", "Team not exists!");
             }
             else
             {
                 if (userIdFromToken != team.LeaderId)
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                    response.Status = ResponseCode.Forbidden;
+                    response.Message = new("Team", $"You are not leader of Team {team.Name}!");
                 }
                 else
                 {
@@ -69,8 +70,8 @@ namespace Inventory.Services.Services
 
                     _team.Update(team);
                     await _unitOfWork.SaveAsync();
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
-                    response.Messages.Add(new ResponseMessage("Team", "Add new member to team successfully!"));
+                    response.Status = ResponseCode.Success;
+                    response.Message = new("Team", "Add new member to team successfully!");
                 }
 
             }
@@ -81,7 +82,7 @@ namespace Inventory.Services.Services
         public async Task<ResultResponse<TeamDTO>> CreateTeam(string token, TeamEditDTO dto)
         {
             ResultResponse<TeamDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ;
 
             var userId = _tokenService.GetUserId(token);
 
@@ -92,61 +93,60 @@ namespace Inventory.Services.Services
             await _unitOfWork.SaveAsync();
 
             response.Data = _mapper.Map<TeamDTO>(team);
-            response.Status = ResponseStatus.STATUS_SUCCESS;
-            response.Messages.Add(new ResponseMessage("Team", "Team created!"));
+            response.Status = ResponseCode.Success;
+            response.Message = new("Team", "Team created!");
             return response;
         }
 
         public async Task<ResultResponse<TeamDTO>> DeleteTeam(string token, Guid id)
         {
             ResultResponse<TeamDTO> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ;
             
             var userId = _tokenService.GetUserId(token);
 
-            var team = await _team.GetTeamById(id);
+            var team = await _team.GetById(id);
 
             if (team == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Team", "Team not exists!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Team", "Team not exists!");
             }
             else
             {
                 if(userId != team.LeaderId)
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                    response.Status = ResponseCode.Forbidden;
+                    response.Message = new("Team", $"You are not leader of Team {team.Name}!");
                 }
                 else
                 {
                     _team.Remove(team);
                     await _unitOfWork.SaveAsync();
 
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
-                    response.Messages.Add(new ResponseMessage("Team", "Team deleted!"));
+                    response.Status = ResponseCode.Success;
+                    response.Message = new("Team", "Team deleted!");
                 }
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<TeamDTO>>> GetAll()
+        public async Task<ResultResponse<IEnumerable<TeamDTO>>> GetList()
         {
-            ResultResponse<IEnumerable<TeamDTO>> response = new()
-            { Messages = new List<ResponseMessage>() };
+            ResultResponse<IEnumerable<TeamDTO>> response = new();
 
-            var teams = await _team.GetAllWithPropertyAsync();
+            var teams = await _team.GetList();
 
             if (teams.Any())
             {
                 response.Data = _mapper.Map<IEnumerable<TeamDTO>>(teams);
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Team", "There is no record"));
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Team", "There is no record");
             }
 
             return response;
@@ -155,40 +155,19 @@ namespace Inventory.Services.Services
         public async Task<ResultResponse<TeamWithMembersDTO>> GetById(Guid id)
         {
             ResultResponse<TeamWithMembersDTO> response = new() 
-            { Messages = new List<ResponseMessage>() };
+            ;
 
-            var team = await _team.GetTeamById(id);
+            var team = await _team.GetById(id);
 
             if (team == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Team", "Team not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Team", "Team not found!");
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<TeamWithMembersDTO>(team);
-            }
-
-            return response;
-        }
-
-        public async Task<ResultResponse<IEnumerable<TeamDTO>>> SearchTeamByName(string name)
-        {
-            ResultResponse<IEnumerable<TeamDTO>> response = new() 
-            { Messages = new List<ResponseMessage>() };
-
-            var teams = await _team.GetAsync(x=> x.Name!.Contains(name));
-
-            if (teams.Any())
-            {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<TeamDTO>>(teams);
-            }
-            else
-            {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Team", "Team not found!"));
             }
 
             return response;
@@ -197,23 +176,23 @@ namespace Inventory.Services.Services
         public async Task<ResultResponse<TeamDTO>> UpdateTeam(string token, Guid id, TeamEditDTO dto)
         {
             ResultResponse<TeamDTO> response = new() 
-            { Messages = new List<ResponseMessage>() };
+            ;
 
             var userId = _tokenService.GetUserId(token);
 
-            var team = await _team.GetTeamById(id);
+            var team = await _team.GetById(id);
 
             if (team == null)
             {
-                response.Status =ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Team", "Team not found!"));
+                response.Status =ResponseCode.NotFound;
+                response.Message = new("Team", "Team not found!");
             }
             else
             {
                 if (userId != team.LeaderId)
                 {
-                    response.Status = ResponseStatus.STATUS_FAILURE;
-                    response.Messages.Add(new ResponseMessage("Team", $"You are not leader of Team {team.Name}!"));
+                    response.Status = ResponseCode.Forbidden;
+                    response.Message = new("Team", $"You are not leader of Team {team.Name}!");
                 }
                 else
                 {
@@ -223,9 +202,35 @@ namespace Inventory.Services.Services
                     _team.Update(team);
                     await _unitOfWork.SaveAsync();
 
-                    response.Status = ResponseStatus.STATUS_SUCCESS;
-                    response.Messages.Add(new ResponseMessage("Team", "Team updated!"));
+                    response.Status = ResponseCode.Success;
+                    response.Message = new("Team", "Team updated!");
                 }
+            }
+
+            return response;
+        }
+
+        public async Task<PaginationResponse<TeamDTO>> GetPagination(PaginationRequest request)
+        {
+            PaginationResponse<TeamDTO> response = new()
+            {
+                PageIndex = request.PageIndex,
+                PageSize = request.PageSize
+            };
+
+            var lists = await _team.GetPagination(request);
+
+            if (lists.Data!.Any())
+            {
+                response.TotalRecords = lists.TotalRecords;
+                response.TotalPages = lists.TotalPages;
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<IEnumerable<TeamDTO>>(lists.Data);
+            }
+            else
+            {
+                response.Status = ResponseCode.NoContent;
+                response.Message = new("Team", "No record!");
             }
 
             return response;

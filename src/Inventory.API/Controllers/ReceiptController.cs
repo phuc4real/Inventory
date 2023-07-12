@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
@@ -35,14 +36,14 @@ namespace Inventory.API.Controllers
             }
             else
             {
-                var result = await _receiptService.GetAll();
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                var result = await _receiptService.GetList();
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey, result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -59,35 +60,13 @@ namespace Inventory.API.Controllers
             {
                 var result = await _receiptService.ReceiptById(id);
 
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
+                if (result.Status == ResponseCode.Success)
                 {
                     await _cacheService.SetCacheAsync(redisKey + id, result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Messages);
-            }
-        }
-
-        [HttpGet("by-item/{itemId:Guid}")]
-        [ProducesResponseType(typeof(List<ReceiptDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> ReceiptsByItemId(Guid itemId)
-        {
-            if (_cacheService.TryGetCacheAsync(redisKey + itemId, out IEnumerable<ReceiptDTO> receipts))
-            {
-                return Ok(receipts);
-            }
-            else
-            {
-                var result = await _receiptService.ReceiptByItemId(itemId);
-                if (result.Status == ResponseStatus.STATUS_SUCCESS)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + itemId, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return NotFound(result.Messages);
+                return NotFound(result.Message);
             }
         }
 
@@ -109,8 +88,8 @@ namespace Inventory.API.Controllers
 
             await _cacheService.RemoveCacheAsync(redisKey);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Created("receipt/"+result.Data!.Id,result.Messages) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                Created("receipt/"+result.Data!.Id,result.Message) : NotFound(result.Message);
         }
     }
 }

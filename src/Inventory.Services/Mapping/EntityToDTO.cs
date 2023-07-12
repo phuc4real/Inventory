@@ -30,7 +30,7 @@ namespace Inventory.Services.Mapping
 
 
             CreateMap<Export, ExportDTO>();
-            CreateMap<Export, ExportWithDetailDTO>();
+            CreateMap<Export, ExportDTO>();
             CreateMap<ExportDetail, ExportDetailDTO>();
             CreateMap<ExportDetail, UsingItemDTO>();
 
