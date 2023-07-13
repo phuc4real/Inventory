@@ -25,7 +25,7 @@ namespace Inventory.Repository.Repositories
         public async Task<Item> GetById(Guid id)
         {
             var query = GetAllWithProperty
-                .Where(x => x.Id == id);
+               .Where(x => x.Id == id);
 #pragma warning disable CS8603 // Possible null reference return.
             return await query.FirstOrDefaultAsync();
 #pragma warning restore CS8603 // Possible null reference return.
@@ -34,7 +34,7 @@ namespace Inventory.Repository.Repositories
         public async Task<PaginationList<Item>> GetPagination(PaginationRequest requestParams)
         {
             PaginationList<Item> items = new();
-            var query = GetAllWithProperty;
+            var query = GetAllWithProperty.Where(x => !x.IsDeleted);
 
             if (requestParams.SearchKeyword != null)
             {
@@ -68,7 +68,7 @@ namespace Inventory.Repository.Repositories
 
         public async Task<IEnumerable<Item>> GetList(string name)
         {
-            IQueryable<Item> query = _context.Items;
+            var query = GetAllWithProperty.Where(x => !x.IsDeleted);
 
             if (name != null)
             {

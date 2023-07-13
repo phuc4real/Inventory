@@ -32,7 +32,7 @@ namespace Inventory.Repository.Repositories
         {
             PaginationList<Catalog> catalogs = new();
 
-            var query = GetAll;
+            var query = GetAll.Where(x => !x.IsDeleted);
 
             if (request.SearchKeyword != null)
             {
@@ -64,7 +64,7 @@ namespace Inventory.Repository.Repositories
         }
         public async Task<IEnumerable<Catalog>> GetList(string name)
         {
-            IQueryable<Catalog> query = _context.Catalogs;
+            IQueryable<Catalog> query = _context.Catalogs.Where(x => !x.IsDeleted);
 
             if (name != null)
             {

@@ -68,11 +68,11 @@ namespace Inventory.Repository.DbContext
                 .HasForeignKey(e => e.TeamId)
                 .IsRequired(false);
 
-            builder.Entity<Catalog>()
-                .HasQueryFilter(x => !x.IsDeleted);
+            //builder.Entity<Catalog>()
+            //    .HasQueryFilter(x => !x.IsDeleted);
 
-            builder.Entity<Item>()
-                .HasQueryFilter(x => !x.IsDeleted);
+            //builder.Entity<Item>()
+            //    .HasQueryFilter(x => !x.IsDeleted);
         }
     }
 }
