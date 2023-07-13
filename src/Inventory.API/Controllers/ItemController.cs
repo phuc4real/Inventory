@@ -27,7 +27,7 @@ namespace Inventory.API.Controllers
 
         [HttpGet("list")]
         [ProducesResponseType(typeof(List<ItemDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetList([FromQuery] string? name)
         {
             var queryString = Request.QueryString.ToString();
@@ -45,13 +45,14 @@ namespace Inventory.API.Controllers
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Message);
+                //return StatusCode((int)result.Status,result.Message);
+                return StatusCode((int)result.Status);
             }
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(PaginationResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest requestParams)
         {
             var queryString = Request.QueryString.ToString();
@@ -69,13 +70,13 @@ namespace Inventory.API.Controllers
                     return Ok(result);
                 }
 
-                return NotFound(result.Message);
+                return StatusCode((int)result.Status);
             }
         }
 
         [HttpGet("{id:Guid}")]
         [ProducesResponseType(typeof(ItemDetailDTO),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetItem(Guid id)
         {
             if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out ItemDetailDTO items))
@@ -92,15 +93,15 @@ namespace Inventory.API.Controllers
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Message);
+                return StatusCode((int)result.Status, result.Message);
             }
         }
 
         [HttpPost]
         [Authorize(Roles =InventoryRoles.IM)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateItem(ItemEditDTO item)
         {
             if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
@@ -112,14 +113,14 @@ namespace Inventory.API.Controllers
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseCode.Success ?
-                Created("item/" + result.Data!.Id, result.Message) : NotFound(result.Message);
+                Created("item/" + result.Data!.Id, result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPut("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(ResultResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateItem(Guid id, ItemEditDTO item)
         {
             if(!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
@@ -131,13 +132,13 @@ namespace Inventory.API.Controllers
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseCode.Success ?
-                    Ok(result) : NotFound(result.Message);
+                    Ok(result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
         [HttpDelete("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteItem(Guid id)
         {
             var accessToken = await HttpContext.GetAccessToken();
@@ -147,7 +148,7 @@ namespace Inventory.API.Controllers
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseCode.Success ?
-                    Ok(result.Message) : NotFound(result.Message);
+                    Ok(result.Message) : StatusCode((int)result.Status, result.Message);
         }
     }
 }

@@ -36,7 +36,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Catalog", "No record");
+                //response.Message = new("Catalog", "No record");
             }
 
             return response;
@@ -141,7 +141,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Catalog", "No record!");
+                //response.Message = new("Catalog", "No record!");
             }
 
             return response;

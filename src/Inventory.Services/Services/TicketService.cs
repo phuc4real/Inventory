@@ -158,7 +158,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Ticket", "There is no record!");
+                //response.Message = new("Ticket", "There is no record!");
             }
 
             return response;
@@ -416,7 +416,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Ticket", "There is no record!");
+                //response.Message = new("Ticket", "There is no record!");
             }
 
             return response;

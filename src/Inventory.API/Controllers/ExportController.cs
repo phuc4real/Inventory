@@ -48,7 +48,7 @@ namespace Inventory.API.Controllers
                     return Ok(result);
                 }
 
-                return StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.Status);
             }
         }
 
@@ -73,16 +73,16 @@ namespace Inventory.API.Controllers
                     return Ok(result.Data);
                 }
 
-                return StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.Status);
             }
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ExportDTO), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetExport(int id)
         {
-            if(_cacheService.TryGetCacheAsync(redisKey + id,out ExportDTO export))
+            if(_cacheService.TryGetCacheAsync(redisKey + "." + id,out ExportDTO export))
             {
                 return Ok(export);
             }
@@ -92,18 +92,19 @@ namespace Inventory.API.Controllers
 
                 if (result.Status == ResponseCode.Success)
                 {
-                    await _cacheService.SetCacheAsync(redisKey + id, result.Data);
+                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
                     return Ok(result.Data);
                 }
 
-                return NotFound(result.Message);
+                return StatusCode((int)result.Status, result.Message);
             }
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> CreateExport(ExportCreateDTO dto)
         {
             if (!ModelState.IsValid)
@@ -114,21 +115,20 @@ namespace Inventory.API.Controllers
             var token = await HttpContext.GetAccessToken();
 
             var result = await _exportService.CreateExport(token, dto);
-            await _cacheService.RemoveCacheAsync(redisKey);
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseCode.Success ?
-                    Created("export/" + result.Data!.Id, result.Message) : NotFound(result.Message);
+                    Created("export/" + result.Data!.Id, result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
         [HttpDelete("{id:int}/cancel")]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CancelExport(int id)
         {
             var result = await _exportService.CancelExport(id);
-            await _cacheService.RemoveCacheAsync(new [] { redisKey, redisKey + id });
-            return result.Status == ResponseCode.Success ?
-                    Ok(result.Message) : NotFound(result.Message);
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
+            return StatusCode((int)result.Status, result.Message);
         }
     }
 }

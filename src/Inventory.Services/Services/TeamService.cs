@@ -146,7 +146,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Team", "There is no record");
+                //response.Message = new("Team", "There is no record");
             }
 
             return response;
@@ -230,7 +230,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Team", "No record!");
+                //response.Message = new("Team", "No record!");
             }
 
             return response;

@@ -42,7 +42,7 @@ namespace Inventory.API.Controllers
         [HttpPost("login")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
             if (!ModelState.IsValid)

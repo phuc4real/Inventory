@@ -47,7 +47,7 @@ namespace Inventory.API.Controllers
                     return Ok(result);
                 }
 
-                return StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.Status);
             }
         }
 
@@ -72,7 +72,7 @@ namespace Inventory.API.Controllers
                     return Ok(result.Data);
                 }
 
-                return StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.Status);
             }
         }
 

@@ -1,18 +1,11 @@
 ﻿using AutoMapper;
-using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
-using Inventory.Repository.Repositories;
 using Inventory.Services.IServices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.Services
 {
@@ -158,7 +151,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Export", "There is no record");
+                //response.Message = new("Export", "There is no record");
             }
 
             return response;
@@ -184,7 +177,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.NoContent;
-                response.Message = new("Export", "No record!");
+                //response.Message = new("Export", "No record!");
             }
 
             return response;
