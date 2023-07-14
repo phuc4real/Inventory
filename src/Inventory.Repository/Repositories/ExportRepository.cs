@@ -25,8 +25,11 @@ namespace Inventory.Repository.Repositories
         }
 
         private IQueryable<Export> GetAllWithProperty => _context.Exports
-                .Include(x => x.Details)!
-                .ThenInclude(x => x.Item);
+            .Where(x=>!x.IsCancel)
+            .Include(x => x.Details)!
+                .ThenInclude(x => x.Item)
+            .Include(x => x.CreatedByUser); 
+
 
         public async Task<IEnumerable<Export>> GetList()
         {

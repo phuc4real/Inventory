@@ -72,6 +72,7 @@ namespace Inventory.Services
             services.AddScoped<IReceiptRepository, ReceiptRepository>();
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IExportDetailRepository, ExportDetailRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }
@@ -86,10 +87,11 @@ namespace Inventory.Services
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IExportService, ExportService>();
-            services.AddScoped<IReceiptService, ReceiptService>();
+            services.AddScoped<IReceiptService, ReceiptService>();  
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IUsingItemService, UsingItemService>();
             services.AddScoped<IRedisCacheService, RedisCacheService>();
+            services.AddScoped<IUserService, UserService>();
 
             return services;
         }
