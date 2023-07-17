@@ -422,9 +422,44 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public Task<PaginationResponse<TicketDTO>> GetPagination(string token, PaginationRequest request)
+        public async Task<PaginationResponse<TicketDTO>> GetPagination(string token, PaginationRequest request)
         {
-            throw new NotImplementedException();
+            PaginationResponse<TicketDTO> response = new();
+
+            var userId = _tokenService.GetUserId(token);
+            var user = await _userManager.FindByIdAsync(userId);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            var list = await _ticket.GetPagination(request);
+
+            //IEnumerable<Ticket>? listTicket;
+
+            //if (userRoles.Contains(InventoryRoles.IM))
+            //{
+            //    listTicket = await _ticket.GetList();
+            //}
+            //else if (userRoles.Contains(InventoryRoles.PM))
+            //{
+            //    listTicket = await _ticket.GetList(user!.TeamId!.Value);
+            //}
+            //else
+            //{
+            //    listTicket = await _ticket.GetList(userId);
+            //}
+
+            if (list.Data!.Any())
+            {
+                response.TotalRecords = list.TotalRecords;
+                response.TotalPages = list.TotalPages;
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<IEnumerable<TicketDTO>>(list.Data);
+            }
+            else
+            {
+                response.Status = ResponseCode.NoContent;
+            }
+
+            return response;
         }
     }
 }

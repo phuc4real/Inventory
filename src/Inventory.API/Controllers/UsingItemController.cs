@@ -1,6 +1,7 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
@@ -24,8 +25,25 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(PaginationResponse<UsingItemDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest request)
+        {
+            var token = await HttpContext.GetAccessToken();
+
+            var result = await _usingItemService.GetPagination(token, request);
+
+            if (result.Status == ResponseCode.Success)
+            {
+                return Ok(result.Data);
+            }
+
+            return StatusCode((int)result.Status);
+        }
+
+        [HttpGet("list")]
         [ProducesResponseType(typeof(IEnumerable<UsingItemDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> ListUsingItem()
         {
             var token = await HttpContext.GetAccessToken();
@@ -37,12 +55,12 @@ namespace Inventory.API.Controllers
                 return Ok(result.Data);
             }
 
-            return NotFound(result.Message);
+            return StatusCode((int)result.Status);
         }
 
         [HttpGet("my-list")]
         [ProducesResponseType(typeof(IEnumerable<UsingItemDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> MyUsingItem()
         {
             var token = await HttpContext.GetAccessToken();
@@ -54,7 +72,7 @@ namespace Inventory.API.Controllers
                 return Ok(result.Data);
             }
 
-            return NotFound(result.Message);
+            return StatusCode((int)result.Status);
         }
     }
 }
