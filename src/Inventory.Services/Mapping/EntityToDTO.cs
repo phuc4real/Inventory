@@ -2,11 +2,6 @@
 using Inventory.Core.Extensions;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.Mapping
 {
@@ -22,6 +17,7 @@ namespace Inventory.Services.Mapping
 
 
             CreateMap<AppUser, AppUserDTO>();
+            CreateMap<AppUser, AppUserWithTeamDTO>();
 
             CreateMap<Item, ItemDTO>();
             CreateMap<Item, ItemDetailDTO>();
@@ -35,7 +31,7 @@ namespace Inventory.Services.Mapping
 
 
             CreateMap<Export, ExportDTO>();
-            CreateMap<Export, ExportWithDetailDTO>();
+            CreateMap<Export, ExportDTO>();
             CreateMap<ExportDetail, ExportDetailDTO>();
             CreateMap<ExportDetail, UsingItemDTO>();
 

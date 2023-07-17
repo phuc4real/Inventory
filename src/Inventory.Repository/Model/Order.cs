@@ -19,7 +19,7 @@ namespace Inventory.Repository.Model
         public string? OrderBy { get; set; }
         [ForeignKey(nameof(OrderBy))]
         public AppUser? OrderByUser { get; set; }
-        public DateTime CompleteDate { get; set; }
+        public DateTime? CompleteDate { get; set; }
 
         public IList<Item>? Items { get; set; }
         public IList<OrderDetail>? Details { get; set; }

@@ -17,7 +17,7 @@ namespace Inventory.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.5")
+                .HasAnnotation("ProductVersion", "7.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -38,7 +38,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Catalogs");
+                    b.ToTable("Catalogs", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Export", b =>
@@ -65,7 +65,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("Exports");
+                    b.ToTable("Exports", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.ExportDetail", b =>
@@ -88,7 +88,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("ItemId");
 
-                    b.ToTable("ExportDetails");
+                    b.ToTable("ExportDetails", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
@@ -138,7 +138,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("LastModifiedBy");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Order", b =>
@@ -168,7 +168,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("OrderBy");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.OrderDetail", b =>
@@ -192,7 +192,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderDetail");
+                    b.ToTable("OrderDetail", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Receipt", b =>
@@ -216,7 +216,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("Receipts");
+                    b.ToTable("Receipts", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.ReceiptDetail", b =>
@@ -234,7 +234,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("ReceiptId");
 
-                    b.ToTable("ReceiptDetail");
+                    b.ToTable("ReceiptDetail", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Team", b =>
@@ -253,7 +253,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("LeaderId");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
@@ -304,7 +304,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("LastModifiedBy");
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Tickets", (string)null);
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.TicketDetail", b =>
@@ -325,7 +325,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketDetail");
+                    b.ToTable("TicketDetail", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -372,6 +372,12 @@ namespace Inventory.Repository.Migrations
                             Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
                             Name = "Inventory Manager",
                             NormalizedName = "INVENTORY MANAGER"
+                        },
+                        new
+                        {
+                            Id = "fc2a7273-a3c2-47be-bc55-aab11097e09a",
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
                         });
                 });
 
@@ -533,6 +539,13 @@ namespace Inventory.Repository.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
+                            RoleId = "fc2a7273-a3c2-47be-bc55-aab11097e09a"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -573,6 +586,24 @@ namespace Inventory.Repository.Migrations
                     b.HasIndex("TeamId");
 
                     b.HasDiscriminator().HasValue("AppUser");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ea727fd5-cfe5-43e2-bb0b-e6e2a0f8ae69",
+                            Email = "admin@local.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@LOCAL.COM",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOuHrNcNkFhgvLybKYvapPDh69ozM+vh3ZD1TqjoBuSDVhsUICj6pKfUz+wLmf+ZYQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "c9f0b0db-c57a-4916-b68e-966009cf86dd",
+                            TwoFactorEnabled = false,
+                            UserName = "admin"
+                        });
                 });
 
             modelBuilder.Entity("Inventory.Repository.Model.Export", b =>

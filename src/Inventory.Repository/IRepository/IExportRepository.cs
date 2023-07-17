@@ -1,4 +1,6 @@
-﻿using Inventory.Repository.Model;
+﻿using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +12,8 @@ namespace Inventory.Repository.IRepository
 {
     public interface IExportRepository : IRepository<Export>
     {
+        Task<PaginationList<Export>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<Export>> GetList();
         Task<Export> GetById(int id);
-        Task<IEnumerable<Export>> ExportByItem(Item item);
-        Task<IEnumerable<Export>> GetAllAsync(Expression<Func<Export, bool>>? filter = null);
     }
 }

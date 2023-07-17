@@ -1,14 +1,20 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
+using Inventory.Core.Extensions;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using StackExchange.Redis;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UsingItemController : ControllerBase
     {
         private readonly IUsingItemService _usingItemService;
@@ -19,25 +25,54 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<UsingItemDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetItemInUse()
+        [ProducesResponseType(typeof(PaginationResponse<UsingItemDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest request)
         {
-            var result = await _usingItemService.GetAllUsingItemAsync();
+            var token = await HttpContext.GetAccessToken();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            var result = await _usingItemService.GetPagination(token, request);
+
+            if (result.Status == ResponseCode.Success)
+            {
+                return Ok(result.Data);
+            }
+
+            return StatusCode((int)result.Status);
         }
 
-        [HttpGet("search")]
+        [HttpGet("list")]
         [ProducesResponseType(typeof(IEnumerable<UsingItemDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SearchUsingItem(string filter)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> ListUsingItem()
         {
-            var result = await _usingItemService.SearchForUsingItemAsync(filter);
+            var token = await HttpContext.GetAccessToken();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            var result = await _usingItemService.GetList(token);
+
+            if (result.Status == ResponseCode.Success)
+            {
+                return Ok(result.Data);
+            }
+
+            return StatusCode((int)result.Status);
+        }
+
+        [HttpGet("my-list")]
+        [ProducesResponseType(typeof(IEnumerable<UsingItemDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> MyUsingItem()
+        {
+            var token = await HttpContext.GetAccessToken();
+
+            var result = await _usingItemService.GetMyUsingItem(token);
+
+            if (result.Status == ResponseCode.Success)
+            {
+                return Ok(result.Data);
+            }
+
+            return StatusCode((int)result.Status);
         }
     }
 }

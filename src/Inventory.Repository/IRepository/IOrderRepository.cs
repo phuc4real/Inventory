@@ -1,17 +1,14 @@
-﻿using Inventory.Repository.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 
 namespace Inventory.Repository.IRepository
 {
     public interface IOrderRepository : IRepository<Order>
     {
+        Task<PaginationList<Order>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<Order>> GetList();
         Task<Order> GetById(int id);
-        Task<IEnumerable<Order>> GetAllAsync(Expression<Func<Order, bool>>? filter = null);
-        Task<IEnumerable<Order>> OrdersByItem(Item item);
+
     }
 }

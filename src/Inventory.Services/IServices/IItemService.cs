@@ -1,20 +1,16 @@
-﻿using Inventory.Core.Response;
+﻿using Inventory.Core.Request;
+using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.IServices
 {
     public interface IItemService
     {
-        Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetAll();
+        Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetList(string? name);
+        Task<PaginationResponse<ItemDetailDTO>> GetPagination(PaginationRequest request);
         Task<ResultResponse<ItemDetailDTO>> GetById(Guid id);
-        Task<ResultResponse<IEnumerable<ItemDetailDTO>>> SearchByName(string name);
-        Task<ResultResponse<ItemDetailDTO>> CreateItem(string jwtToken, ItemEditDTO dto);
-        Task<ResultResponse<ItemDetailDTO>> UpdateItem(string jwtToken, Guid id, ItemEditDTO dto);
-        Task<ResultResponse<ItemDetailDTO>> DeleteItem(string jwtToken, Guid id);
+        Task<ResultResponse<ItemDetailDTO>> CreateItem(string token, ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> UpdateItem(string token, Guid id, ItemEditDTO dto);
+        Task<ResultResponse<ItemDetailDTO>> DeleteItem(string token, Guid id);
     }
 }

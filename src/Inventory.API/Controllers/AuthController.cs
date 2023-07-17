@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
+using Inventory.Core.Enums;
 
 namespace Inventory.API.Controllers
 {
@@ -27,65 +28,74 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register(RegisterDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var result = await _authService.SignUpAsync(dto);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : BadRequest(result.Messages);
+            return StatusCode((int)result.Status, result.Message);
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Login(LoginDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
             var result = await _authService.SignInAsync(dto);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : BadRequest(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Data) : StatusCode((int)result.Status, result.Message);
         }
 
-        //Change to HttpPost if have front-end
         [AllowAnonymous]
         [HttpGet("external-login")]
-        public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/home")
+        public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/")
         {
             var properties = _authService.CreateAuthenticationProperties(provider!, returnUrl!);
             return new ChallengeResult(provider!, properties);
         }
 
-        //Change to HttpPost if have front-end
         [AllowAnonymous]
         [HttpGet("external-login-callback")]
-        [ProducesResponseType(typeof(ResultResponse<TokenModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ExternalLoginCallback()
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> ExternalLoginCallback(string returnUrl)
         {
             var result = await _authService.ExternalLoginAsync();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : BadRequest(result.Messages);
+            HttpContext.Response.Headers.Location = returnUrl;
+
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Data) : StatusCode((int)result.Status, result.Message);
+
         }
 
         [HttpDelete("logout")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Logout()
         {
             string token = await HttpContext.GetAccessToken();
 
             var result = await _authService.SignOutAsync(token);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Messages) : BadRequest(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh")]
-        [EnableRateLimiting("LimitRequestPer5Minutes")]
+        [EnableRateLimiting("RefresshTokenLimit")]
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RefreshToken()
@@ -93,13 +103,29 @@ namespace Inventory.API.Controllers
             var accessToken = await HttpContext.GetAccessToken();
             var refreshToken = HttpContext.GetRefreshToken();
 
-            if (refreshToken == "") 
-                return BadRequest(new ResponseMessage("RefreshToken","Cannot get refresh token!"));
+            if (refreshToken == "")
+            {
+                return BadRequest(new ResponseMessage("RefreshToken", "Cannot get refresh token!"));
+            }
 
             var result = await _authService.RefreshToken(accessToken, refreshToken);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ? 
-                    Ok(result.Data) : BadRequest(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Data) : StatusCode((int)result.Status, result.Message);
+        }
+
+
+        [HttpPost("grant-role")]
+        [Authorize(Roles = InventoryRoles.Admin)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> GrantPermission(GrantRoleDTO dto)
+        {
+            var result = await _authService.GrantPermission(dto);
+
+            return result.Status == ResponseCode.Success ?
+                     Ok(result.Message) : StatusCode((int)result.Status, result.Message);
         }
     }
 }

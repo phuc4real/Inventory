@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
 using Inventory.Core.Common;
+using Inventory.Repository.DataSeed;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Inventory.Repository.DbContext
 {
@@ -15,7 +12,6 @@ namespace Inventory.Repository.DbContext
     {
         public AppDbContext(DbContextOptions options) : base(options)
         {
-            
         }
 
         public DbSet<Item> Items { get; set; }
@@ -27,28 +23,12 @@ namespace Inventory.Repository.DbContext
         public DbSet<Team> Teams { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
 
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<IdentityRole>()
-                .HasData(new IdentityRole {
-                    Id = "46a4f2b7-2a9e-4977-ae32-e0e5793e6267",
-                    Name = InventoryRoles.Employee,
-                    NormalizedName = InventoryRoles.Employee.ToUpper(),
-                });
-            builder.Entity<IdentityRole>()
-                .HasData(new IdentityRole { 
-                    Id = "f8b59b69-fabb-4386-948e-5fb7054ffff4",
-                    Name = InventoryRoles.PM,
-                    NormalizedName = InventoryRoles.PM.ToUpper(),
-                });
-            builder.Entity<IdentityRole>()
-                .HasData(new IdentityRole { 
-                    Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
-                    Name = InventoryRoles.IM,
-                    NormalizedName = InventoryRoles.IM.ToUpper(),
-                });
+            builder.SeedingData();
 
             builder.Entity<Order>()
                 .HasMany(e => e.Items)
@@ -88,11 +68,11 @@ namespace Inventory.Repository.DbContext
                 .HasForeignKey(e => e.TeamId)
                 .IsRequired(false);
 
-            builder.Entity<Catalog>()
-                .HasQueryFilter(x => !x.IsDeleted);
+            //builder.Entity<Catalog>()
+            //    .HasQueryFilter(x => !x.IsDeleted);
 
-            builder.Entity<Item>()
-                .HasQueryFilter(x => !x.IsDeleted);
+            //builder.Entity<Item>()
+            //    .HasQueryFilter(x => !x.IsDeleted);
         }
     }
 }

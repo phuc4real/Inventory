@@ -1,0 +1,9 @@
+version: '3.4'
+name: inventory-backend
+
+services:
+  api:
+    image: api
+    build:
+      context: .
+      dockerfile: Inventory.API/Dockerfile

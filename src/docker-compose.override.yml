@@ -1,0 +1,12 @@
+version: '3.4'
+name: inventory-backend
+
+services:
+  api:
+    env_file: 
+        inventory.env
+    ports:
+      - "5001:443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro

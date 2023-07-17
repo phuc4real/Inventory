@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Inventory.Core.Common;
+using Inventory.Core.Enums;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
@@ -21,22 +22,21 @@ namespace Inventory.Services.Services
             _mapper = mapper;
         }
 
-        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetAll()
+        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetList()
         {
-            ResultResponse<IEnumerable<CatalogDTO>> response = new()
-            { Messages = new List<ResponseMessage>()};
+            ResultResponse<IEnumerable<CatalogDTO>> response = new();
 
             var catalogs = await _catalog.GetAsync();
 
             if(catalogs.Any())
             {
                 response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", "There is no record"));
+                response.Status = ResponseCode.NoContent;
+                //response.Message = new("Catalog", "No record");
             }
 
             return response;
@@ -44,18 +44,18 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<CatalogDTO>> GetById(int id)
         {
-            ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
+            ResultResponse<CatalogDTO> response = new();
 
-            var result = await _catalog.FindById(id);
+            var result = await _catalog.GetById(id);
 
             if (result == null)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", "Catalog not found!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Catalog", "Not found!");
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
+                response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<CatalogDTO>(result);
             }
 
@@ -64,28 +64,28 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<CatalogDTO>> CreateCatalog(CatalogEditDTO dto)
         {
-            ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
+            ResultResponse<CatalogDTO> response = new();
             Catalog catalog = _mapper.Map<Catalog>(dto);
 
             await _catalog.AddAsync(catalog);
             await _unitOfWork.SaveAsync();
 
-            response.Status = ResponseStatus.STATUS_SUCCESS;
+            response.Status = ResponseCode.Created;
             response.Data = _mapper.Map<CatalogDTO>(catalog);
-            response.Messages.Add(new ResponseMessage("Catalog", "Catalog created!"));
+            response.Message = new("Catalog", "Catalog created!");
 
             return response;
         }
 
         public async Task<ResultResponse<CatalogDTO>> UpdateCatalog(int id, CatalogEditDTO dto)
         {
-            ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
+            ResultResponse<CatalogDTO> response = new();
 
-            var catalog = await _catalog.FindById(id);
+            var catalog = await _catalog.GetById(id);
             if (catalog == null || catalog.IsDeleted)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", "Catalog not exists!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Catalog", "Catalog not exists!");
             }
             else
             {
@@ -93,21 +93,21 @@ namespace Inventory.Services.Services
                 _catalog.Update(catalog);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<CatalogDTO>(catalog);
+                response.Status = ResponseCode.Success;
+                response.Message = new("Catalog", "Catalog updated!");
             }
             return response;
         }
 
         public async Task<ResultResponse<CatalogDTO>> DeleteCatalog(int id)
         {
-            ResultResponse<CatalogDTO> response = new() { Messages = new List<ResponseMessage>() };
+            ResultResponse<CatalogDTO> response = new();
 
-            var catalog = await _catalog.FindById(id);
+            var catalog = await _catalog.GetById(id);
             if (catalog == null || catalog.IsDeleted)
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", "Catalog not exists!"));
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Catalog", "Catalog not exists!");
             }
             else
             {
@@ -115,32 +115,33 @@ namespace Inventory.Services.Services
                 _catalog.Update(catalog);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Messages.Add(new ResponseMessage("Catalog", "Catalog deleted!"));
+                response.Status = ResponseCode.Success;
+                response.Message = new("Catalog", "Catalog deleted!");
             }
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> SearchCatalog(string filter)
+        public async Task<PaginationResponse<CatalogDTO>> GetPagination(PaginationRequest request)
         {
-            ResultResponse<IEnumerable<CatalogDTO>> response = new() { Messages = new List<ResponseMessage>() };
-
-            IEnumerable<Catalog> catalogs;
-
-            if (int.TryParse(filter, out int id))
-                catalogs = await _catalog.GetAsync(x => x.Name!.Contains(filter) || x.Id == id);
-            else
-                catalogs = await _catalog.GetAsync(x => x.Name!.Contains(filter));
-
-            if (catalogs.Any())
+            PaginationResponse<CatalogDTO> response = new() 
             {
-                response.Status = ResponseStatus.STATUS_SUCCESS;
-                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
+                PageIndex = request.PageIndex,
+                PageSize = request.PageSize
+            };
+
+            var catalogs = await _catalog.GetPagination(request);
+
+            if (catalogs.Data!.Any())
+            {
+                response.TotalRecords = catalogs.TotalRecords;
+                response.TotalPages = catalogs.TotalPages;
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs.Data);
             }
             else
             {
-                response.Status = ResponseStatus.STATUS_FAILURE;
-                response.Messages.Add(new ResponseMessage("Catalog", "Not found!"));
+                response.Status = ResponseCode.NoContent;
+                //response.Message = new("Catalog", "No record!");
             }
 
             return response;

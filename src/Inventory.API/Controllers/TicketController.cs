@@ -1,15 +1,17 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class TicketController : ControllerBase
     {
         private readonly ITicketService _ticketService;
@@ -20,135 +22,136 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(PaginationResponse<TicketDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> GetPagination()
+        {
+            var token = await HttpContext.GetAccessToken();
+
+            var result = await _ticketService.GetList(token);
+
+            return result.Status == ResponseCode.Success ?
+                    Ok(result) : NoContent();
+        }
+
+        [HttpGet("list")]
         [ProducesResponseType(typeof(List<TicketDTO>),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> ListTicket() 
         {
-            var result = await _ticketService.GetAll();
+            var token = await HttpContext.GetAccessToken();
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            var result = await _ticketService.GetList(token);
+
+            return result.Status == ResponseCode.Success ?
+                    Ok(result) : NoContent();
         }
 
         [HttpGet("{id:Guid}")]
         [ProducesResponseType(typeof(TicketDTO),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetTicketById(Guid id)
         {
-            var result = await _ticketService.GetTicketById(id);
+            var token = await HttpContext.GetAccessToken();
+            var result = await _ticketService.GetById(token, id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
-        }
-
-        [HttpGet("by-item/{itemId:Guid}")]
-        [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> TicketsByItemId(Guid itemId)
-        {
-            var result = await _ticketService.TicketsByItemId(itemId);
-
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result.Data) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Ok(result.Data) : StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CreateTicket(TicketCreateDTO dto)
         {
-            if(!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
+            if(!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var token = await HttpContext.GetAccessToken();
 
             var result = await _ticketService.CreateTicket(token, dto);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                    Created("ticket/"+result.Data!.Id ,result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
 
         [HttpPut("{id:Guid}")]
-        [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status422UnprocessableEntity)]
+
         public async Task<IActionResult> UpdateTicketInfo(Guid id, TicketCreateDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState.GetErrorMessages());
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
 
             var token = await HttpContext.GetAccessToken();
 
             var result = await _ticketService.UpdateTicketInfo(token,id ,dto);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : NotFound(result.Messages);
+            return StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPut("{id:Guid}/update-status")]
-        [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [Authorize(Roles = InventoryRoles.IM)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status422UnprocessableEntity)]
         public async Task<IActionResult> UpdateStatus(Guid id)
         {
             var token = await HttpContext.GetAccessToken();
 
             var result = await _ticketService.UpdateStatus(token, id);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                    Ok(result) : BadRequest(result.Messages);
+            return StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPut("{id:Guid}/reject")]
-        [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [Authorize(Roles = InventoryRoles.IM)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RejectTicket(Guid id, string rejectReason)
         {
             var token = await HttpContext.GetAccessToken();
 
             var result = await _ticketService.RejectTicket(token ,id ,rejectReason);
                 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result) : NotFound(result.Messages);
+            return StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPut("{id:Guid}/pm-approve")]
         [HttpPut("{id:Guid}/pm-reject")]
-        [ProducesResponseType(typeof(ResultResponse<TicketDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [Authorize(Roles = InventoryRoles.PM)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PMStatus(Guid id, string? rejectReason)
         {
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _ticketService.PMStatus(token, id, rejectReason);
+            var result = await _ticketService.UpdatePMStatus(token, id, rejectReason);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result) : NotFound(result.Messages);
+            return StatusCode((int)result.Status, result.Message);
         }
-
-
-        [HttpGet("search")]
-        [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> SearchTicket(string filter)
-        {
-            var result = await _ticketService.SearchTicket(filter);
-
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result.Data) : NotFound(result.Messages);
-        }
-
 
         [HttpGet("my-ticket")]
         [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> MyTicket()
         {
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _ticketService.ListTicketOfUser(token);
+            var result = await _ticketService.GetMyTickets(token);
 
-            return result.Status == ResponseStatus.STATUS_SUCCESS ?
-                Ok(result.Data) : NotFound(result.Messages);
+            return result.Status == ResponseCode.Success ?
+                Ok(result.Data) : StatusCode((int)result.Status, result.Message);
         }
     }
 }

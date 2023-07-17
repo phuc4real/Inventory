@@ -3,7 +3,7 @@ using System.Threading.RateLimiting;
 
 namespace Inventory.API.RateLimits
 {
-    public class LimitRequestPerMinutesPolicy : IRateLimiterPolicy<string>
+    public class RefreshTokenLimitPolicy : IRateLimiterPolicy<string>
     {
         public Func<OnRejectedContext, CancellationToken, ValueTask>? OnRejected { get; }
             = (context, cancellationToken) => {
@@ -15,8 +15,8 @@ namespace Inventory.API.RateLimits
         {
             return RateLimitPartition.GetFixedWindowLimiter(string.Empty, options => new()
             {
-                PermitLimit = 1,
-                Window = TimeSpan.FromMinutes(5)
+                PermitLimit = 2,
+                Window = TimeSpan.FromMinutes(6)
             });
         }
     }

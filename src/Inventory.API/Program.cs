@@ -12,8 +12,12 @@ using Microsoft.AspNetCore.Mvc;
 using Inventory.API.RateLimits;
 using Microsoft.OpenApi.Models;
 using Inventory.API.Filters;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
+using Serilog;
+using Inventory.API.Middleware;
+using System.Threading.RateLimiting;
+using System.Globalization;
+using Microsoft.EntityFrameworkCore;
+using Inventory.Repository.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +27,7 @@ builder.Services
 
 builder.Services
     .AddDatabase(builder.Configuration)
+    .AddRedisCache(builder.Configuration)
     .AddRepository()
     .AddServices();
 
@@ -62,14 +67,14 @@ builder.Services.AddControllers(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     })
-    .ConfigureApiBehaviorOptions(options=>
+    .ConfigureApiBehaviorOptions(options =>
     {
         options.InvalidModelStateResponseFactory = (errorContext) =>
         {
             var errors = errorContext.ModelState
                 .Where(m => m.Value!.Errors.Any())
                 .Select(m => new ResponseMessage(
-                    m.Key, 
+                    m.Key,
                     m.Value!.Errors.FirstOrDefault()!.ErrorMessage))
                 .ToList();
             return new BadRequestObjectResult(errors);
@@ -78,8 +83,45 @@ builder.Services.AddControllers(options =>
 
 builder.Services.AddRateLimiter(option =>
     {
-        option.AddPolicy<string, LimitRequestPerMinutesPolicy>("LimitRequestPer5Minutes");
-    } );
+        option.AddPolicy<string, RefreshTokenLimitPolicy>("RefresshTokenLimit");
+        option.OnRejected = (context, _) =>
+        {
+            if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            {
+                context.HttpContext.Response.Headers.RetryAfter =
+                    ((int)retryAfter.TotalSeconds).ToString(NumberFormatInfo.InvariantInfo);
+            }
+
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            context.HttpContext.Response
+                .WriteAsync(new ResponseMessage("Too many request", "Please try again later!!").ToString());
+
+            return new ValueTask();
+        };
+        option.GlobalLimiter = PartitionedRateLimiter.CreateChained(
+            PartitionedRateLimiter.Create<HttpContext, string>(HttpContext =>
+            {
+                var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+                return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 20,
+                    Window = TimeSpan.FromMinutes(1)
+                });
+            }),
+            PartitionedRateLimiter.Create<HttpContext, string>(HttpContext =>
+            {
+                var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+                return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 1000,
+                    Window = TimeSpan.FromMinutes(60)
+                });
+            })
+        );
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -99,19 +141,57 @@ builder.Services.AddSwaggerGen(
     }
 );
 
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration));
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(builder.Configuration["Client:Origin"]!)
+                .WithExposedHeaders(new []{ "Location" })
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(
+        options =>
+        {
+            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger");
+            options.RoutePrefix = string.Empty;
+        });
 }
 
+//app.UseRateLimiter();
+
+app.UseSerilogRequestLogging();
+
+app.UseExceptionMiddleware();
+
 app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+
+    var context = services.GetRequiredService<AppDbContext>();
+    if (context.Database.GetPendingMigrations().Any())
+    {
+        context.Database.Migrate();
+    }
+}
 
 app.Run();

@@ -1,14 +1,13 @@
-﻿using Inventory.Repository.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 
 namespace Inventory.Repository.IRepository
 {
     public interface ICatalogRepository : IRepository<Catalog>
     {
-        Task<Catalog> FindById(int id);
+        Task<PaginationList<Catalog>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<Catalog>> GetList(string name);
+        Task<Catalog> GetById(int id);
     }
 }

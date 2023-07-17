@@ -6,8 +6,11 @@ using Inventory.Services.IServices;
 using Inventory.Services.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
+using StackExchange.Redis;
 
 namespace Inventory.Services
 {
@@ -16,9 +19,13 @@ namespace Inventory.Services
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<AppDbContext>(
-                options => options.UseSqlServer(
-                    configuration.GetConnectionString("Inventory"))
-                );
+                options =>
+                {
+                    options.UseSqlServer(configuration.GetConnectionString("InventorySQLServerAzure"));
+                    //options.UseNpgsql(configuration.GetConnectionString("InventoryPostgres"));
+                    options.ConfigureWarnings(builder => 
+                        builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
+                });
 
             services.AddIdentity<AppUser, IdentityRole>(
             options =>
@@ -38,6 +45,22 @@ namespace Inventory.Services
             return services;
         }
 
+        public static IServiceCollection AddRedisCache(this IServiceCollection services, IConfiguration configuration)
+        {
+
+            try
+            {
+                services.AddSingleton<IConnectionMultiplexer>(options =>
+                    ConnectionMultiplexer.Connect(configuration.GetConnectionString("RedisCloud")));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+
+            return services;
+        }
+        
         public static IServiceCollection AddRepository(this IServiceCollection services)
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -49,6 +72,7 @@ namespace Inventory.Services
             services.AddScoped<IReceiptRepository, ReceiptRepository>();
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<IExportDetailRepository, ExportDetailRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }
@@ -63,9 +87,11 @@ namespace Inventory.Services
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IExportService, ExportService>();
-            services.AddScoped<IReceiptService, ReceiptService>();
+            services.AddScoped<IReceiptService, ReceiptService>();  
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IUsingItemService, UsingItemService>();
+            services.AddScoped<IRedisCacheService, RedisCacheService>();
+            services.AddScoped<IUserService, UserService>();
 
             return services;
         }

@@ -1,4 +1,6 @@
-﻿using Inventory.Repository.Model;
+﻿using Inventory.Core.Request;
+using Inventory.Core.ViewModel;
+using Inventory.Repository.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,9 +11,10 @@ namespace Inventory.Repository.IRepository
 {
     public interface IExportDetailRepository : IRepository<ExportDetail>
     {
-        Task<IEnumerable<ExportDetail>> GetAllAsync();
-        //Search by Itemid, item name ,exportid ,username, userid, email
-        Task<IEnumerable<ExportDetail>> SearchAsync(string filter);
+        Task<PaginationList<ExportDetail>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<ExportDetail>> GetList();
+        Task<IEnumerable<ExportDetail>> GetList(Guid teamId);
+        Task<IEnumerable<ExportDetail>> GetList(string userId);
 
     }
 }

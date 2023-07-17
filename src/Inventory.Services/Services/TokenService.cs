@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Options;
+using Inventory.Core.Response;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Identity;
@@ -21,7 +22,7 @@ namespace Inventory.Services.Services
         {
             _option = option.Value;
         }
-        public SecurityToken GenerateToken(AppUser user, IList<string> userRoles, int expireMinutes)
+        public SecurityToken GenerateToken(AppUser user, IList<string> userRoles)
         {
             var authClaims = new List<Claim>
                     {
@@ -41,7 +42,7 @@ namespace Inventory.Services.Services
             var token = new JwtSecurityToken(
                  audience: _option.ValidAudience,
                  issuer: _option.ValidIssuer,
-                 expires: DateTime.UtcNow.AddMinutes(expireMinutes),
+                 expires: DateTime.UtcNow.AddMinutes(_option.ExpireTimeMinutes),
                  claims: authClaims,
                  signingCredentials: new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256)
                  );
@@ -68,7 +69,10 @@ namespace Inventory.Services.Services
             if (securityToken is not JwtSecurityToken jwtSecurityToken || 
                 !jwtSecurityToken.Header.Alg
                     .Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
+            {
+                throw new SecurityTokenException("Invalid access token");
+            }
+
             return principal;
         }
 
@@ -77,6 +81,21 @@ namespace Inventory.Services.Services
             var principal = GetPrincipalFromExpiredToken(token);
 
             return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        }
+
+        public bool TryGetUserId(string token, out ResponseMessage result)
+        {
+
+            if (string.IsNullOrEmpty(token))
+            {
+                result = new("Token", "Token is Null or Empty");
+                return false;
+            }
+            else
+            {
+                result = new("UserId", GetUserId(token));
+                return true;
+            }
         }
     }
 }

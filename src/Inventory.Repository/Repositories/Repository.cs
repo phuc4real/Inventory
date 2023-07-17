@@ -40,7 +40,10 @@ namespace Inventory.Repository.Repositories
         {
             IQueryable<T> query = _dbSet;
 
-            if (filter != null) query = query.Where(filter);
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
 
             return await query.ToListAsync();
         }
