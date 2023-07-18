@@ -15,5 +15,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<TicketDTO>> UpdatePMStatus(string token, Guid ticketId, string? rejectReason = null);
         Task<ResultResponse<TicketDTO>> UpdateStatus(string token, Guid ticketId);
         Task<ResultResponse<TicketDTO>> RejectTicket(string token, Guid ticketId, string rejectReason);
+        Task<ResultResponse<TicketCountDTO>> GetTicketCount();
     }
 }

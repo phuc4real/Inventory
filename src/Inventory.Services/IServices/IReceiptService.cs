@@ -14,6 +14,7 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<IEnumerable<ReceiptDTO>>> GetList();
         Task<PaginationResponse<ReceiptDTO>> GetPagination(PaginationRequest request);
         Task<ResultResponse<ReceiptDTO>> ReceiptById(int id);
-        Task<ResultResponse<ReceiptDTO>> CreateReceipt(string token, ReceiptCreateDTO dto);
+        Task<ResultResponse<ReceiptDTO>> CreateReceipt(string token, ReceiptCreateDTO dto); 
+        Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth();
     }
 }

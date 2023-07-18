@@ -7,6 +7,7 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
+using StackExchange.Redis;
 
 namespace Inventory.Services.Services
 {
@@ -133,6 +134,18 @@ namespace Inventory.Services.Services
                 response.Status = ResponseCode.Success;
                 response.Data = _mapper.Map<ReceiptDTO>(receipt);
             }
+
+            return response;
+        }
+
+        public async Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth()
+        {
+            ResultResponse<IEnumerable<ResponseMessage>> response = new();
+
+            var result = await _receipt.GetCount();
+
+            response.Status = ResponseCode.Success;
+            response.Data = result;
 
             return response;
         }

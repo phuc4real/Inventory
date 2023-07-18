@@ -140,5 +140,15 @@ namespace Inventory.API.Controllers
 
             return StatusCode((int)result.Status, result.Message);
         }
+
+
+        [HttpGet("count-by-month")]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCount()
+        {
+            var result = await _orderService.GetCountByMonth();
+
+            return StatusCode((int)result.Status, result.Data);
+        }
     }
 }

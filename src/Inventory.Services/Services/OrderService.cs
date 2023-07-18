@@ -123,7 +123,6 @@ namespace Inventory.Services.Services
                 Details = orderDetails,
                 OrderBy = userId,
                 OrderDate = DateTime.UtcNow,
-                CompleteDate = default(DateTime)
             };
             
             await _order.AddAsync(order);
@@ -255,6 +254,18 @@ namespace Inventory.Services.Services
                         }
                 };
             }
+
+            return response;
+        }
+
+        public async Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth()
+        {
+            ResultResponse<IEnumerable<ResponseMessage>> response = new();
+
+            var result = await _order.GetCount();
+
+            response.Status = ResponseCode.Success;
+            response.Data = result;
 
             return response;
         }

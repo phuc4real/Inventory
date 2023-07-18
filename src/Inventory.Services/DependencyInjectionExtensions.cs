@@ -21,8 +21,8 @@ namespace Inventory.Services
             services.AddDbContext<AppDbContext>(
                 options =>
                 {
-                    options.UseSqlServer(configuration.GetConnectionString("InventorySQLServerAzure"));
-                    //options.UseNpgsql(configuration.GetConnectionString("InventoryPostgres"));
+                    //options.UseSqlServer(configuration.GetConnectionString("InventorySQLServerAzure"));
+                    options.UseNpgsql(configuration.GetConnectionString("PostgresNeonCloud"));
                     options.ConfigureWarnings(builder => 
                         builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });

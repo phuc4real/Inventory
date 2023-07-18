@@ -130,5 +130,14 @@ namespace Inventory.API.Controllers
             await _cacheService.RemoveCacheTreeAsync(redisKey);
             return StatusCode((int)result.Status, result.Message);
         }
+
+        [HttpGet("count-by-month")]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCount()
+        {
+            var result = await _exportService.GetCountByMonth();
+
+            return StatusCode((int)result.Status, result.Data);
+        }
     }
 }

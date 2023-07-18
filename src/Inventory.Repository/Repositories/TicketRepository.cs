@@ -1,4 +1,5 @@
-﻿using Inventory.Core.Extensions;
+﻿using Inventory.Core.Enums;
+using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
 using Inventory.Core.ViewModel;
@@ -102,6 +103,34 @@ namespace Inventory.Repository.Repositories
             var query = GetAllWithProperty;
 
             return await query.ToListAsync();
+        }
+
+        public async Task<TicketCountDTO> GetCount()
+        {
+            TicketCountDTO result = new()
+            {
+                Pending = 0,
+                Processing = 0,
+                Completed = 0,
+                Rejected = 0,
+            };
+
+            var month = DateTime.Now.Month;
+
+            var query = _context.Tickets.Where(x=> x.CreatedDate.Month == month);
+
+            var groupBy = await query.Select(x => new { x.Id, x.Status }).GroupBy(x => x.Status).ToListAsync() ;
+
+            foreach (var item in groupBy)
+            {
+                if (item.Key == TicketStatus.Pending) result.Pending = item.Count();
+                if (item.Key == TicketStatus.Processing) result.Processing = item.Count();
+                if (item.Key == TicketStatus.Done) result.Completed = item.Count();
+                if (item.Key == TicketStatus.Reject) result.Rejected = item.Count();
+            }
+
+            return result;
+           
         }
     }
 }

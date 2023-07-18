@@ -229,6 +229,7 @@ namespace Inventory.Services.Services
                 else
                 {
                     ticket.PMStatus = TicketPMStatus.Reject;
+                    ticket.Status = TicketStatus.Reject;
                     ticket.RejectReason = rejectReason;
                     ticket.IsClosed = true;
                     ticket.ClosedDate = DateTime.UtcNow;
@@ -458,6 +459,19 @@ namespace Inventory.Services.Services
             {
                 response.Status = ResponseCode.NoContent;
             }
+
+            return response;
+        }
+
+        public async Task<ResultResponse<TicketCountDTO>> GetTicketCount()
+        {
+            ResultResponse<TicketCountDTO> response = new();
+
+            var count = await _ticket.GetCount();
+
+            response.Data = count;
+
+            response.Status = ResponseCode.Success;
 
             return response;
         }

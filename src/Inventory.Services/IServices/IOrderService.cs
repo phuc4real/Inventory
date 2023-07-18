@@ -12,5 +12,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<OrderDTO>> CreateOrder(string token, OrderCreateDTO dto);
         Task<ResultResponse<OrderDTO>> UpdateOrderStatus(int id);
         Task<ResultResponse<OrderDTO>> CancelOrder(int id);
+        Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth();
     }
 }

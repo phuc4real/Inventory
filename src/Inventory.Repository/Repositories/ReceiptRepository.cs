@@ -1,6 +1,7 @@
 ﻿using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
+using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
@@ -75,6 +76,34 @@ namespace Inventory.Repository.Repositories
             pagination.Data = await query.ToListAsync();
 
             return pagination;
+        }
+
+        public async Task<List<ResponseMessage>> GetCount()
+        {
+            List<ResponseMessage> result = new();
+
+            var last12Month = DateTime.UtcNow.AddMonths(-11);
+            last12Month = last12Month.AddDays(1 - last12Month.Day);
+            var query = await _context.Receipts
+                .Where(x => x.CreatedDate > last12Month)
+                .GroupBy(x => new { x.CreatedDate.Month, x.CreatedDate.Year })
+                .ToListAsync();
+
+            for (int i = 1; i <= 12; i++)
+            {
+                var key = $"{last12Month.Month}/{last12Month.Year}";
+                result.Add(new(key, "0"));
+                last12Month = last12Month.AddMonths(1);
+            }
+
+            foreach (var order in query)
+            {
+                var key = $"{order.Key.Month}/{order.Key.Year}";
+                var index = result.FindIndex(0, x => x.Key == key);
+                result[index].Value = order.Count().ToString();
+            }
+
+            return result;
         }
     }
 }

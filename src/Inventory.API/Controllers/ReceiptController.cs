@@ -5,6 +5,7 @@ using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
+using Inventory.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -113,6 +114,15 @@ namespace Inventory.API.Controllers
 
             return result.Status == ResponseCode.Success ?
                 Created("receipt/"+result.Data!.Id,result.Message) : StatusCode((int)result.Status, result.Message);
+        }
+
+        [HttpGet("count-by-month")]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCount()
+        {
+            var result = await _receiptService.GetCountByMonth();
+
+            return StatusCode((int)result.Status, result.Data);
         }
     }
 }

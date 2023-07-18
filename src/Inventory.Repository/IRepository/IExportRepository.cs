@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Request;
+using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 using System;
@@ -15,5 +16,6 @@ namespace Inventory.Repository.IRepository
         Task<PaginationList<Export>> GetPagination(PaginationRequest request);
         Task<IEnumerable<Export>> GetList();
         Task<Export> GetById(int id);
+        Task<List<ResponseMessage>> GetCount();
     }
 }

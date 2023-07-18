@@ -17,6 +17,6 @@ namespace Inventory.Repository.IRepository
         Task<IEnumerable<Ticket>> GetList(string userid);
         Task<IEnumerable<Ticket>> GetList(Item item);
         Task<Ticket> GetById(Guid id);
-
+        Task<TicketCountDTO> GetCount();
     }
 }

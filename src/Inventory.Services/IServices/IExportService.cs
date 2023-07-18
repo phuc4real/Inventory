@@ -16,5 +16,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<ExportDTO>> GetById(int id);
         Task<ResultResponse<ExportDTO>> CreateExport(string token, ExportCreateDTO dto);
         Task<ResultResponse<ExportDTO>> CancelExport(int id);
+        Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth();
     }
 }

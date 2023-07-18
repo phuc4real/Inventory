@@ -35,7 +35,7 @@ namespace Inventory.API.Controllers
 
             if (result.Status == ResponseCode.Success)
             {
-                return Ok(result.Data);
+                return Ok(result);
             }
 
             return StatusCode((int)result.Status);

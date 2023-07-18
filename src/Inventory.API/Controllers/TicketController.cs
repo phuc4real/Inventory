@@ -153,5 +153,14 @@ namespace Inventory.API.Controllers
             return result.Status == ResponseCode.Success ?
                 Ok(result.Data) : StatusCode((int)result.Status, result.Message);
         }
+
+        [HttpGet("count")]
+        [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTicketCount()
+        {
+            var result = await _ticketService.GetTicketCount();
+
+            return StatusCode((int)result.Status, result.Data);
+        }
     }
 }
