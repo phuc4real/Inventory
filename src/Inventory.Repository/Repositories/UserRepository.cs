@@ -1,4 +1,5 @@
-﻿using Inventory.Core.Extensions;
+﻿using Inventory.Core.Common;
+using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
 using Inventory.Core.ViewModel;
@@ -64,6 +65,21 @@ namespace Inventory.Repository.Repositories
         public async Task<IEnumerable<AppUser>> GetList()
         {
             var result = await _userManager.Users.ToListAsync();
+
+            return result;
+        }
+
+        public async Task<RoleDTO> CheckRole(string userId)
+        {
+            RoleDTO result = new();
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user != null)
+            {
+                result.IsTeamLeader = await _userManager.IsInRoleAsync(user, InventoryRoles.TeamLeader);
+                result.IsAdmin = await _userManager.IsInRoleAsync(user, InventoryRoles.Admin);
+                result.IsSuperAdmin = await _userManager.IsInRoleAsync(user, InventoryRoles.SuperAdmin);
+            }
 
             return result;
         }

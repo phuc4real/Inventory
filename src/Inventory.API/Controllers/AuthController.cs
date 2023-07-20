@@ -113,19 +113,5 @@ namespace Inventory.API.Controllers
             return result.Status == ResponseCode.Success ?
                     Ok(result.Data) : StatusCode((int)result.Status, result.Message);
         }
-
-
-        [HttpPost("grant-role")]
-        [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> GrantPermission(GrantRoleDTO dto)
-        {
-            var result = await _authService.GrantPermission(dto);
-
-            return result.Status == ResponseCode.Success ?
-                     Ok(result.Message) : StatusCode((int)result.Status, result.Message);
-        }
     }
 }

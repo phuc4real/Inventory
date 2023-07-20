@@ -114,11 +114,11 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetList(string? name)
+        public async Task<ResultResponse<IEnumerable<ItemDetailDTO>>> GetList(string? filter)
         {
             ResultResponse<IEnumerable<ItemDetailDTO>> response = new();
 
-            var items = await _item.GetList(name);
+            var items = await _item.GetList(filter!);
 
             if (items.Any())
             {

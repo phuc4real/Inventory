@@ -42,11 +42,11 @@ namespace Inventory.Services.Services
 
             IEnumerable<ExportDetail>? result;
 
-            if (userRoles.Contains(InventoryRoles.IM))
+            if (userRoles.Contains(InventoryRoles.Admin))
             {
                 result = await _exportDetail.GetList();
             }
-            else if (userRoles.Contains(InventoryRoles.PM))
+            else if (userRoles.Contains(InventoryRoles.TeamLeader))
             {
                 result = await _exportDetail.GetList(user!.TeamId!.Value);
             }

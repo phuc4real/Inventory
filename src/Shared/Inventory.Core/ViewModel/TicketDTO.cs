@@ -14,7 +14,7 @@ namespace Inventory.Core.ViewModel
         public string? Purpose { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public string? PMStatus { get; set; }
+        public string? LeaderApprove { get; set; }
         public string? Status { get; set; }
         public string? RejectReason { get; set; }
 

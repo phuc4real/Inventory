@@ -12,7 +12,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.IM)]
+    [Authorize(Roles = InventoryRoles.Admin)]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -72,7 +72,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
@@ -91,7 +90,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(OrderDetailDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrder(int id)
@@ -114,7 +112,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:int}/update-status")]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
@@ -128,7 +125,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:int}/cancel")]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]

@@ -17,7 +17,7 @@ namespace Inventory.Repository.Model
         public TicketPurpose Purpose { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public TicketPMStatus PMStatus { get; set; }
+        public LeaderApprove LeaderApprove { get; set; }
         public TicketStatus Status { get; set; }
         public string? RejectReason { get; set; }
 

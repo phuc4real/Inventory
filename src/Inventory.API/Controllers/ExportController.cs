@@ -4,9 +4,7 @@ using Inventory.Core.Extensions;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using Inventory.Repository.Model;
 using Inventory.Services.IServices;
-using Inventory.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +12,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.IM)]
+    [Authorize(Roles = InventoryRoles.Admin)]
     public class ExportController : ControllerBase
     {
         private readonly IExportService _exportService;

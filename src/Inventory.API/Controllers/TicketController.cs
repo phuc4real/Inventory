@@ -1,6 +1,7 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
@@ -24,11 +25,11 @@ namespace Inventory.API.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(PaginationResponse<TicketDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetPagination()
+        public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest request)
         {
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _ticketService.GetList(token);
+            var result = await _ticketService.GetPagination(token, request);
 
             return result.Status == ResponseCode.Success ?
                     Ok(result) : NoContent();
@@ -44,7 +45,7 @@ namespace Inventory.API.Controllers
             var result = await _ticketService.GetList(token);
 
             return result.Status == ResponseCode.Success ?
-                    Ok(result) : NoContent();
+                    Ok(result.Data) : NoContent();
         }
 
         [HttpGet("{id:Guid}")]
@@ -79,28 +80,21 @@ namespace Inventory.API.Controllers
         }
 
 
-        [HttpPut("{id:Guid}")]
+        [HttpDelete("{id:Guid}")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status422UnprocessableEntity)]
-
-        public async Task<IActionResult> UpdateTicketInfo(Guid id, TicketCreateDTO dto)
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CancelTicket(Guid id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
-
             var token = await HttpContext.GetAccessToken();
 
-            var result = await _ticketService.UpdateTicketInfo(token,id ,dto);
+            var result = await _ticketService.CancelTicket(token,id);
 
             return StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPut("{id:Guid}/update-status")]
-        [Authorize(Roles = InventoryRoles.IM)]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
@@ -115,7 +109,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}/reject")]
-        [Authorize(Roles = InventoryRoles.IM)]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> RejectTicket(Guid id, string rejectReason)
@@ -129,7 +123,7 @@ namespace Inventory.API.Controllers
 
         [HttpPut("{id:Guid}/pm-approve")]
         [HttpPut("{id:Guid}/pm-reject")]
-        [Authorize(Roles = InventoryRoles.PM)]
+        [Authorize(Roles = InventoryRoles.TeamLeader)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PMStatus(Guid id, string? rejectReason)
@@ -155,6 +149,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("count")]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(List<TicketDTO>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetTicketCount()
         {

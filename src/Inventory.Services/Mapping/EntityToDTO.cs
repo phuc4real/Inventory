@@ -41,8 +41,8 @@ namespace Inventory.Services.Mapping
             CreateMap<Ticket, TicketDTO>()
                 .ForMember(dest => dest.Purpose, opt => opt
                     .MapFrom(src => src.Purpose.ToDescriptionString()))
-                .ForMember(dest => dest.PMStatus, opt => opt
-                    .MapFrom(src => src.PMStatus.ToDescriptionString()))
+                .ForMember(dest => dest.LeaderApprove, opt => opt
+                    .MapFrom(src => src.LeaderApprove.ToDescriptionString()))
                 .ForMember(dest => dest.Status, opt => opt
                     .MapFrom(src => src.Status.ToDescriptionString()));
             CreateMap<TicketDetail, TicketDetailDTO>()

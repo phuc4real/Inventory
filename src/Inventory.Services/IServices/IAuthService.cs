@@ -19,7 +19,6 @@ namespace Inventory.Services.IServices
         Task<ResultResponse<TokenModel>> ExternalLoginAsync();
         Task<ResultResponse<TokenModel>> SignOutAsync(string token);
         Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken);
-        Task<ResultResponse<AppUserDTO>> GrantPermission(GrantRoleDTO dto);
         AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl);
     }
 }

@@ -66,13 +66,21 @@ namespace Inventory.Repository.Repositories
             return items;
         }
 
-        public async Task<IEnumerable<Item>> GetList(string name)
+        public async Task<IEnumerable<Item>> GetList(string filter)
         {
             var query = GetAllWithProperty.Where(x => !x.IsDeleted);
 
-            if (name != null)
+            if (filter != null)
             {
-                query = query.Where(x => x.Name!.ToLower().Contains(name.ToLower()));
+                if( Guid.TryParse(filter, out var id))
+                {
+                    query = query.Where(x => x.Id == id);
+                }
+                else
+                {
+                    query = query.Where(x =>
+                        x.Name!.ToLower().Contains(filter.ToLower()));
+                }
             }
 
             return await query.Take(10).ToListAsync();

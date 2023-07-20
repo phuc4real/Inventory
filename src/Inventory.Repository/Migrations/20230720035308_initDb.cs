@@ -4,8 +4,6 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace Inventory.Repository.Migrations
 {
     /// <inheritdoc />
@@ -287,7 +285,7 @@ namespace Inventory.Repository.Migrations
                     Purpose = table.Column<int>(type: "integer", nullable: false),
                     Title = table.Column<string>(type: "text", nullable: true),
                     Description = table.Column<string>(type: "text", nullable: true),
-                    PMStatus = table.Column<int>(type: "integer", nullable: false),
+                    LeaderApprove = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     RejectReason = table.Column<string>(type: "text", nullable: true),
                     IsClosed = table.Column<bool>(type: "boolean", nullable: false),
@@ -426,21 +424,29 @@ namespace Inventory.Repository.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "46a4f2b7-2a9e-4977-ae32-e0e5793e6267", null, "Employee", "EMPLOYEE" },
-                    { "4e5e4a2b-9b92-40fa-87f2-1fefc574336b", null, "Inventory Manager", "INVENTORY MANAGER" },
-                    { "f8b59b69-fabb-4386-948e-5fb7054ffff4", null, "Project Manager", "PROJECT MANAGER" },
-                    { "fc2a7273-a3c2-47be-bc55-aab11097e09a", null, "Administrator", "ADMINISTRATOR" }
+                    { "46a4f2b7-2a9e-4977-ae32-e0e5793e6267", null, "Normal User", "NORMAL USER" },
+                    { "4e5e4a2b-9b92-40fa-87f2-1fefc574336b", null, "Administrator", "ADMINISTRATOR" },
+                    { "f8b59b69-fabb-4386-948e-5fb7054ffff4", null, "Team Leader", "TEAM LEADER" },
+                    { "fc2a7273-a3c2-47be-bc55-aab11097e09a", null, "Super Administrator", "SUPER ADMINISTRATOR" }
                 });
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
                 columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Discriminator", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RefreshTokenExpireTime", "SecurityStamp", "TeamId", "TwoFactorEnabled", "UserName" },
-                values: new object[] { "d2f7a36c-d4a6-43db-8fe9-74598da4c352", 0, "7af15dc5-d186-404f-8319-1017eb1240f6", "AppUser", "admin@local.com", false, null, null, false, null, "ADMIN@LOCAL.COM", "ADMIN", "AQAAAAIAAYagAAAAEDudl9U1zn4RDWeLaJ9LUvu8mkJK9V48Sxv5UGtDtbGE9dV9bKa5m34PboLkOVLrQw==", null, false, null, "1f6532c8-022f-4d23-8927-4a4c5f3a6a00", null, false, "admin" });
+                values: new object[,]
+                {
+                    { "d2f7a36c-d4a6-43db-8fe9-74598da4c352", 0, "d379c3a2-2d1a-4b2c-8185-a6f4a1b0fe72", "AppUser", "sa@local.com", false, null, null, false, null, "SA@LOCAL.COM", "SUPERADMIN", "AQAAAAIAAYagAAAAEG8hRLvzzDab5vkyLwJIxwUn3yUIQ00XcDWJFpRc2qg7OGmxLnGBh6wV3uG18AcBzQ==", null, false, null, "bd042462-1cb9-4148-8639-829a41fa9c66", null, false, "superadmin" },
+                    { "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8", 0, "427803d8-858b-4166-8e79-5749bc2416bd", "AppUser", "admin@local.com", false, null, null, false, null, "ADMIN@LOCAL.COM", "ADMIN", "AQAAAAIAAYagAAAAEHR/RODZcXuv1KcRk6w24DgukoONF0PJavadRBvjq8uCu/ccfpWiOWzTWP49sjMY4Q==", null, false, null, "f5cba4e9-b06b-45f3-a3ed-da156358a921", null, false, "admin" }
+                });
 
             migrationBuilder.InsertData(
                 table: "AspNetUserRoles",
                 columns: new[] { "RoleId", "UserId" },
-                values: new object[] { "fc2a7273-a3c2-47be-bc55-aab11097e09a", "d2f7a36c-d4a6-43db-8fe9-74598da4c352" });
+                values: new object[,]
+                {
+                    { "fc2a7273-a3c2-47be-bc55-aab11097e09a", "d2f7a36c-d4a6-43db-8fe9-74598da4c352" },
+                    { "4e5e4a2b-9b92-40fa-87f2-1fefc574336b", "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8" }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

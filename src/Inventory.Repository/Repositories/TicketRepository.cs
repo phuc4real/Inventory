@@ -7,11 +7,6 @@ using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
@@ -25,7 +20,9 @@ namespace Inventory.Repository.Repositories
 
         private IQueryable<Ticket> GetAllWithProperty => _context.Tickets
             .Include(x => x.Details)!
-            .ThenInclude(d => d.Item);
+            .ThenInclude(d => d.Item)
+            .Include(x => x.CreatedByUser)
+            .Include(x => x.ModifiedByUser);
 
         public async Task<Ticket> GetById(Guid id)
         {

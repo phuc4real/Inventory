@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Inventory.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20230717142350_initDb")]
+    [Migration("20230720035308_initDb")]
     partial class initDb
     {
         /// <inheritdoc />
@@ -286,7 +286,7 @@ namespace Inventory.Repository.Migrations
                     b.Property<DateTime>("LastModifiedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("PMStatus")
+                    b.Property<int>("LeaderApprove")
                         .HasColumnType("integer");
 
                     b.Property<int>("Purpose")
@@ -360,26 +360,26 @@ namespace Inventory.Repository.Migrations
                         new
                         {
                             Id = "46a4f2b7-2a9e-4977-ae32-e0e5793e6267",
-                            Name = "Employee",
-                            NormalizedName = "EMPLOYEE"
+                            Name = "Normal User",
+                            NormalizedName = "NORMAL USER"
                         },
                         new
                         {
                             Id = "f8b59b69-fabb-4386-948e-5fb7054ffff4",
-                            Name = "Project Manager",
-                            NormalizedName = "PROJECT MANAGER"
+                            Name = "Team Leader",
+                            NormalizedName = "TEAM LEADER"
                         },
                         new
                         {
                             Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
-                            Name = "Inventory Manager",
-                            NormalizedName = "INVENTORY MANAGER"
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "fc2a7273-a3c2-47be-bc55-aab11097e09a",
-                            Name = "Administrator",
-                            NormalizedName = "ADMINISTRATOR"
+                            Name = "Super Administrator",
+                            NormalizedName = "SUPER ADMINISTRATOR"
                         });
                 });
 
@@ -546,6 +546,11 @@ namespace Inventory.Repository.Migrations
                         {
                             UserId = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                             RoleId = "fc2a7273-a3c2-47be-bc55-aab11097e09a"
+                        },
+                        new
+                        {
+                            UserId = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
+                            RoleId = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b"
                         });
                 });
 
@@ -593,15 +598,31 @@ namespace Inventory.Repository.Migrations
                         {
                             Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7af15dc5-d186-404f-8319-1017eb1240f6",
+                            ConcurrencyStamp = "d379c3a2-2d1a-4b2c-8185-a6f4a1b0fe72",
+                            Email = "sa@local.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SA@LOCAL.COM",
+                            NormalizedUserName = "SUPERADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG8hRLvzzDab5vkyLwJIxwUn3yUIQ00XcDWJFpRc2qg7OGmxLnGBh6wV3uG18AcBzQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "bd042462-1cb9-4148-8639-829a41fa9c66",
+                            TwoFactorEnabled = false,
+                            UserName = "superadmin"
+                        },
+                        new
+                        {
+                            Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "427803d8-858b-4166-8e79-5749bc2416bd",
                             Email = "admin@local.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCAL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDudl9U1zn4RDWeLaJ9LUvu8mkJK9V48Sxv5UGtDtbGE9dV9bKa5m34PboLkOVLrQw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHR/RODZcXuv1KcRk6w24DgukoONF0PJavadRBvjq8uCu/ccfpWiOWzTWP49sjMY4Q==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1f6532c8-022f-4d23-8927-4a4c5f3a6a00",
+                            SecurityStamp = "f5cba4e9-b06b-45f3-a3ed-da156358a921",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });

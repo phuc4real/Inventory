@@ -13,7 +13,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.IM)]
+    [Authorize(Roles = InventoryRoles.Admin)]
     public class ReceiptController : ControllerBase
     {
         private readonly IReceiptService _receiptService;
@@ -95,7 +95,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]

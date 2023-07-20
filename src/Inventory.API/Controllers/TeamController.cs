@@ -12,7 +12,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = InventoryRoles.TeamLeader)]
     public class TeamController : ControllerBase
     {
         private readonly ITeamServices _teamServices;
@@ -97,7 +97,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.PM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateTeam(TeamEditDTO dto)
@@ -116,7 +115,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:Guid}")]
-        [Authorize(Roles = InventoryRoles.PM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
@@ -137,7 +135,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:Guid}")]
-        [Authorize(Roles = InventoryRoles.PM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteTeam(Guid id)
@@ -152,7 +149,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("{id:Guid}/add-member")]
-        [Authorize(Roles = InventoryRoles.PM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> AddMembers(Guid id, string memberId)

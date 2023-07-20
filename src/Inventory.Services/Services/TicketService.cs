@@ -107,7 +107,7 @@ namespace Inventory.Services.Services
                 Title = dto.Title,
                 Description = dto.Description,
                 Details = ticketDetails,
-                PMStatus = TicketPMStatus.Pending,
+                LeaderApprove = LeaderApprove.Pending,
                 Status = TicketStatus.Pending,
                 IsClosed = false,
                 CreatedBy = userId,
@@ -137,11 +137,11 @@ namespace Inventory.Services.Services
 
             IEnumerable<Ticket>? listTicket;
 
-            if (userRoles.Contains(InventoryRoles.IM))
+            if (userRoles.Contains(InventoryRoles.Admin))
             {
                 listTicket = await _ticket.GetList();
             }
-            else if(userRoles.Contains(InventoryRoles.PM))
+            else if(userRoles.Contains(InventoryRoles.TeamLeader))
             {
                 listTicket = await _ticket.GetList(user!.TeamId!.Value);
             }
@@ -174,9 +174,9 @@ namespace Inventory.Services.Services
 
             Ticket? ticket = await _ticket.GetById(id);
 
-            if (!userRoles.Contains(InventoryRoles.IM))
+            if (!userRoles.Contains(InventoryRoles.Admin))
             {
-                if (userRoles.Contains(InventoryRoles.PM))
+                if (userRoles.Contains(InventoryRoles.TeamLeader))
                 {
                     if(ticket.CreatedByUser!.TeamId != user!.TeamId)
                     {
@@ -223,12 +223,12 @@ namespace Inventory.Services.Services
             {
                 if(rejectReason is null)
                 {
-                    ticket.PMStatus = TicketPMStatus.Approve;
+                    ticket.LeaderApprove = LeaderApprove.Approve;
                     response.Message = new("Ticket", $"You approve for ticket #{ticketId}");
                 }
                 else
                 {
-                    ticket.PMStatus = TicketPMStatus.Reject;
+                    ticket.LeaderApprove = LeaderApprove.Reject;
                     ticket.Status = TicketStatus.Reject;
                     ticket.RejectReason = rejectReason;
                     ticket.IsClosed = true;
@@ -266,7 +266,7 @@ namespace Inventory.Services.Services
             }
             else
             {
-                if (ticket.PMStatus == TicketPMStatus.Approve)
+                if (ticket.LeaderApprove == LeaderApprove.Approve)
                 {
                     foreach(var detail in ticket.Details!)
                     {
@@ -327,7 +327,7 @@ namespace Inventory.Services.Services
                 {
                     response.Status = ResponseCode.BadRequest;
 
-                    if(ticket.PMStatus == TicketPMStatus.Reject)
+                    if(ticket.LeaderApprove == LeaderApprove.Reject)
                     {
                         response.Message = new("Ticket", "Ticket is reject by Project Manager!");
                     }
@@ -339,16 +339,13 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TicketDTO>> UpdateTicketInfo(string token, Guid ticketId, TicketCreateDTO dto)
+        public async Task<ResultResponse<TicketDTO>> CancelTicket(string token, Guid ticketId)
         {
-            ResultResponse<TicketDTO> response = new()
-            ;
+            ResultResponse<TicketDTO> response = new();
 
             var userId = _tokenService.GetUserId(token);
-            
-            var ticket = await _ticket.GetById(ticketId);
 
-            var ticketDetails = new List<TicketDetail>();
+            var ticket = await _ticket.GetById(ticketId);
 
             if (ticket == null)
             {
@@ -357,42 +354,35 @@ namespace Inventory.Services.Services
             }
             else
             {
-                foreach (var detail in dto.Details!)
+               if(ticket.CreatedBy != userId)
                 {
-                    var item = await _item.GetById(detail.ItemId);
-
-                    if (item == null || item.InStock < detail.Quantity)
-                    {
-                        if (item == null)
-                        {
-                            response.Status = ResponseCode.NotFound;
-                            response.Message = new("Item", $"Item #{detail.ItemId} not exists!");
-                        }
-                        else
-                        {
-                            response.Status = ResponseCode.UnprocessableContent;
-                            response.Message = new("Item", $"Out of stock!");
-                        }
-
-                        return response;
-                    }
-
-                    ticketDetails.Add(_mapper.Map<TicketDetail>(detail));
+                    response.Status = ResponseCode.Forbidden;
+                    response.Message = new("Forbidden", "You don't have access");
                 }
+                else
+                {
+                   if (ticket.IsClosed)
+                    {
 
-                ticket.Purpose = dto.Purpose;
-                ticket.Title = dto.Title;
-                ticket.Description = dto.Description;
-                ticket.Details = ticketDetails;
-                ticket.LastModifiedBy = userId;
-                ticket.LastModifiedDate = DateTime.UtcNow;
+                        response.Status = ResponseCode.BadRequest;
+                        response.Message = new("Ticket", "Ticket already cancelled");
+                    }
+                    else
+                    {
+                        ticket.Status = TicketStatus.Close;
+                        ticket.IsClosed = true;
+                        ticket.ClosedDate = DateTime.UtcNow;
+                        ticket.LastModifiedBy = userId;
+                        ticket.LastModifiedDate = DateTime.UtcNow;
 
-                _ticket.Update(ticket);
-                await _unitOfWork.SaveAsync();
+                        _ticket.Update(ticket);
+                        await _unitOfWork.SaveAsync();
 
-                response.Data = _mapper.Map<TicketDTO>(ticket);
-                response.Status = ResponseCode.Success;
-                response.Message = new("Ticket", "Ticket Updated!");
+                        response.Data = _mapper.Map<TicketDTO>(ticket);
+                        response.Status = ResponseCode.Success;
+                        response.Message = new("Ticket", "Cancel ticket success!");
+                    }
+                }
             }
 
             return response;
@@ -427,15 +417,15 @@ namespace Inventory.Services.Services
         {
             PaginationResponse<TicketDTO> response = new();
 
-            var userId = _tokenService.GetUserId(token);
-            var user = await _userManager.FindByIdAsync(userId);
-            var userRoles = await _userManager.GetRolesAsync(user!);
+            //var userId = _tokenService.GetUserId(token);
+            //var user = await _userManager.FindByIdAsync(userId);
+            //var userRoles = await _userManager.GetRolesAsync(user!);
 
             var list = await _ticket.GetPagination(request);
 
             //IEnumerable<Ticket>? listTicket;
 
-            //if (userRoles.Contains(InventoryRoles.IM))
+            //if (userRoles.Contains(InventoryRoles.Admin))
             //{
             //    listTicket = await _ticket.GetList();
             //}

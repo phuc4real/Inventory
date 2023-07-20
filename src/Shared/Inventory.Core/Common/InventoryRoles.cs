@@ -8,9 +8,9 @@ namespace Inventory.Core.Common
 {
     public class InventoryRoles
     {
-        public const string Employee = "Employee";
-        public const string PM = "Project Manager";
-        public const string IM = "Inventory Manager";
+        public const string NormalUser = "Normal User";
+        public const string TeamLeader = "Team Leader";
         public const string Admin = "Administrator";
+        public const string SuperAdmin = "Super Administrator";
     }
 }

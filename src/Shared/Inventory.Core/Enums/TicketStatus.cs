@@ -11,10 +11,11 @@ namespace Inventory.Core.Enums
         Pending = 1,
         Processing = 2,
         Done = 3, 
-        Reject = 4
+        Reject = 4,
+        Close = 5
     }
 
-    public enum TicketPMStatus
+    public enum LeaderApprove
     {
         Pending = 1,
         Approve = 2,

@@ -5,7 +5,6 @@ using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using Serilog;
 using Inventory.Core.Request;
 using Inventory.Core.Enums;
 
@@ -27,6 +26,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(PaginationResponse<CatalogDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
@@ -100,7 +100,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles =InventoryRoles.IM)]
+        [Authorize(Roles =InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(CatalogEditDTO dto)
@@ -118,7 +118,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:int}")]
-        [Authorize(Roles = InventoryRoles.IM)]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
@@ -139,7 +139,7 @@ namespace Inventory.API.Controllers
 
 
         [HttpDelete("{id:int}")]
-        [Authorize(Roles = InventoryRoles.IM)]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)

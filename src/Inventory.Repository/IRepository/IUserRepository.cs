@@ -9,5 +9,6 @@ namespace Inventory.Repository.IRepository
         Task<PaginationList<AppUser>> GetPagination(PaginationRequest request);
         Task<IEnumerable<AppUser>> GetList();
         Task<AppUser> GetById(string id);
+        Task<RoleDTO> CheckRole(string userId);
     }
 }

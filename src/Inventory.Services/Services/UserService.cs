@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.Enums;
+using Inventory.Core.Extensions;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
@@ -20,12 +21,29 @@ namespace Inventory.Services.Services
     {
         private readonly IUserRepository _user;
         private readonly IMapper _mapper;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly ITokenService _tokenService;
 
-        public UserService(IUserRepository user, IMapper mapper)
+        public UserService(IUserRepository user, IMapper mapper, UserManager<AppUser> userManager, ITokenService tokenService)
         {
             _user = user;
             _mapper = mapper;
+            _userManager = userManager;
+            _tokenService = tokenService;
         }
+
+        public async Task<ResultResponse<RoleDTO>> CheckRole(string id)
+        {
+            ResultResponse<RoleDTO> response = new();
+
+            var result = await _user.CheckRole(id);
+
+            response.Data = result;
+            response.Status = ResponseCode.Success;
+
+            return response;
+        }
+
         public async Task<ResultResponse<AppUserWithTeamDTO>> GetById(string id)
         {
             ResultResponse<AppUserWithTeamDTO> response = new();
@@ -88,6 +106,49 @@ namespace Inventory.Services.Services
                 response.Status = ResponseCode.NoContent;
             }
 
+            return response;
+        }
+
+        public async Task<ResultResponse<AppUserDTO>> GetUserInfo(string token)
+        {
+            ResultResponse<AppUserDTO> response = new();
+
+            var userId = _tokenService.GetUserId(token);
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            response.Data = _mapper.Map<AppUserDTO>(user);
+            response.Status = ResponseCode.Success;
+
+            return response;
+        }
+
+        public async Task<ResultResponse<AppUserDTO>> GrantPermission(GrantRoleDTO dto)
+        {
+            ResultResponse<AppUserDTO> response = new();
+
+            var user = await _userManager.FindByIdAsync(dto.UserId!);
+            if (user == null)
+            {
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("User", "User not found!");
+            }
+            else
+            {
+                var role = dto.Role.ToDescriptionString();
+                var hasRole = await _userManager.IsInRoleAsync(user, role!);
+                if (hasRole)
+                {
+                    response.Status = ResponseCode.Conflict;
+                    response.Message = new("User", $"User already has role {role}!");
+                }
+                else
+                {
+                    response.Status = ResponseCode.Success;
+                    await _userManager.AddToRoleAsync(user, role!);
+                    response.Message = new("User", $"Grant role {role} to {user.UserName}");
+                }
+            }
             return response;
         }
     }

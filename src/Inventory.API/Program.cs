@@ -94,7 +94,7 @@ builder.Services.AddRateLimiter(option =>
 
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
             context.HttpContext.Response
-                .WriteAsync(new ResponseMessage("Too many request", "Please try again later!!").ToString());
+                .WriteAsync(new ResponseMessage("Too many request", "Please try again later!!").ToString(), cancellationToken: _);
 
             return new ValueTask();
         };
@@ -106,7 +106,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 20,
+                    PermitLimit = 100,
                     Window = TimeSpan.FromMinutes(1)
                 });
             }),
@@ -116,7 +116,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 1000,
+                    PermitLimit = 5000,
                     Window = TimeSpan.FromMinutes(60)
                 });
             })
@@ -169,7 +169,7 @@ if (app.Environment.IsDevelopment())
         });
 }
 
-//app.UseRateLimiter();
+app.UseRateLimiter();
 
 app.UseSerilogRequestLogging();
 

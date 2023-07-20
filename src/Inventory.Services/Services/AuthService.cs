@@ -71,7 +71,7 @@ namespace Inventory.Services.Services
                         if (res)
                         {
                             response.Status = ResponseCode.Success;
-                            await _userManager.AddToRoleAsync(newUser, InventoryRoles.Employee);
+                            await _userManager.AddToRoleAsync(newUser, InventoryRoles.NormalUser);
                             await _userManager.AddLoginAsync(newUser, info);
                             response.Message = new("User", "User created successfully!");
                         }
@@ -155,7 +155,7 @@ namespace Inventory.Services.Services
 
                 if (res)
                 {
-                    await _userManager.AddToRoleAsync(user, InventoryRoles.Employee);
+                    await _userManager.AddToRoleAsync(user, InventoryRoles.NormalUser);
                     response.Status = ResponseCode.Success;
                     response.Message = new("User", "User created successfully!");
                 }
@@ -281,34 +281,5 @@ namespace Inventory.Services.Services
         }
 
         private static bool IsEmail(string email) => new EmailAddressAttribute().IsValid(email);
-
-        public async Task<ResultResponse<AppUserDTO>> GrantPermission(GrantRoleDTO dto)
-        {
-            ResultResponse<AppUserDTO> response = new();
-
-            var user = await _userManager.FindByIdAsync(dto.UserId!);
-            if (user == null)
-            {
-                response.Status = ResponseCode.NotFound;
-                response.Message = new("User", "User not found!");
-            }
-            else
-            {
-                var role = dto.Role.ToDescriptionString();
-                var hasRole = await _userManager.IsInRoleAsync(user,role!);
-                if (hasRole)
-                {
-                    response.Status = ResponseCode.Conflict;
-                    response.Message = new("User", $"User already has role {role}!");
-                }
-                else
-                {
-                    response.Status = ResponseCode.Success;
-                    await _userManager.AddToRoleAsync(user, role!);
-                    response.Message = new("User", $"Grant role {role} to {user.UserName}");
-                }
-            }
-            return response;
-        }
     }
 }
