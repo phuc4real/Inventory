@@ -1,18 +1,17 @@
 ﻿using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using Inventory.Repository.Model;
-
 
 namespace Inventory.Services.IServices
 {
     public interface ICatalogServices
     {
-        Task<ResultResponse<IEnumerable<CatalogDTO>>> GetList();
-        Task<PaginationResponse<CatalogDTO>> GetPagination(PaginationRequest request);
-        Task<ResultResponse<CatalogDTO>> GetById(int id);
-        Task<ResultResponse<CatalogDTO>> CreateCatalog(CatalogEditDTO dto);
-        Task<ResultResponse<CatalogDTO>> UpdateCatalog(int id, CatalogEditDTO dto);
-        Task<ResultResponse<CatalogDTO>> DeleteCatalog(int id);
+        Task<ResultResponse<IEnumerable<Catalog>>> GetList();
+        Task<PaginationResponse<Catalog>> GetPagination(PaginationRequest request);
+        Task<ResultResponse<Catalog>> GetById(int id);
+        Task<ResultResponse<Catalog>> Create(UpdateCatalog dto);
+        Task<ResultResponse> Update(int id, UpdateCatalog dto);
+        Task<ResultResponse> Delete(int id);
+        Task<ResultResponse> Any(int id);
     }
 }

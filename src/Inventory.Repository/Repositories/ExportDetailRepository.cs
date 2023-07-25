@@ -1,21 +1,15 @@
 ﻿using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
-using Inventory.Core.ViewModel;
+using Inventory.Core.Response;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
-    public class ExportDetailRepository : Repository<ExportDetail>, IExportDetailRepository
+    public class ExportDetailRepository : Repository<ExportDetailEntity>, IExportDetailRepository
     {
         private readonly AppDbContext _context;
         public ExportDetailRepository(AppDbContext context) : base(context)
@@ -23,39 +17,32 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        private IQueryable<ExportDetail> GetAllWithProperty => _context.ExportDetails
+        public Task<PaginationList<ExportDetailEntity>> GetPagination(PaginationRequest request)
+        {
+            return Pagination(request, GetAllInclude);
+        }
+
+        public Task<PaginationList<ExportDetailEntity>> GetPagination(PaginationRequest request, string userId)
+        {
+            return Pagination(request, GetAllInclude.Where(x => x.Export!.ForId == userId));
+        }
+
+        public Task<PaginationList<ExportDetailEntity>> GetPagination(PaginationRequest request, Guid teamId)
+        {
+            return Pagination(request, GetAllInclude.Where(x => x.Export!.ForUser!.TeamId == teamId));
+        }
+
+        private IQueryable<ExportDetailEntity> GetAll => _context.ExportDetails;
+
+        private IQueryable<ExportDetailEntity> GetAllInclude => GetAll
             .Include(x => x.Item)
             .Include(x => x.Export)
-            .Include(x => x.ForUser);
+                .ThenInclude(e => e!.ForUser);
 
-        public async Task<IEnumerable<ExportDetail>> GetList()
+
+        private static async Task<PaginationList<ExportDetailEntity>> Pagination(PaginationRequest request, IQueryable<ExportDetailEntity> query)
         {
-            var query = GetAllWithProperty;
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<ExportDetail>> GetList(Guid teamId)
-        {
-            var query = GetAllWithProperty
-                .Where(x => x.ForUser!.TeamId == teamId);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<ExportDetail>> GetList(string userId)
-        {
-            var query = GetAllWithProperty
-                .Where(x=>x.ForUserId == userId);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<PaginationList<ExportDetail>> GetPagination(PaginationRequest request)
-        {
-            PaginationList<ExportDetail> pagination = new();
-
-            var query = GetAllWithProperty;
+            PaginationList<ExportDetailEntity> pagination = new();
 
             if (request.SearchKeyword != null)
             {
@@ -63,10 +50,7 @@ namespace Inventory.Repository.Repositories
                 query = query.Where(x =>
                     x.ItemId.ToString().Contains(searchKeyword) ||
                     x.Item!.Name!.Contains(searchKeyword) ||
-                    x.ExportId.Equals(searchKeyword) ||
-                    x.ForUser!.UserName!.Contains(searchKeyword) ||
-                    x.ForUser.Id.Equals(searchKeyword) ||
-                    x.ForUser.Email!.Equals(searchKeyword)
+                    x.ExportId.Equals(searchKeyword)
                 );
             }
 
@@ -74,9 +58,9 @@ namespace Inventory.Repository.Repositories
             {
                 string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
 
-                var desc = request.SortDirection == "desc";
+                var isDesc = request.SortDirection == "desc";
 
-                query = query.OrderByField(columnName, !desc);
+                query = query.OrderByField(columnName, !isDesc);
             }
 
             pagination.TotalRecords = query.Count();

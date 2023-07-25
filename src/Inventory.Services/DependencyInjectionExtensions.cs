@@ -21,13 +21,12 @@ namespace Inventory.Services
             services.AddDbContext<AppDbContext>(
                 options =>
                 {
-                    options.UseSqlServer(configuration.GetConnectionString("InventorySQLServerAzure"));
-                    //options.UseNpgsql(configuration.GetConnectionString("InventoryPostgres"));
-                    options.ConfigureWarnings(builder => 
+                    options.UseNpgsql(configuration.GetConnectionString("PostgresNeonCloud"));
+                    options.ConfigureWarnings(builder =>
                         builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });
 
-            services.AddIdentity<AppUser, IdentityRole>(
+            services.AddIdentity<AppUserEntity, IdentityRole>(
             options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -39,7 +38,7 @@ namespace Inventory.Services
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
-            .AddTokenProvider("Inventory", typeof(DataProtectorTokenProvider<AppUser>))
+            .AddTokenProvider("Inventory", typeof(DataProtectorTokenProvider<AppUserEntity>))
             .AddSignInManager();
 
             return services;
@@ -60,17 +59,17 @@ namespace Inventory.Services
 
             return services;
         }
-        
+
         public static IServiceCollection AddRepository(this IServiceCollection services)
         {
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICatalogRepository, CatalogRepository>();
-            services.AddScoped<ITeamRepository, TeamRepository>();
             services.AddScoped<IItemRepository, ItemRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<IOrderInfoRepository, OrderInfoRepository>();
             services.AddScoped<IExportRepository, ExportRepository>();
-            services.AddScoped<IReceiptRepository, ReceiptRepository>();
             services.AddScoped<ITicketRepository, TicketRepository>();
+            services.AddScoped<ITicketInfoRepository, TicketInfoRepository>();
             services.AddScoped<IExportDetailRepository, ExportDetailRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
 
@@ -82,14 +81,12 @@ namespace Inventory.Services
             services.AddAutoMapper(typeof(DependencyInjectionExtensions).Assembly);
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<ICatalogServices,CatalogService>();
-            services.AddScoped<ITeamServices,TeamService>();
+            services.AddScoped<ICatalogServices, CatalogService>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IExportService, ExportService>();
-            services.AddScoped<IReceiptService, ReceiptService>();  
             services.AddScoped<ITicketService, TicketService>();
-            services.AddScoped<IUsingItemService, UsingItemService>();
+            services.AddScoped<IInUseService, InUseService>();
             services.AddScoped<IRedisCacheService, RedisCacheService>();
             services.AddScoped<IUserService, UserService>();
 

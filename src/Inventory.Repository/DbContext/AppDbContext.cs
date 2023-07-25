@@ -2,9 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using Inventory.Core.Common;
 using Inventory.Repository.DataSeed;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Inventory.Repository.DbContext
 {
@@ -14,14 +12,14 @@ namespace Inventory.Repository.DbContext
         {
         }
 
-        public DbSet<Item> Items { get; set; }
-        public DbSet<Catalog> Catalogs { get; set; }
-        public DbSet<Export> Exports { get; set; }
-        public DbSet<ExportDetail> ExportDetails { get; set; }
-        public DbSet<Order> Orders { get; set; }
-        public DbSet<Receipt> Receipts { get; set; }
-        public DbSet<Team> Teams { get; set; }
-        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<ItemEntity> Items { get; set; }
+        public DbSet<CatalogEntity> Catalogs { get; set; }
+        public DbSet<ExportEntity> Exports { get; set; }
+        public DbSet<ExportDetailEntity> ExportDetails { get; set; }
+        public DbSet<OrderEntity> Orders { get; set; }
+        public DbSet<OrderInfoEntity> OrderInfos { get; set; }
+        public DbSet<TeamEntity> Teams { get; set; }
+        public DbSet<TicketEntity> Tickets { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -30,43 +28,47 @@ namespace Inventory.Repository.DbContext
 
             builder.SeedingData();
 
-            builder.Entity<Order>()
+            builder.Entity<OrderEntity>()
+                .HasMany(o => o.History)
+                .WithOne(i => i.Order)
+                .HasForeignKey(i => i.OrderId);
+
+            builder.Entity<OrderInfoEntity>()
                 .HasMany(e => e.Items)
-                .WithMany(e => e.Orders)
-                .UsingEntity<OrderDetail>(
-                    l => l.HasOne<Item>(e=>e.Item).WithMany(e => e.OrderDetails),
-                    r => r.HasOne<Order>().WithMany(e => e.Details)
+                .WithMany(e => e.OrderInfo)
+                .UsingEntity<OrderDetailEntity>(
+                    l => l.HasOne<ItemEntity>(e => e.Item).WithMany(e => e.OrderDetails),
+                    r => r.HasOne<OrderInfoEntity>().WithMany(e => e.Details)
                 );
 
-            builder.Entity<Export>()
+            builder.Entity<ExportEntity>()
                 .HasMany(e => e.Items)
                 .WithMany(e => e.Exports)
-                .UsingEntity<ExportDetail>(
-                    l => l.HasOne<Item>(e => e.Item).WithMany(e => e.ExportDetails),
-                    r => r.HasOne<Export>(e => e.Export).WithMany(e => e.Details)
+                .UsingEntity<ExportDetailEntity>(
+                    l => l.HasOne<ItemEntity>(e => e.Item).WithMany(e => e.ExportDetails),
+                    r => r.HasOne<ExportEntity>(e => e.Export).WithMany(e => e.Details)
                 );
 
-            builder.Entity<Receipt>()
-                .HasMany(e => e.Items)
-                .WithMany(e => e.Receipts)
-                .UsingEntity<ReceiptDetail>(
-                    l => l.HasOne<Item>(e => e.Item).WithMany(e => e.ReceiptDetails),
-                    r => r.HasOne<Receipt>().WithMany(e => e.Details)
-                );
+            builder.Entity<TicketEntity>()
+                .HasMany(t => t.History)
+                .WithOne(h => h.Ticket)
+                .HasForeignKey(h => h.TicketId);
 
-            builder.Entity<Ticket>()
-                .HasMany(e => e.Items)
-                .WithMany(e => e.Tickets)
-                .UsingEntity<TicketDetail>(
-                    l => l.HasOne<Item>(e => e.Item).WithMany(e => e.TicketDetails),
-                    r => r.HasOne<Ticket>().WithMany(e => e.Details)
-                );
+            builder.Entity<TicketInfoEntity>()
+                .HasMany(x => x.Items)
+                .WithMany(i => i.TicketInfo)
+                .UsingEntity<TicketDetailEntity>(
+                    l => l.HasOne<ItemEntity>(e => e.Item).WithMany(e => e.TicketDetails),
+                    r => r.HasOne<TicketInfoEntity>().WithMany(e => e.Details));
 
-            builder.Entity<Team>()
+            builder.Entity<TeamEntity>()
                 .HasMany(e => e.Members)
                 .WithOne(e => e.Team)
                 .HasForeignKey(e => e.TeamId)
                 .IsRequired(false);
+
+            builder.Entity<DecisionEntity>()
+                .HasKey(x => new { x.ById, x.Date });
 
             //builder.Entity<Catalog>()
             //    .HasQueryFilter(x => !x.IsDeleted);

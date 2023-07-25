@@ -25,7 +25,7 @@ namespace Inventory.API.Middleware
             }
         }
 
-        private async Task HandleExceptionAsync(HttpContext context)
+        private static async Task HandleExceptionAsync(HttpContext context)
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;

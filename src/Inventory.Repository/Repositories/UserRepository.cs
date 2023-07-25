@@ -1,6 +1,4 @@
-﻿using Inventory.Core.Extensions;
-using Inventory.Core.Helper;
-using Inventory.Core.Request;
+﻿using Inventory.Core.Common;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
@@ -10,60 +8,37 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Repository.Repositories
 {
-    public class UserRepository : Repository<AppUser>, IUserRepository
+    public class UserRepository : Repository<AppUserEntity>, IUserRepository
     {
-        private readonly UserManager<AppUser> _userManager;
-        public UserRepository(AppDbContext context, UserManager<AppUser> userManager) : base(context)
+        private readonly UserManager<AppUserEntity> _userManager;
+        public UserRepository(AppDbContext context, UserManager<AppUserEntity> userManager) : base(context)
         {
             _userManager = userManager;
         }
 
-        public async Task<PaginationList<AppUser>> GetPagination(PaginationRequest request)
+        public async Task<AppUserEntity> GetById(string id)
         {
-            PaginationList<AppUser> pagination = new();
-
-            var list = _userManager.Users.AsQueryable();
-
-            if (request.SearchKeyword != null)
-            {
-                var searchKeyword = request.SearchKeyword.ToLower();
-                list = list.Where(x =>
-                    x.UserName!.ToLower().Contains(searchKeyword) ||
-                    x.Email!.ToLower().Contains(searchKeyword) ||
-                    string.Concat(x.FirstName, x.LastName).Contains(searchKeyword)
-                );
-            }
-
-            pagination.TotalRecords = list.Count();
-            pagination.TotalPages = pagination.TotalRecords /request.PageSize;
-
-            if(request.SortField != null && request.SortField != "undefined")
-            {
-                string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
-                var desc = request.SortDirection == "desc";
-                list = list.OrderByField(columnName, !desc);
-            }
-
-            list = list.Skip(request.PageIndex * request.PageSize)
-                         .Take(request.PageSize);
-
-            pagination.Data = await list.ToListAsync();
-
-            return pagination;
-        }
-
-        public async Task<AppUser> GetById(string id)
-        {
-            var result = await _userManager.FindByIdAsync(id);
-
 #pragma warning disable CS8603 // Possible null reference return.
-            return result;
+            return await _userManager.FindByIdAsync(id);
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<IEnumerable<AppUser>> GetList()
+        public async Task<IEnumerable<AppUserEntity>> GetList()
         {
-            var result = await _userManager.Users.ToListAsync();
+            return await _userManager.Users.ToListAsync();
+        }
+
+        public async Task<Permission> CheckRole(string userId)
+        {
+            Permission result = new();
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user != null)
+            {
+                result.IsTeamLeader = await _userManager.IsInRoleAsync(user, InventoryRoles.TeamLeader);
+                result.IsAdmin = await _userManager.IsInRoleAsync(user, InventoryRoles.Admin);
+                result.IsSuperAdmin = await _userManager.IsInRoleAsync(user, InventoryRoles.SuperAdmin);
+            }
 
             return result;
         }

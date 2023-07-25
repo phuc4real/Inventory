@@ -1,20 +1,17 @@
 ﻿using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Inventory.Repository.Model;
 
 namespace Inventory.Services.IServices
 {
     public interface IExportService
     {
-        Task<ResultResponse<IEnumerable<ExportDTO>>> GetList();
-        Task<PaginationResponse<ExportDTO>> GetPagination(PaginationRequest request);
-        Task<ResultResponse<ExportDTO>> GetById(int id);
-        Task<ResultResponse<ExportDTO>> CreateExport(string token, ExportCreateDTO dto);
-        Task<ResultResponse<ExportDTO>> CancelExport(int id);
+        Task<ResultResponse<IEnumerable<Export>>> GetList();
+        Task<PaginationResponse<Export>> GetPagination(PaginationRequest request);
+        Task<ResultResponse<Export>> GetById(int id);
+        Task<ResultResponse<Export>> CreateFromTicket(string adminId, string forUserId, TicketInfoEntity dto);
+        Task<ResultResponse> UpdateStatus(string token, int id);
+        Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth();
     }
 }

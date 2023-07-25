@@ -1,7 +1,7 @@
 ﻿using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
-using Inventory.Core.ViewModel;
+using Inventory.Core.Response;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Repository.Repositories
 {
-    public class CatalogRepository : Repository<Catalog>, ICatalogRepository
+    public class CatalogRepository : Repository<CatalogEntity>, ICatalogRepository
     {
         private readonly AppDbContext _context;
 
@@ -18,29 +18,25 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        private IQueryable<Catalog> GetAll => _context.Catalogs; 
+        private IQueryable<CatalogEntity> GetAll => _context.Catalogs;
 
-        public async Task<Catalog> GetById(int id)
+        public async Task<CatalogEntity> GetById(int id)
         {
-            var query = GetAll.Where(x => x.Id == id);
 #pragma warning disable CS8603 // Possible null reference return.
-            return await query.FirstOrDefaultAsync();
+            return await _context.Catalogs.FindAsync(id);
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<PaginationList<Catalog>> GetPagination(PaginationRequest request)
+        public async Task<PaginationList<CatalogEntity>> GetPagination(PaginationRequest request)
         {
-            PaginationList<Catalog> catalogs = new();
+            PaginationList<CatalogEntity> catalogs = new();
 
             var query = GetAll.Where(x => !x.IsDeleted);
 
             if (request.SearchKeyword != null)
             {
                 var searchKeyword = request.SearchKeyword.ToLower();
-                query = query.Where(x => 
-                    x.Id.ToString().Contains(searchKeyword) ||
-                    x.Name!.ToLower().Contains(searchKeyword)
-                 );
+                query = query.Where(x => x.Name!.ToLower().Contains(searchKeyword));
             }
 
             catalogs.TotalRecords = query.Count();
@@ -50,9 +46,9 @@ namespace Inventory.Repository.Repositories
             {
                 string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
 
-                var desc = request.SortDirection == "desc";
+                var isDesc = request.SortDirection == "desc";
 
-                query = query.OrderByField(columnName, !desc);
+                query = query.OrderByField(columnName, !isDesc);
             }
 
             query = query.Skip(request.PageIndex * request.PageSize)
@@ -62,9 +58,9 @@ namespace Inventory.Repository.Repositories
 
             return catalogs;
         }
-        public async Task<IEnumerable<Catalog>> GetList(string name)
+        public async Task<IEnumerable<CatalogEntity>> GetList(string name)
         {
-            IQueryable<Catalog> query = _context.Catalogs.Where(x => !x.IsDeleted);
+            var query = _context.Catalogs.Where(x => !x.IsDeleted);
 
             if (name != null)
             {

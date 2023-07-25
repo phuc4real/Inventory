@@ -26,7 +26,7 @@ namespace Inventory.API.Controllers
         [HttpPost("register")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Register(RegisterDTO dto)
+        public async Task<IActionResult> Register(Register dto)
         {
             if (!ModelState.IsValid)
             {
@@ -43,7 +43,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Login(LoginDTO dto)
+        public async Task<IActionResult> Login(Login dto)
         {
             if (!ModelState.IsValid)
             {
@@ -112,20 +112,6 @@ namespace Inventory.API.Controllers
 
             return result.Status == ResponseCode.Success ?
                     Ok(result.Data) : StatusCode((int)result.Status, result.Message);
-        }
-
-
-        [HttpPost("grant-role")]
-        [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> GrantPermission(GrantRoleDTO dto)
-        {
-            var result = await _authService.GrantPermission(dto);
-
-            return result.Status == ResponseCode.Success ?
-                     Ok(result.Message) : StatusCode((int)result.Status, result.Message);
         }
     }
 }

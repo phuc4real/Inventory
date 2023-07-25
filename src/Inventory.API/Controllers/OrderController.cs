@@ -7,12 +7,13 @@ using Inventory.Core.ViewModel;
 using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NuGet.Common;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.IM)]
+    [Authorize(Roles = InventoryRoles.Admin)]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -26,11 +27,11 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(List<OrderDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> ListOrder()
+        public async Task<IActionResult> List()
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + ".ListOrder",out IEnumerable<OrderDTO> orders))
+            if (_cacheService.TryGetCacheAsync(redisKey + ".ListOrder", out IEnumerable<Order> orders))
             {
                 return Ok(orders);
             }
@@ -48,13 +49,13 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PaginationResponse<OrderDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginationResponse<Order>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetOrderPagination([FromQuery] PaginationRequest request)
+        public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
             var queryString = Request.QueryString.ToString();
 
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<OrderDTO> orders))
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Order> orders))
             {
                 return Ok(orders);
             }
@@ -72,31 +73,27 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CreateOrder(OrderCreateDTO dto)
+        public async Task<IActionResult> Create(UpdateOrderInfo dto)
         {
-            if(!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
+            if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
 
-            var token = await HttpContext.GetAccessToken();
-
-            var result = await _orderService.CreateOrder(token, dto);
+            var result = await _orderService.Create(await HttpContext.GetAccessToken(), dto);
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseCode.Success ?
-                    Created("order/"+result.Data!.Id,result.Message) : StatusCode((int)result.Status, result.Message);
+                    Created("order/" + result.Data!.Id, result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = InventoryRoles.IM)]
-        [ProducesResponseType(typeof(OrderDetailDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetOrder(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id,out OrderDTO order))
+            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out Order order))
             {
                 return Ok(order);
             }
@@ -114,13 +111,25 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id:int}/update-status")]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateOrderStatus(int id)
+        public async Task<IActionResult> UpdateStatus(int id)
         {
-            var result = await _orderService.UpdateOrderStatus(id);
+            var result = await _orderService.UpdateStatus(await HttpContext.GetAccessToken(), id);
+
+            await _cacheService.RemoveCacheTreeAsync(redisKey);
+
+            return StatusCode((int)result.Status, result.Message);
+        }
+
+
+        [HttpPost("{id:int}/decide")]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Decide(int id, UpdateDecision decision)
+        {
+            var result = await _orderService.Decide(await HttpContext.GetAccessToken(), id, decision);
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
@@ -128,17 +137,26 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id:int}/cancel")]
-        [Authorize(Roles = InventoryRoles.IM)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CancelOrder(int id)
+        public async Task<IActionResult> Cancel(int id)
         {
-            var result = await _orderService.CancelOrder(id);
+            var result = await _orderService.Cancel(await HttpContext.GetAccessToken(), id);
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return StatusCode((int)result.Status, result.Message);
+        }
+
+
+        [HttpGet("count-by-month")]
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetCount()
+        {
+            var result = await _orderService.GetCountByMonth();
+
+            return StatusCode((int)result.Status, result.Data);
         }
     }
 }

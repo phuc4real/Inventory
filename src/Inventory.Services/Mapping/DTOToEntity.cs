@@ -1,11 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.Mapping
 {
@@ -13,31 +8,20 @@ namespace Inventory.Services.Mapping
     {
         public DTOtoEntity()
         {
-            CreateMap<CatalogDTO, Catalog>();
-            CreateMap<CatalogEditDTO, Catalog>();
+            CreateMap<Catalog, CatalogEntity>();
+            CreateMap<UpdateCatalog, CatalogEntity>();
 
-            CreateMap<TeamDTO, Team>();
-            CreateMap<TeamEditDTO, Team>();
-            CreateMap<TeamWithMembersDTO, Team>();
+            CreateMap<AppUser, AppUserEntity>();
 
-            CreateMap<AppUserDTO, AppUser>();
-            CreateMap<AppUserEditDTO, AppUser>();
+            CreateMap<Item, ItemEntity>();
+            CreateMap<ItemDetail, ItemEntity>();
+            CreateMap<UpdateItem, ItemEntity>();
 
-            CreateMap<ItemDTO, Item>();
-            CreateMap<ItemDetailDTO, Item>();
-            CreateMap<ItemEditDTO, Item>();
+            CreateMap<UpdateOrderInfo, OrderInfoEntity>();
+            CreateMap<UpdateOrderDetail, OrderDetailEntity>();
 
-            CreateMap<OrderCreateDTO, Order>();
-            CreateMap<OrderDetailCreateDTO, OrderDetail>();
-
-            CreateMap<ExportCreateDTO, Export>();
-            CreateMap<ExportDetailCreateDTO, ExportDetail>();
-
-            CreateMap<ReceiptCreateDTO, Receipt>();
-            CreateMap<ReceiptDetailCreateDTO, ReceiptDetail>();
-            
-            CreateMap<TicketCreateDTO, Ticket>();
-            CreateMap<TicketDetailCreateDTO, TicketDetail>();
+            CreateMap<UpdateTicketInfo, TicketInfoEntity>();
+            CreateMap<UpdateTicketDetail, TicketDetailEntity>();
         }
     }
 }

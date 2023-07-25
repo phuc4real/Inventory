@@ -1,19 +1,14 @@
 ﻿using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class
     {
         private readonly AppDbContext _context;
-        private DbSet<T> _dbSet;
+        private readonly DbSet<T> _dbSet;
 
         public Repository(AppDbContext context)
         {
@@ -51,6 +46,12 @@ namespace Inventory.Repository.Repositories
         public void Update(T entity)
         {
             _dbSet.Update(entity);
+        }
+
+        public void UpdateRage(List<T> entities)
+        {
+            foreach (T entity in entities)
+                _dbSet.Update(entity);
         }
     }
 }

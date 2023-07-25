@@ -3,8 +3,8 @@ using System;
 using Inventory.Repository.DbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -17,340 +17,418 @@ namespace Inventory.Repository.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.8")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("ProductVersion", "7.0.9")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Inventory.Repository.Model.Catalog", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.CatalogEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Catalogs", (string)null);
+                    b.ToTable("Catalogs");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Export", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.DecisionEntity", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("ById")
+                        .HasColumnType("text");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("Message")
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                    b.HasKey("ById", "Date");
 
-                    b.Property<bool>("IsCancel")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.ToTable("Exports", (string)null);
+                    b.ToTable("DecisionEntity");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.ExportDetail", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.ExportDetailEntity", b =>
                 {
                     b.Property<int>("ExportId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("ItemId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
-                    b.Property<string>("ForUserId")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("ExportId", "ItemId");
 
-                    b.HasIndex("ForUserId");
-
                     b.HasIndex("ItemId");
 
-                    b.ToTable("ExportDetails", (string)null);
+                    b.ToTable("ExportDetails");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.ExportEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ForId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UpdatedById")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("ForId");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.ToTable("Exports");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.ItemEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<int>("CatalogId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("InStock")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InUsing")
+                        .HasColumnType("integer");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
-                    b.Property<int>("Used")
-                        .HasColumnType("int");
+                    b.Property<string>("UpdatedById")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CatalogId");
 
-                    b.HasIndex("CreatedBy");
+                    b.HasIndex("CreatedById");
 
-                    b.HasIndex("LastModifiedBy");
+                    b.HasIndex("UpdatedById");
 
-                    b.ToTable("Items", (string)null);
+                    b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Order", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.OrderDetailEntity", b =>
+                {
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("OrderInfoId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("MaxPrice")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MaxTotal")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MinPrice")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MinTotal")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ItemId", "OrderInfoId");
+
+                    b.HasIndex("OrderInfoId");
+
+                    b.ToTable("OrderDetailEntity");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.OrderEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CompleteDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("CompleteDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("OrderBy")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<double>("OrderTotal")
-                        .HasColumnType("float");
+                    b.Property<string>("UpdatedById")
+                        .HasColumnType("text");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderBy");
+                    b.HasIndex("CreatedById");
 
-                    b.ToTable("Orders", (string)null);
+                    b.HasIndex("UpdatedById");
+
+                    b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.OrderDetail", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.OrderInfoEntity", b =>
                 {
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
 
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Price")
-                        .HasColumnType("float");
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                    b.Property<string>("DecisionById")
+                        .HasColumnType("text");
 
-                    b.Property<double>("Total")
-                        .HasColumnType("float");
+                    b.Property<DateTime?>("DecisionDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("ItemId", "OrderId");
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<long>("MaxTotal")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("MinTotal")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderDetail", (string)null);
+                    b.HasIndex("DecisionById", "DecisionDate");
+
+                    b.ToTable("OrderInfos");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Receipt", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("ItemCount")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.ToTable("Receipts", (string)null);
-                });
-
-            modelBuilder.Entity("Inventory.Repository.Model.ReceiptDetail", b =>
-                {
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ReceiptId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("ItemId", "ReceiptId");
-
-                    b.HasIndex("ReceiptId");
-
-                    b.ToTable("ReceiptDetail", (string)null);
-                });
-
-            modelBuilder.Entity("Inventory.Repository.Model.Team", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TeamEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.Property<string>("LeaderId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("LeaderId");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TicketDetailEntity", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TicketInfoId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("ItemId", "TicketInfoId");
+
+                    b.HasIndex("TicketInfoId");
+
+                    b.ToTable("TicketDetailEntity");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.TicketEntity", b =>
+                {
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("integer");
 
-                    b.Property<DateTime>("ClosedDate")
-                        .HasColumnType("datetime2");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<DateTime?>("CloseDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedById")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("UpdatedById")
+                        .HasColumnType("text");
 
-                    b.Property<bool>("IsClosed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PMStatus")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Purpose")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RejectReason")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
+                    b.HasIndex("CreatedById");
 
-                    b.HasIndex("LastModifiedBy");
+                    b.HasIndex("UpdatedById");
 
-                    b.ToTable("Tickets", (string)null);
+                    b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.TicketDetail", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TicketInfoEntity", b =>
                 {
-                    b.Property<Guid>("ItemId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
 
-                    b.Property<Guid>("TicketId")
-                        .HasColumnType("uniqueidentifier");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("CloseAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("ItemId", "TicketId");
+                    b.Property<string>("DecisionById")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("DecisionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LeaderDecisionById")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LeaderDecisionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("TicketDetail", (string)null);
+                    b.HasIndex("DecisionById", "DecisionDate");
+
+                    b.HasIndex("LeaderDecisionById", "LeaderDecisionDate");
+
+                    b.ToTable("TicketInfoEntity");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                        .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
 
@@ -358,26 +436,26 @@ namespace Inventory.Repository.Migrations
                         new
                         {
                             Id = "46a4f2b7-2a9e-4977-ae32-e0e5793e6267",
-                            Name = "Employee",
-                            NormalizedName = "EMPLOYEE"
+                            Name = "Normal User",
+                            NormalizedName = "NORMAL USER"
                         },
                         new
                         {
                             Id = "f8b59b69-fabb-4386-948e-5fb7054ffff4",
-                            Name = "Project Manager",
-                            NormalizedName = "PROJECT MANAGER"
+                            Name = "Team Leader",
+                            NormalizedName = "TEAM LEADER"
                         },
                         new
                         {
                             Id = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
-                            Name = "Inventory Manager",
-                            NormalizedName = "INVENTORY MANAGER"
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "fc2a7273-a3c2-47be-bc55-aab11097e09a",
-                            Name = "Administrator",
-                            NormalizedName = "ADMINISTRATOR"
+                            Name = "Super Administrator",
+                            NormalizedName = "SUPER ADMINISTRATOR"
                         });
                 });
 
@@ -385,19 +463,19 @@ namespace Inventory.Repository.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -409,58 +487,58 @@ namespace Inventory.Repository.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Discriminator")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -469,8 +547,7 @@ namespace Inventory.Repository.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                        .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
 
@@ -483,19 +560,19 @@ namespace Inventory.Repository.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -507,17 +584,17 @@ namespace Inventory.Repository.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -529,10 +606,10 @@ namespace Inventory.Repository.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -545,89 +622,108 @@ namespace Inventory.Repository.Migrations
                         {
                             UserId = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                             RoleId = "fc2a7273-a3c2-47be-bc55-aab11097e09a"
+                        },
+                        new
+                        {
+                            UserId = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
+                            RoleId = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b"
                         });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.AppUser", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.AppUserEntity", b =>
                 {
                     b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("RefreshTokenExpireTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("TeamId")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uuid");
 
                     b.HasIndex("TeamId");
 
-                    b.HasDiscriminator().HasValue("AppUser");
+                    b.HasDiscriminator().HasValue("AppUserEntity");
 
                     b.HasData(
                         new
                         {
                             Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ea727fd5-cfe5-43e2-bb0b-e6e2a0f8ae69",
+                            ConcurrencyStamp = "4f790736-d140-45d0-9dc4-41dcabec1ddb",
+                            Email = "sa@local.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SA@LOCAL.COM",
+                            NormalizedUserName = "SUPERADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAECPxHq1q3/J9Cqqu3BNG2YOzl1DRjvzHJ9UvGaAJJxPuXUMyPBQ5PjcrlGO1d3bYUw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "2faf08c4-2ef5-4fe6-a58f-ba61d2567f6d",
+                            TwoFactorEnabled = false,
+                            UserName = "superadmin"
+                        },
+                        new
+                        {
+                            Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "458c3719-c44a-49b5-ba33-e4e1fe1877a4",
                             Email = "admin@local.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@LOCAL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOuHrNcNkFhgvLybKYvapPDh69ozM+vh3ZD1TqjoBuSDVhsUICj6pKfUz+wLmf+ZYQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ1JMCGOjaKGJ6WVLkYrf2468lbWifLurCfyuztxl5BlUzQ2+kSixDAyIUg6ZGvwvw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "c9f0b0db-c57a-4916-b68e-966009cf86dd",
+                            SecurityStamp = "9f77237c-1bc7-429e-8dc1-fffe2e57940f",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Export", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.DecisionEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.AppUser", "CreatedByUser")
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "ByUser")
                         .WithMany()
-                        .HasForeignKey("CreatedBy");
+                        .HasForeignKey("ById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("ByUser");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.ExportDetail", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.ExportDetailEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Export", "Export")
+                    b.HasOne("Inventory.Repository.Model.ExportEntity", "Export")
                         .WithMany("Details")
                         .HasForeignKey("ExportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Inventory.Repository.Model.AppUser", "ForUser")
-                        .WithMany()
-                        .HasForeignKey("ForUserId");
-
-                    b.HasOne("Inventory.Repository.Model.Item", "Item")
+                    b.HasOne("Inventory.Repository.Model.ItemEntity", "Item")
                         .WithMany("ExportDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -635,125 +731,160 @@ namespace Inventory.Repository.Migrations
 
                     b.Navigation("Export");
 
-                    b.Navigation("ForUser");
-
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.ExportEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Catalog", "Catalog")
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedById");
+
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "ForUser")
+                        .WithMany()
+                        .HasForeignKey("ForId");
+
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ForUser");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.ItemEntity", b =>
+                {
+                    b.HasOne("Inventory.Repository.Model.CatalogEntity", "Catalog")
                         .WithMany()
                         .HasForeignKey("CatalogId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Inventory.Repository.Model.AppUser", "CreatedByUser")
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "CreatedByUser")
                         .WithMany()
-                        .HasForeignKey("CreatedBy");
+                        .HasForeignKey("CreatedById");
 
-                    b.HasOne("Inventory.Repository.Model.AppUser", "ModifiedByUser")
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "UpdatedByUser")
                         .WithMany()
-                        .HasForeignKey("LastModifiedBy");
+                        .HasForeignKey("UpdatedById");
 
                     b.Navigation("Catalog");
 
                     b.Navigation("CreatedByUser");
 
-                    b.Navigation("ModifiedByUser");
+                    b.Navigation("UpdatedByUser");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Order", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.OrderDetailEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.AppUser", "OrderByUser")
-                        .WithMany()
-                        .HasForeignKey("OrderBy");
-
-                    b.Navigation("OrderByUser");
-                });
-
-            modelBuilder.Entity("Inventory.Repository.Model.OrderDetail", b =>
-                {
-                    b.HasOne("Inventory.Repository.Model.Item", "Item")
+                    b.HasOne("Inventory.Repository.Model.ItemEntity", "Item")
                         .WithMany("OrderDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Inventory.Repository.Model.Order", null)
+                    b.HasOne("Inventory.Repository.Model.OrderInfoEntity", null)
                         .WithMany("Details")
-                        .HasForeignKey("OrderId")
+                        .HasForeignKey("OrderInfoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Item");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Receipt", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.OrderEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.AppUser", "CreatedByUser")
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "CreatedByUser")
                         .WithMany()
-                        .HasForeignKey("CreatedBy");
+                        .HasForeignKey("CreatedById");
+
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("UpdatedByUser");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.ReceiptDetail", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.OrderInfoEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Item", "Item")
-                        .WithMany("ReceiptDetails")
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Inventory.Repository.Model.OrderEntity", "Order")
+                        .WithMany("History")
+                        .HasForeignKey("OrderId");
 
-                    b.HasOne("Inventory.Repository.Model.Receipt", null)
-                        .WithMany("Details")
-                        .HasForeignKey("ReceiptId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("Inventory.Repository.Model.DecisionEntity", "Decision")
+                        .WithMany()
+                        .HasForeignKey("DecisionById", "DecisionDate");
 
-                    b.Navigation("Item");
+                    b.Navigation("Decision");
+
+                    b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Team", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TeamEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.AppUser", "Leader")
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "Leader")
                         .WithMany()
                         .HasForeignKey("LeaderId");
 
                     b.Navigation("Leader");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TicketDetailEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.AppUser", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy");
-
-                    b.HasOne("Inventory.Repository.Model.AppUser", "ModifiedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastModifiedBy");
-
-                    b.Navigation("CreatedByUser");
-
-                    b.Navigation("ModifiedByUser");
-                });
-
-            modelBuilder.Entity("Inventory.Repository.Model.TicketDetail", b =>
-                {
-                    b.HasOne("Inventory.Repository.Model.Item", "Item")
+                    b.HasOne("Inventory.Repository.Model.ItemEntity", "Item")
                         .WithMany("TicketDetails")
                         .HasForeignKey("ItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Inventory.Repository.Model.Ticket", null)
+                    b.HasOne("Inventory.Repository.Model.TicketInfoEntity", null)
                         .WithMany("Details")
-                        .HasForeignKey("TicketId")
+                        .HasForeignKey("TicketInfoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.TicketEntity", b =>
+                {
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedById");
+
+                    b.HasOne("Inventory.Repository.Model.AppUserEntity", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.TicketInfoEntity", b =>
+                {
+                    b.HasOne("Inventory.Repository.Model.TicketEntity", "Ticket")
+                        .WithMany("History")
+                        .HasForeignKey("TicketId");
+
+                    b.HasOne("Inventory.Repository.Model.DecisionEntity", "Decision")
+                        .WithMany()
+                        .HasForeignKey("DecisionById", "DecisionDate");
+
+                    b.HasOne("Inventory.Repository.Model.DecisionEntity", "LeaderDecision")
+                        .WithMany()
+                        .HasForeignKey("LeaderDecisionById", "LeaderDecisionDate");
+
+                    b.Navigation("Decision");
+
+                    b.Navigation("LeaderDecision");
+
+                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -807,47 +938,50 @@ namespace Inventory.Repository.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.AppUser", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.AppUserEntity", b =>
                 {
-                    b.HasOne("Inventory.Repository.Model.Team", "Team")
+                    b.HasOne("Inventory.Repository.Model.TeamEntity", "Team")
                         .WithMany("Members")
                         .HasForeignKey("TeamId");
 
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Export", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.ExportEntity", b =>
                 {
                     b.Navigation("Details");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Item", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.ItemEntity", b =>
                 {
                     b.Navigation("ExportDetails");
 
                     b.Navigation("OrderDetails");
 
-                    b.Navigation("ReceiptDetails");
-
                     b.Navigation("TicketDetails");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Order", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.OrderEntity", b =>
+                {
+                    b.Navigation("History");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.OrderInfoEntity", b =>
                 {
                     b.Navigation("Details");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Receipt", b =>
-                {
-                    b.Navigation("Details");
-                });
-
-            modelBuilder.Entity("Inventory.Repository.Model.Team", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TeamEntity", b =>
                 {
                     b.Navigation("Members");
                 });
 
-            modelBuilder.Entity("Inventory.Repository.Model.Ticket", b =>
+            modelBuilder.Entity("Inventory.Repository.Model.TicketEntity", b =>
+                {
+                    b.Navigation("History");
+                });
+
+            modelBuilder.Entity("Inventory.Repository.Model.TicketInfoEntity", b =>
                 {
                     b.Navigation("Details");
                 });

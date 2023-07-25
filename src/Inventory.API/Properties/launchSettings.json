@@ -2,8 +2,8 @@
   "profiles": {
     "API": {
       "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "",
+      //"launchBrowser": true,
+      //"launchUrl": "",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

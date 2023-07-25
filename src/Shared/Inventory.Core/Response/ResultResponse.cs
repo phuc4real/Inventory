@@ -12,4 +12,11 @@ namespace Inventory.Core.Response
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ResponseMessage? Message { get; set; }
     }
+
+    public class ResultResponse
+    {
+        [JsonIgnore]
+        public ResponseCode Status { get; set; }
+        public ResponseMessage? Message { get; set; }
+    }
 }

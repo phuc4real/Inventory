@@ -1,11 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Inventory.Core.Common
+﻿namespace Inventory.Core.Common
 {
     public class TokenModel
     {

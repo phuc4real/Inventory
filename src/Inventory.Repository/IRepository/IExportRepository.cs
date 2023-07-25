@@ -1,19 +1,14 @@
 ﻿using Inventory.Core.Request;
-using Inventory.Core.ViewModel;
+using Inventory.Core.Response;
 using Inventory.Repository.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.IRepository
 {
-    public interface IExportRepository : IRepository<Export>
+    public interface IExportRepository : IRepository<ExportEntity>
     {
-        Task<PaginationList<Export>> GetPagination(PaginationRequest request);
-        Task<IEnumerable<Export>> GetList();
-        Task<Export> GetById(int id);
+        Task<PaginationList<ExportEntity>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<ExportEntity>> GetList();
+        Task<ExportEntity> GetById(int id);
+        Task<List<ResponseMessage>> GetCount();
     }
 }
