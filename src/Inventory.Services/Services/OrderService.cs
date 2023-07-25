@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
@@ -13,49 +12,48 @@ namespace Inventory.Services.Services
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _order;
+        private readonly IOrderInfoRepository _orderInfo;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IItemRepository _item;
+        private readonly IItemService _itemService;
         private readonly ITokenService _tokenService;
 
         public OrderService(
             IOrderRepository order,
+            IOrderInfoRepository orderInfo,
             IUnitOfWork unitOfWork,
             IMapper mapper,
-            IItemRepository item,
+            IItemService itemService,
             ITokenService tokenService)
         {
             _order = order;
+            _orderInfo = orderInfo;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _item = item;
+            _itemService = itemService;
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<IEnumerable<OrderDTO>>> GetList()
+        public async Task<ResultResponse<IEnumerable<Order>>> GetList()
         {
-            ResultResponse<IEnumerable<OrderDTO>> response = new();
-
+            ResultResponse<IEnumerable<Order>> response = new();
             var orders = await _order.GetList();
 
             if (orders.Any())
             {
                 response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<OrderDTO>>(orders);
+                response.Data = _mapper.Map<IEnumerable<Order>>(orders);
             }
             else
             {
                 response.Status = ResponseCode.NoContent;
-                //response.Message = new("Order", "There is no record");
             }
-
             return response;
         }
 
-
-        public async Task<PaginationResponse<OrderDTO>> GetPagination(PaginationRequest request)
+        public async Task<PaginationResponse<Order>> GetPagination(PaginationRequest request)
         {
-            PaginationResponse<OrderDTO> response = new()
+            PaginationResponse<Order> response = new()
             {
                 PageIndex = request.PageIndex,
                 PageSize = request.PageSize
@@ -68,82 +66,99 @@ namespace Inventory.Services.Services
                 response.TotalRecords = orders.TotalRecords;
                 response.TotalPages = orders.TotalPages;
                 response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<OrderDTO>>(orders.Data);
+                response.Data = _mapper.Map<IEnumerable<Order>>(orders.Data);
             }
             else
             {
                 response.Status = ResponseCode.NoContent;
-                //response.Message = new("Order", "There is no record");
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<OrderDTO>> CreateOrder(string token, OrderCreateDTO dto)
+        public async Task<ResultResponse<Order>> Create(string token, UpdateOrderInfo dto)
         {
-            ResultResponse<OrderDTO> response = new();
-            IList<OrderDetail> orderDetails = new List<OrderDetail>();
+            ResultResponse<Order> response = new();
+            List<OrderDetailEntity> orderDetails = new();
 
-            var userId = _tokenService.GetUserId(token);
-            double total = 0;
-            foreach (var detail in dto.Details!)
+            var userId = _tokenService.GetuserId(token);
+            long minTotal = 0;
+            long maxTotal = 0;
+
+            var res = await _itemService.Exists(dto.Details!
+                                                .Select(x => x.ItemId).ToList());
+
+            if (res.Status != ResponseCode.Success)
             {
-                var itemExists = await _item.AnyAsync(x => x.Id == detail.ItemId);
-
-                if (!itemExists) 
-                {
-                    response.Status = ResponseCode.NotFound;
-                    response.Message = new("Item", $"Item #{detail.ItemId} not exists!");
-
-                    return response;
-                }
-                double itemTotal = detail.Price * detail.Quantity;
-                
-                if(itemTotal != detail.Total) {
-                    response.Status = ResponseCode.BadRequest;
-                    response.Message = new("OrderDetail", "Item total not match!");
-                    return response;
-                }
-                total += itemTotal;
-                orderDetails.Add(_mapper.Map<OrderDetail>(detail));
+                response.Message = res.Message;
+                response.Status = ResponseCode.NotFound;
+                return response;
             }
 
-            if (total != dto.OrderTotal)
+            foreach (var detail in dto.Details!)
+            {
+                bool isMinDetailTotalValid = (detail.MinPrice * detail.Quantity) == detail.MinTotal;
+                bool isMaxDetailTotalValid = (detail.MaxPrice * detail.Quantity) == detail.MaxTotal;
+
+                if (isMinDetailTotalValid && isMaxDetailTotalValid)
+                {
+                    response.Status = ResponseCode.BadRequest;
+                    response.Message = new("Order Detail", "Detail total not match!");
+                    return response;
+                }
+
+                minTotal += detail.MinTotal;
+                maxTotal += detail.MaxTotal;
+                orderDetails.Add(_mapper.Map<OrderDetailEntity>(detail));
+            }
+
+            if (minTotal != dto.MinTotal && maxTotal != dto.MaxTotal)
             {
                 response.Status = ResponseCode.BadRequest;
                 response.Message = new("Order", "Order total not match!");
                 return response;
             }
 
-
-            Order order = new()
+            OrderInfoEntity orderInfo = new()
             {
-                OrderTotal = dto.OrderTotal,
                 Status = OrderStatus.Pending,
-                Details = orderDetails,
-                OrderBy = userId,
-                OrderDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                MinTotal = dto.MinTotal,
+                MaxTotal = dto.MaxTotal,
+                Description = dto.Description,
+                Details = orderDetails
             };
-            
+
+            OrderEntity order = new()
+            {
+                CreatedDate = DateTime.UtcNow,
+                CreatedById = userId,
+                UpdatedDate = DateTime.UtcNow,
+                UpdatedById = userId,
+                History = new List<OrderInfoEntity>()
+            };
+
+            order.History.Add(orderInfo);
+
             await _order.AddAsync(order);
             await _unitOfWork.SaveAsync();
 
-            response.Data = _mapper.Map<OrderDTO>(order);
-            response.Status = ResponseCode.Success;
+            response.Data = _mapper.Map<Order>(order);
+            response.Status = ResponseCode.Created;
             response.Message = new("Order", "Order created!");
             return response;
         }
 
-        public async Task<ResultResponse<OrderDTO>> GetById(int id)
+        public async Task<ResultResponse<Order>> GetById(int id)
         {
-            ResultResponse<OrderDTO> response = new();
+            ResultResponse<Order> response = new();
 
             var order = await _order.GetById(id);
 
-            if(order != null)
+            if (order != null)
             {
-                response.Status= ResponseCode.Success;
-                response.Data = _mapper.Map<OrderDTO>(order);
+                response.Status = ResponseCode.Success;
+                response.Data = _mapper.Map<Order>(order);
             }
             else
             {
@@ -154,67 +169,72 @@ namespace Inventory.Services.Services
             return response;
         }
 
-         public async Task<ResultResponse<OrderDTO>> UpdateOrderStatus(int id)
+        public async Task<ResultResponse> UpdateStatus(string token, int id)
         {
-            ResultResponse<OrderDTO> response = new();
+            ResultResponse response = new();
+
+            var userId = _tokenService.GetuserId(token);
 
             var order = await _order.GetById(id);
             if (order == null)
             {
                 response.Status = ResponseCode.NotFound;
                 response.Message = new("Order", "Order not found!");
-
             }
             else
             {
-                switch (order.Status)
+                var orderInfo = order.History!.OrderByDescending(x => x.CreatedAt).First();
+
+                switch (orderInfo.Status)
                 {
                     case OrderStatus.Pending:
                         {
-                            order.Status++;
+                            orderInfo.Status++;
+                            order.UpdatedDate = DateTime.UtcNow;
+                            order.UpdatedById = userId;
+
+                            _orderInfo.Update(orderInfo);
                             _order.Update(order);
                             await _unitOfWork.SaveAsync();
 
                             response.Status = ResponseCode.Success;
-                            response.Data = _mapper.Map<OrderDTO>(order);
-
                             response.Message = new("Order", "Order status changed!");
                             break;
                         }
                     case OrderStatus.Processing:
                         {
-                            order.Status++;
+                            orderInfo.Status++;
                             order.CompleteDate = DateTime.UtcNow;
+                            order.UpdatedDate = DateTime.UtcNow;
+                            order.UpdatedById = userId;
+
+                            var res = await _itemService.Order(orderInfo.Details!.ToList());
+                            if (res.Status != ResponseCode.Success) return res;
+
+                            _orderInfo.Update(orderInfo);
                             _order.Update(order);
                             await _unitOfWork.SaveAsync();
 
                             response.Status = ResponseCode.Success;
-                            response.Data = _mapper.Map<OrderDTO>(order);
-
                             response.Message = new("Order", "Order status changed!");
                             break;
                         }
-                    case OrderStatus.Done:
+                    default:
                         {
                             response.Status = ResponseCode.BadRequest;
-                            response.Message = new("Order", "Order is done!");
-                            break;
-                        }
-                    case OrderStatus.Cancel:
-                        {
-                            response.Status = ResponseCode.BadRequest;
-                            response.Message = new("Order", "Order is cancel!");
+                            response.Message = new("Order", "Order status cannot change!");
                             break;
                         }
                 };
             }
-
             return response;
         }
 
-        public async Task<ResultResponse<OrderDTO>> CancelOrder(int id)
+        public async Task<ResultResponse> Cancel(string token, int id)
         {
-            ResultResponse<OrderDTO> response = new();
+            ResultResponse response = new();
+
+            var userId = _tokenService.GetuserId(token);
 
             var order = await _order.GetById(id);
             if (order == null)
@@ -225,34 +245,63 @@ namespace Inventory.Services.Services
             }
             else
             {
-                switch (order.Status)
+                var orderInfo = order.History!.OrderByDescending(x => x.CreatedAt).First();
+
+                if (orderInfo.Status == OrderStatus.Done || orderInfo.Status == OrderStatus.Cancel)
                 {
-                    case OrderStatus.Pending:
-                    case OrderStatus.Processing:
-                        {
-                            order.Status = OrderStatus.Cancel;
-                            _order.Update(order);
-                            await _unitOfWork.SaveAsync();
+                    response.Status = ResponseCode.BadRequest;
+                    response.Message = new("Order", "Order already cancelled!");
+                }
+                else
+                {
+                    orderInfo.Status = OrderStatus.Cancel;
+                    order.UpdatedDate = DateTime.UtcNow;
+                    order.UpdatedById = userId;
 
-                            response.Status = ResponseCode.Success;
-                            response.Data = _mapper.Map<OrderDTO>(order);
+                    _orderInfo.Update(orderInfo);
+                    _order.Update(order);
+                    await _unitOfWork.SaveAsync();
 
-                            response.Message = new("Order", "Order canceled!");
-                            break;
-                        }
-                    case OrderStatus.Done:
-                        {
-                            response.Status = ResponseCode.BadRequest;
-                            response.Message = new("Order", "Order is done");
-                            break;
-                        }
-                    case OrderStatus.Cancel:
-                        {
-                            response.Status = ResponseCode.BadRequest;
-                            response.Message = new("Order", "Order already cancelled!");
-                            break;
-                        }
+                    response.Status = ResponseCode.Success;
+                    response.Message = new("Order", "Order canceled!");
+                }
+            }
+            return response;
+        }
+
+        public async Task<ResultResponse> Decide(string token, int id, UpdateDecision decision)
+        {
+            ResultResponse response = new();
+
+            var userId = _tokenService.GetuserId(token);
+            var order = await _order.GetById(id);
+
+            if (order == null)
+            {
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Order", "Order not found!");
+            }
+            else
+            {
+                var orderInfo = order.History!.OrderByDescending(x => x.CreatedAt).First();
+
+                orderInfo.Decision = new()
+                {
+                    Status = decision.Status,
+                    ById = userId,
+                    Date = DateTime.UtcNow,
+                    Message = decision.Message
                 };
+
+                order.UpdatedDate = DateTime.UtcNow;
+                order.UpdatedById = userId;
+
+                _orderInfo.Update(orderInfo);
+                _order.Update(order);
+                await _unitOfWork.SaveAsync();
+
+                response.Status = ResponseCode.Success;
+                response.Message = new("Decision", "Success");
             }
 
             return response;
@@ -260,12 +309,11 @@ namespace Inventory.Services.Services
 
         public async Task<ResultResponse<IEnumerable<ResponseMessage>>> GetCountByMonth()
         {
-            ResultResponse<IEnumerable<ResponseMessage>> response = new();
-
-            var result = await _order.GetCount();
-
-            response.Status = ResponseCode.Success;
-            response.Data = result;
+            ResultResponse<IEnumerable<ResponseMessage>> response = new()
+            {
+                Status = ResponseCode.Success,
+                Data = await _order.GetCount()
+            };
 
             return response;
         }

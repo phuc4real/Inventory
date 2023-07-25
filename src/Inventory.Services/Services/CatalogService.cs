@@ -22,29 +22,26 @@ namespace Inventory.Services.Services
             _mapper = mapper;
         }
 
-        public async Task<ResultResponse<IEnumerable<CatalogDTO>>> GetList()
+        public async Task<ResultResponse<IEnumerable<Catalog>>> GetList()
         {
-            ResultResponse<IEnumerable<CatalogDTO>> response = new();
+            ResultResponse<IEnumerable<Catalog>> response = new();
 
             var catalogs = await _catalog.GetAsync();
 
-            if(catalogs.Any())
+            if (catalogs.Any())
             {
-                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs);
+                response.Data = _mapper.Map<IEnumerable<Catalog>>(catalogs);
                 response.Status = ResponseCode.Success;
             }
             else
-            {
                 response.Status = ResponseCode.NoContent;
-                //response.Message = new("Catalog", "No record");
-            }
 
             return response;
         }
 
-        public async Task<ResultResponse<CatalogDTO>> GetById(int id)
+        public async Task<ResultResponse<Catalog>> GetById(int id)
         {
-            ResultResponse<CatalogDTO> response = new();
+            ResultResponse<Catalog> response = new();
 
             var result = await _catalog.GetById(id);
 
@@ -56,30 +53,30 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<CatalogDTO>(result);
+                response.Data = _mapper.Map<Catalog>(result);
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<CatalogDTO>> CreateCatalog(CatalogEditDTO dto)
+        public async Task<ResultResponse<Catalog>> Create(UpdateCatalog dto)
         {
-            ResultResponse<CatalogDTO> response = new();
-            Catalog catalog = _mapper.Map<Catalog>(dto);
+            ResultResponse<Catalog> response = new();
+            CatalogEntity catalog = _mapper.Map<CatalogEntity>(dto);
 
             await _catalog.AddAsync(catalog);
             await _unitOfWork.SaveAsync();
 
             response.Status = ResponseCode.Created;
-            response.Data = _mapper.Map<CatalogDTO>(catalog);
+            response.Data = _mapper.Map<Catalog>(catalog);
             response.Message = new("Catalog", "Catalog created!");
 
             return response;
         }
 
-        public async Task<ResultResponse<CatalogDTO>> UpdateCatalog(int id, CatalogEditDTO dto)
+        public async Task<ResultResponse> Update(int id, UpdateCatalog dto)
         {
-            ResultResponse<CatalogDTO> response = new();
+            ResultResponse response = new();
 
             var catalog = await _catalog.GetById(id);
             if (catalog == null || catalog.IsDeleted)
@@ -99,9 +96,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<CatalogDTO>> DeleteCatalog(int id)
+        public async Task<ResultResponse> Delete(int id)
         {
-            ResultResponse<CatalogDTO> response = new();
+            ResultResponse response = new();
 
             var catalog = await _catalog.GetById(id);
             if (catalog == null || catalog.IsDeleted)
@@ -121,9 +118,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<PaginationResponse<CatalogDTO>> GetPagination(PaginationRequest request)
+        public async Task<PaginationResponse<Catalog>> GetPagination(PaginationRequest request)
         {
-            PaginationResponse<CatalogDTO> response = new() 
+            PaginationResponse<Catalog> response = new()
             {
                 PageIndex = request.PageIndex,
                 PageSize = request.PageSize
@@ -136,12 +133,27 @@ namespace Inventory.Services.Services
                 response.TotalRecords = catalogs.TotalRecords;
                 response.TotalPages = catalogs.TotalPages;
                 response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<CatalogDTO>>(catalogs.Data);
+                response.Data = _mapper.Map<IEnumerable<Catalog>>(catalogs.Data);
+            }
+            else
+                response.Status = ResponseCode.NoContent;
+
+            return response;
+        }
+
+        public async Task<ResultResponse> Any(int id)
+        {
+            ResultResponse response = new();
+
+            if (await _catalog.AnyAsync(x => x.Id == id))
+            {
+                response.Status = ResponseCode.Success;
+                response.Message = new("Catalog", $"Catalog #{id} exist!");
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
-                //response.Message = new("Catalog", "No record!");
+                response.Status = ResponseCode.NotFound;
+                response.Message = new("Catalog", $"Catalog #{id} not exist!");
             }
 
             return response;

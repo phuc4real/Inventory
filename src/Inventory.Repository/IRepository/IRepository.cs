@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 
 namespace Inventory.Repository.IRepository
 {
@@ -11,6 +6,7 @@ namespace Inventory.Repository.IRepository
     {
         Task AddAsync(T entity);
         void Update(T entity);
+        void UpdateRage(List<T> entities);
         void Remove(T entity);
         Task<IEnumerable<T>> GetAsync(Expression<Func<T, bool>>? filter = null);
         Task<bool> AnyAsync(Expression<Func<T, bool>> filter);

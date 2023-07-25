@@ -2,6 +2,7 @@
 using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
+using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Repository.Repositories
 {
-    public class TicketRepository : Repository<Ticket>, ITicketRepository
+    public class TicketRepository : Repository<TicketEntity>, ITicketRepository
     {
         private readonly AppDbContext _context;
         public TicketRepository(AppDbContext context) : base(context)
@@ -18,37 +19,58 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        private IQueryable<Ticket> GetAllWithProperty => _context.Tickets
-            .Include(x => x.Details)!
-            .ThenInclude(d => d.Item)
+        private IQueryable<TicketEntity> GetAll => _context.Tickets;
+
+        private IQueryable<TicketEntity> GetAllIncludeUser => GetAll
             .Include(x => x.CreatedByUser)
-            .Include(x => x.ModifiedByUser);
+            .Include(x => x.UpdatedByUser);
 
-        public async Task<Ticket> GetById(Guid id)
+        private IQueryable<TicketEntity> GetAllIncludeHistory => GetAllIncludeUser
+            .Include(x => x.History)!
+                .ThenInclude(h => h.LeaderDecision)
+                    .ThenInclude(l => l!.ByUser)
+            .Include(x => x.History)!
+                .ThenInclude(h => h.Decision)
+                    .ThenInclude(l => l!.ByUser);
+
+        private IQueryable<TicketEntity> GetAllIncludeDetail => GetAllIncludeHistory
+            .Include(x => x.History)!
+                .ThenInclude(h => h.Details)!
+                    .ThenInclude(d => d.Item);
+
+        public async Task<TicketEntity> GetById(int id)
         {
-            var query = GetAllWithProperty
-                .Where(x => x.Id == id);
-
 #pragma warning disable CS8603 // Possible null reference return.
-            return await query.FirstOrDefaultAsync();
+            return await GetAllIncludeDetail.FirstOrDefaultAsync(x => x.Id == id);
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<PaginationList<Ticket>> GetPagination(PaginationRequest request)
+        public async Task<PaginationList<TicketEntity>> GetPagination(PaginationRequest request)
         {
-            PaginationList<Ticket> pagination = new();
+            return await Pagination(request, GetAllIncludeDetail);
+        }
 
-            var query = GetAllWithProperty;
+
+        public async Task<PaginationList<TicketEntity>> GetPagination(PaginationRequest request, Guid teamId)
+        {
+            return await Pagination(request, GetAllIncludeDetail.Where(x => x.CreatedByUser!.TeamId == teamId));
+        }
+
+        public async Task<PaginationList<TicketEntity>> GetPagination(PaginationRequest request, string userId)
+        {
+            return await Pagination(request, GetAllIncludeDetail.Where(x => x.CreatedById == userId));
+        }
+
+        private static async Task<PaginationList<TicketEntity>> Pagination(PaginationRequest request, IQueryable<TicketEntity> query)
+        {
+            PaginationList<TicketEntity> pagination = new();
 
             if (request.SearchKeyword != null)
             {
                 var searchKeyword = request.SearchKeyword.ToLower();
                 query = query.Where(x =>
                     x.Id.ToString().Contains(searchKeyword) ||
-                    x.Title!.Contains(searchKeyword) ||
-                    x.Description!.Contains(searchKeyword) ||
-                    x.Items!.Any(i => i.Name!.ToLower().Contains(searchKeyword)) ||
-                    x.Items!.Any(i => i.Id!.ToString().ToLower().Contains(searchKeyword))
+                    x.CreatedByUser!.UserName!.Contains(searchKeyword)
                     );
             }
 
@@ -56,9 +78,9 @@ namespace Inventory.Repository.Repositories
             {
                 string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
 
-                var desc = request.SortDirection == "desc";
+                var isDesc = request.SortDirection == "desc";
 
-                query = query.OrderByField(columnName, !desc);
+                query = query.OrderByField(columnName, !isDesc);
             }
 
             pagination.TotalRecords = query.Count();
@@ -68,43 +90,17 @@ namespace Inventory.Repository.Repositories
                 .Take(request.PageSize);
             pagination.Data = await query.ToListAsync();
 
-            return pagination;            
+            return pagination;
         }
 
-        public async Task<IEnumerable<Ticket>> GetList(Guid teamId)
+        public async Task<IEnumerable<TicketEntity>> GetList()
         {
-            var query = GetAllWithProperty
-                .Where(x => x.CreatedByUser!.TeamId == teamId);
-
-            return await query.ToListAsync();
+            return await GetAll.ToListAsync();
         }
 
-        public async Task<IEnumerable<Ticket>> GetList(string userid)
+        public async Task<TicketCount> GetCount()
         {
-            var query = GetAllWithProperty
-                .Where(x => x.CreatedBy == userid);
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Ticket>> GetList(Item item)
-        {
-            var query = GetAllWithProperty
-                .Where(x => x.Items!.Contains(item));
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<IEnumerable<Ticket>> GetList()
-        {
-            var query = GetAllWithProperty;
-
-            return await query.ToListAsync();
-        }
-
-        public async Task<TicketCountDTO> GetCount()
-        {
-            TicketCountDTO result = new()
+            TicketCount result = new()
             {
                 Pending = 0,
                 Processing = 0,
@@ -114,9 +110,20 @@ namespace Inventory.Repository.Repositories
 
             var month = DateTime.Now.Month;
 
-            var query = _context.Tickets.Where(x=> x.CreatedDate.Month == month);
+            var query = GetAllIncludeHistory.Where(x => x.CreatedDate.Month == month)
+                .Select(x => new TicketEntity
+                {
+                    Id = x.Id,
+                    History = x.History!
+                    .OrderByDescending(h => h.CreatedAt)
+                    .Take(1)
+                    .ToList(),
+                });
 
-            var groupBy = await query.Select(x => new { x.Id, x.Status }).GroupBy(x => x.Status).ToListAsync() ;
+            var groupBy = await query
+                .Select(x => new { x.Id, x.History!.First().Status })
+                .GroupBy(x => x.Status)
+                .ToListAsync();
 
             foreach (var item in groupBy)
             {
@@ -127,7 +134,6 @@ namespace Inventory.Repository.Repositories
             }
 
             return result;
-           
         }
     }
 }

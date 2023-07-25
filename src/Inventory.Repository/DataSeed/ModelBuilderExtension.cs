@@ -41,7 +41,7 @@ namespace Inventory.Repository.DataSeed
                 });
 
             //Add default SuperAdmin
-            AppUser sa = new()
+            AppUserEntity sa = new()
             {
                 Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                 UserName = "superadmin",
@@ -50,10 +50,10 @@ namespace Inventory.Repository.DataSeed
                 NormalizedEmail = "SA@LOCAL.COM",
                 SecurityStamp = Guid.NewGuid().ToString()
             };
-            var hasher = new PasswordHasher<AppUser>();
+            var hasher = new PasswordHasher<AppUserEntity>();
             sa.PasswordHash = hasher.HashPassword(sa, "123456@@");
 
-            builder.Entity<AppUser>()
+            builder.Entity<AppUserEntity>()
                 .HasData(sa);
 
             builder.Entity<IdentityUserRole<string>>()
@@ -64,7 +64,7 @@ namespace Inventory.Repository.DataSeed
                 });
 
             //Add default Admin
-            AppUser admin = new()
+            AppUserEntity admin = new()
             {
                 Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
                 UserName = "admin",
@@ -75,7 +75,7 @@ namespace Inventory.Repository.DataSeed
             };
             admin.PasswordHash = hasher.HashPassword(admin, "123456@@");
 
-            builder.Entity<AppUser>()
+            builder.Entity<AppUserEntity>()
                 .HasData(admin);
 
             builder.Entity<IdentityUserRole<string>>()

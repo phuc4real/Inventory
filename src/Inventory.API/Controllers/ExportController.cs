@@ -26,13 +26,13 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PaginationResponse<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginationResponse<Export>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
             var queryString = Request.QueryString.ToString();
 
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<ExportDTO> catalogs))
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Export> catalogs))
             {
                 return Ok(catalogs);
             }
@@ -51,13 +51,13 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(IEnumerable<ExportDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<Export>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> ListExport()
+        public async Task<IActionResult> List()
         {
             var queryString = Request.QueryString.ToString();
 
-            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out IEnumerable<ExportDTO> exports))
+            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out IEnumerable<Export> exports))
             {
                 return Ok(exports);
             }
@@ -76,11 +76,11 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(ExportDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Export), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetExport(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            if(_cacheService.TryGetCacheAsync(redisKey + "." + id,out ExportDTO export))
+            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out Export export))
             {
                 return Ok(export);
             }
@@ -98,33 +98,12 @@ namespace Inventory.API.Controllers
             }
         }
 
-        [HttpPost]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
+        [HttpDelete("{id:int}/update-status")]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status422UnprocessableEntity)]
-        public async Task<IActionResult> CreateExport(ExportCreateDTO dto)
+        public async Task<IActionResult> UpdateStatus(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
-
-            var token = await HttpContext.GetAccessToken();
-
-            var result = await _exportService.CreateExport(token, dto);
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return result.Status == ResponseCode.Success ?
-                    Created("export/" + result.Data!.Id, result.Message) : StatusCode((int)result.Status, result.Message);
-        }
-
-        [HttpDelete("{id:int}/cancel")]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CancelExport(int id)
-        {
-            var result = await _exportService.CancelExport(id);
+            var result = await _exportService.UpdateStatus(await HttpContext.GetAccessToken(), id);
             await _cacheService.RemoveCacheTreeAsync(redisKey);
             return StatusCode((int)result.Status, result.Message);
         }

@@ -1,15 +1,14 @@
 ﻿using Inventory.Core.Request;
 using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
 
 namespace Inventory.Repository.IRepository
 {
-    public interface IOrderRepository : IRepository<Order>
+    public interface IOrderRepository : IRepository<OrderEntity>
     {
-        Task<PaginationList<Order>> GetPagination(PaginationRequest request);
-        Task<IEnumerable<Order>> GetList();
-        Task<Order> GetById(int id);
+        Task<PaginationList<OrderEntity>> GetPagination(PaginationRequest request);
+        Task<IEnumerable<OrderEntity>> GetList();
+        Task<OrderEntity> GetById(int id);
         Task<List<ResponseMessage>> GetCount();
     }
 }

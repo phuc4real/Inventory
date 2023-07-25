@@ -9,44 +9,39 @@ namespace Inventory.Services.Mapping
     {
         public EntityToDTO()
         {
-            CreateMap<Catalog, CatalogDTO>();
+            CreateMap<CatalogEntity, Catalog>();
 
+            CreateMap<AppUserEntity, AppUser>();
 
-            CreateMap<Team, TeamDTO>();
-            CreateMap<Team, TeamWithMembersDTO>();
+            CreateMap<ItemEntity, Item>();
+            CreateMap<ItemEntity, ItemDetail>();
 
-
-            CreateMap<AppUser, AppUserDTO>();
-            CreateMap<AppUser, AppUserWithTeamDTO>();
-
-            CreateMap<Item, ItemDTO>();
-            CreateMap<Item, ItemDetailDTO>();
-
-            CreateMap<Order, OrderDTO>()
+            CreateMap<DecisionEntity, Decision>()
                 .ForMember(dest => dest.Status, opt => opt
                     .MapFrom(src => src.Status
-                        .ToDescriptionString())
-                 );
-            CreateMap<OrderDetail, OrderDetailDTO>();
+                        .ToDescriptionString()));
+
+            CreateMap<OrderEntity, Order>();
+            CreateMap<OrderInfoEntity, OrderInfo>()
+                .ForMember(dest => dest.Status, opt => opt
+                    .MapFrom(src => src.Status
+                        .ToDescriptionString()));
+
+            CreateMap<OrderDetailEntity, OrderDetail>();
+
+            CreateMap<ExportEntity, Export>();
+            CreateMap<ExportDetail, ExportDetail>();
 
 
-            CreateMap<Export, ExportDTO>();
-            CreateMap<Export, ExportDTO>();
-            CreateMap<ExportDetail, ExportDetailDTO>();
-            CreateMap<ExportDetail, UsingItemDTO>();
-
-            CreateMap<Receipt, ReceiptDTO>();
-            CreateMap<ReceiptDetail, ReceiptDetailDTO>();
-
-            CreateMap<Ticket, TicketDTO>()
+            CreateMap<TicketEntity, Ticket>();
+            CreateMap<TicketInfoEntity, TicketInfo>()
                 .ForMember(dest => dest.Purpose, opt => opt
                     .MapFrom(src => src.Purpose.ToDescriptionString()))
-                .ForMember(dest => dest.LeaderApprove, opt => opt
-                    .MapFrom(src => src.LeaderApprove.ToDescriptionString()))
                 .ForMember(dest => dest.Status, opt => opt
                     .MapFrom(src => src.Status.ToDescriptionString()));
-            CreateMap<TicketDetail, TicketDetailDTO>()
-                .ForMember(dest =>dest.Type, opt => opt
+
+            CreateMap<TicketDetailEntity, TicketDetail>()
+                .ForMember(dest => dest.Type, opt => opt
                     .MapFrom(src => src.Type.ToDescriptionString()));
 
         }

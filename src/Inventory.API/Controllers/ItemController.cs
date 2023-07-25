@@ -26,12 +26,12 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(List<ItemDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Item>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetList([FromQuery] string? name)
+        public async Task<IActionResult> List([FromQuery] string? name)
         {
             var queryString = Request.QueryString.ToString();
-            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out List<ItemDetailDTO> response))
+            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out List<Item> response))
             {
                 return Ok(response);
             }
@@ -45,19 +45,18 @@ namespace Inventory.API.Controllers
                     return Ok(result.Data);
                 }
 
-                //return StatusCode((int)result.Status,result.Message);
                 return StatusCode((int)result.Status);
             }
         }
 
         [HttpGet]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(PaginationResponse<ItemDetailDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginationResponse<Item>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest requestParams)
+        public async Task<IActionResult> Pagination([FromQuery] PaginationRequest requestParams)
         {
             var queryString = Request.QueryString.ToString();
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<ItemDetailDTO> response))
+            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Item> response))
             {
                 return Ok(response);
             }
@@ -76,11 +75,11 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:Guid}")]
-        [ProducesResponseType(typeof(ItemDetailDTO),StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetItem(Guid id)
+        [ProducesResponseType(typeof(ItemDetail), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Get(Guid id)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out ItemDetailDTO items))
+            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out ItemDetail items))
             {
                 return Ok(items);
             }
@@ -99,36 +98,33 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles =InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(List<ResponseMessage>),StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> CreateItem(ItemEditDTO item)
+        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Create(UpdateItem item)
         {
             if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
 
-            var accessToken = await HttpContext.GetAccessToken();
-
-            var result = await _itemService.CreateItem(accessToken, item);
+            var result = await _itemService.Create(await HttpContext.GetAccessToken(), item);
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
             return result.Status == ResponseCode.Success ?
-                Created("item/" + result.Data!.Id, result.Message) : StatusCode((int)result.Status, result.Message);
+                Created("item/" + result.Data!.Id, result.Message) :
+                StatusCode((int)result.Status, result.Message);
         }
 
         [HttpPut("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage),StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateItem(Guid id, ItemEditDTO item)
+        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(Guid id, UpdateItem item)
         {
-            if(!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
+            if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
 
-            var accessToken = await HttpContext.GetAccessToken();
-
-            var result = await _itemService.UpdateItem(accessToken, id, item);
+            var result = await _itemService.Update(await HttpContext.GetAccessToken(), id, item);
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 
@@ -140,11 +136,9 @@ namespace Inventory.API.Controllers
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteItem(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var accessToken = await HttpContext.GetAccessToken();
-
-            var result = await _itemService.DeleteItem(accessToken, id);
+            var result = await _itemService.Delete(await HttpContext.GetAccessToken(), id);
 
             await _cacheService.RemoveCacheTreeAsync(redisKey);
 

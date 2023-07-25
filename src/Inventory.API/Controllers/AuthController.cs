@@ -26,7 +26,7 @@ namespace Inventory.API.Controllers
         [HttpPost("register")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Register(RegisterDTO dto)
+        public async Task<IActionResult> Register(Register dto)
         {
             if (!ModelState.IsValid)
             {
@@ -43,7 +43,7 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Login(LoginDTO dto)
+        public async Task<IActionResult> Login(Login dto)
         {
             if (!ModelState.IsValid)
             {

@@ -2,16 +2,11 @@
 using Inventory.Core.Response;
 using Inventory.Repository.Model;
 using Inventory.Services.IServices;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Services.Services
 {
@@ -22,7 +17,7 @@ namespace Inventory.Services.Services
         {
             _option = option.Value;
         }
-        public SecurityToken GenerateToken(AppUser user, IList<string> userRoles)
+        public SecurityToken GenerateToken(AppUserEntity user, IList<string> userRoles)
         {
             var authClaims = new List<Claim>
                     {
@@ -66,7 +61,7 @@ namespace Inventory.Services.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             var principal = tokenHandler.ValidateToken(token, tokenValidateParameter, out SecurityToken securityToken);
 
-            if (securityToken is not JwtSecurityToken jwtSecurityToken || 
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                 !jwtSecurityToken.Header.Alg
                     .Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -76,14 +71,14 @@ namespace Inventory.Services.Services
             return principal;
         }
 
-        public string GetUserId(string token)
+        public string GetuserId(string token)
         {
             var principal = GetPrincipalFromExpiredToken(token);
 
             return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
         }
 
-        public bool TryGetUserId(string token, out ResponseMessage result)
+        public bool TryGetuserId(string token, out ResponseMessage result)
         {
 
             if (string.IsNullOrEmpty(token))
@@ -93,7 +88,7 @@ namespace Inventory.Services.Services
             }
             else
             {
-                result = new("UserId", GetUserId(token));
+                result = new("userId", GetuserId(token));
                 return true;
             }
         }

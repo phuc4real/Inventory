@@ -1,6 +1,5 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Core.Enums;
-using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
@@ -11,19 +10,18 @@ using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace Inventory.Services.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly SignInManager<AppUser> _signInManager;
+        private readonly UserManager<AppUserEntity> _userManager;
+        private readonly SignInManager<AppUserEntity> _signInManager;
         private readonly ITokenService _tokenService;
 
         public AuthService(
-            UserManager<AppUser> userManager,
-            SignInManager<AppUser> signInManager,
+            UserManager<AppUserEntity> userManager,
+            SignInManager<AppUserEntity> signInManager,
             ITokenService tokenService)
         {
             _userManager = userManager;
@@ -37,7 +35,6 @@ namespace Inventory.Services.Services
 
             var info = await _signInManager.GetExternalLoginInfoAsync();
 
-            //TODO: Kiểm tra ==null trước để tra ra lỗi ngay lập tức.
             if (info == null)
             {
                 response.Status = ResponseCode.BadRequest;
@@ -58,7 +55,7 @@ namespace Inventory.Services.Services
                     }
                     else
                     {
-                        AppUser newUser = new()
+                        AppUserEntity newUser = new()
                         {
                             UserName = Guid.NewGuid().ToString().Replace("-", ""),
                             Email = email,
@@ -80,12 +77,10 @@ namespace Inventory.Services.Services
                             response.Status = ResponseCode.BadRequest;
                             response.Message = new("User", "User info invalid!");
                         }
-                        //TODO: Chổ này có cần có else khum? nếu khum create user thành công thì return response luôn k làm cái dưới.
 
                         return response;
                     }
                 }
-                //TODO: FindByEmailAsync có email đã khởi tạo ở trên rồi, e nên dùng lại.
 
                 response.Data = await GetTokens(user!);
                 response.Status = ResponseCode.Success;
@@ -93,11 +88,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TokenModel>> SignInAsync(LoginDTO dto)
+        public async Task<ResultResponse<TokenModel>> SignInAsync(Login dto)
         {
             ResultResponse<TokenModel> response = new();
-
-            //TOD0: sử dụng "toán tử điều kiện" cho ngắn gọn hơn vì trong if else cùng làm 1 công việc.
 
             var user = IsEmail(dto.Username!) ?
                 await _userManager.FindByEmailAsync(dto.Username!) :
@@ -131,10 +124,10 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<TokenModel>> SignUpAsync(RegisterDTO dto)
+        public async Task<ResultResponse> SignUpAsync(Register dto)
         {
-            ResultResponse<TokenModel> response = new();
-            //TODO: following the C# naming conventions(EmailExist, UserNameExist).
+            ResultResponse response = new();
+
             var emailExist = await _userManager.FindByEmailAsync(dto.Email!) is not null;
             var userNameExist = await _userManager.FindByNameAsync(dto.Username!) is not null;
 
@@ -145,10 +138,10 @@ namespace Inventory.Services.Services
             }
             else
             {
-                AppUser user = new() 
-                { 
-                    UserName = dto.Username, 
-                    Email = dto.Email 
+                AppUserEntity user = new()
+                {
+                    UserName = dto.Username,
+                    Email = dto.Email
                 };
 
                 var res = await CreateUser(user, dto.Password!);
@@ -177,11 +170,11 @@ namespace Inventory.Services.Services
             return properties;
         }
 
-        public async Task<ResultResponse<TokenModel>> SignOutAsync(string token)
+        public async Task<ResultResponse> SignOutAsync(string token)
         {
-            ResultResponse<TokenModel> response = new();
+            ResultResponse response = new();
 
-            var userId = _tokenService.GetUserId(token);
+            var userId = _tokenService.GetuserId(token);
             var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
@@ -221,14 +214,10 @@ namespace Inventory.Services.Services
                     var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
                     var user = await _userManager.FindByIdAsync(userId!);
 
-                    //TODO: đặt tên cho dễ hiểu hơn (storedRefreshToken,isRefreshTokenValid) đặt tên là vấn nạn với a :V
                     var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user!, "Inventory", "RefreshToken");
-
                     var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user!, "Inventory", "RefreshToken", refreshToken);
-
                     var curDateTime = DateTime.UtcNow;
 
-                    //TODO: isValid = isValidRefreshToken 
                     bool isValid = isRefreshTokenValid
                                    && curDateTime < user!.RefreshTokenExpireTime
                                    && storedRefreshToken == refreshToken;
@@ -257,13 +246,13 @@ namespace Inventory.Services.Services
             }
         }
 
-        private async Task<bool> CreateUser(AppUser user, string password)
+        private async Task<bool> CreateUser(AppUserEntity user, string password)
         {
             var result = await _userManager.CreateAsync(user, password);
             return result.Succeeded;
         }
 
-        private async Task<TokenModel> GetTokens(AppUser user)
+        private async Task<TokenModel> GetTokens(AppUserEntity user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
             var token = _tokenService.GenerateToken(user, userRoles);

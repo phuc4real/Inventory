@@ -2,21 +2,14 @@
 using Inventory.Core.Helper;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
 using Inventory.Repository.DbContext;
 using Inventory.Repository.IRepository;
 using Inventory.Repository.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Repository.Repositories
 {
-    public class ExportRepository : Repository<Export>, IExportRepository
+    public class ExportRepository : Repository<ExportEntity>, IExportRepository
     {
         private readonly AppDbContext _context;
 
@@ -25,41 +18,42 @@ namespace Inventory.Repository.Repositories
             _context = context;
         }
 
-        private IQueryable<Export> GetAllWithProperty => _context.Exports
-            .Where(x=>!x.IsCancel)
+        private IQueryable<ExportEntity> GetAll => _context.Exports;
+
+        private IQueryable<ExportEntity> GetAllIncludeUser => GetAll
+            .Include(x => x.ForUser)
+            .Include(x => x.CreatedByUser)
+            .Include(x => x.UpdatedByUser);
+
+        private IQueryable<ExportEntity> GetAllIncludeDetail => GetAllIncludeUser
             .Include(x => x.Details)!
-                .ThenInclude(x => x.Item)
-            .Include(x => x.CreatedByUser); 
+            .ThenInclude(d => d.Item);
 
-
-        public async Task<IEnumerable<Export>> GetList()
+        public async Task<IEnumerable<ExportEntity>> GetList()
         {
-            return await GetAllWithProperty.ToListAsync();
+            return await GetAll.ToListAsync();
         }
 
-        public async Task<Export> GetById(int id)
+        public async Task<ExportEntity> GetById(int id)
         {
-            var query = GetAllWithProperty
-                .Where(x => x.Id == id);
-
 #pragma warning disable CS8603 // Possible null reference return.
-            return await query.FirstOrDefaultAsync();
+            return await GetAllIncludeDetail.FirstOrDefaultAsync(x => x.Id == id);
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<PaginationList<Export>> GetPagination(PaginationRequest request)
+        public async Task<PaginationList<ExportEntity>> GetPagination(PaginationRequest request)
         {
-            PaginationList<Export> pagination = new();
+            PaginationList<ExportEntity> pagination = new();
 
-            var query = GetAllWithProperty;
+            var query = GetAllIncludeUser;
 
             if (request.SearchKeyword != null)
             {
                 var searchKeyword = request.SearchKeyword.ToLower();
                 query = query.Where(x =>
                     x.Id.ToString().Contains(searchKeyword) ||
-                    x.Items!.Any(i => i.Name!.ToLower().Contains(searchKeyword)) ||
-                    x.Items!.Any(i => i.Id!.ToString().ToLower().Contains(searchKeyword))
+                    x.ForUser!.UserName!.Contains(searchKeyword) ||
+                    x.ForUser!.Email!.Contains(searchKeyword)
                     );
             }
 
@@ -67,9 +61,9 @@ namespace Inventory.Repository.Repositories
             {
                 string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
 
-                var desc = request.SortDirection == "desc";
+                var isDesc = request.SortDirection == "desc";
 
-                query = query.OrderByField(columnName, !desc);
+                query = query.OrderByField(columnName, !isDesc);
             }
 
             pagination.TotalRecords = query.Count();
@@ -88,7 +82,7 @@ namespace Inventory.Repository.Repositories
 
             var last12Month = DateTime.UtcNow.AddMonths(-11);
             last12Month = last12Month.AddDays(1 - last12Month.Day);
-            var query = await _context.Exports
+            var query = await GetAll
                 .Where(x => x.CreatedDate > last12Month)
                 .GroupBy(x => new { x.CreatedDate.Month, x.CreatedDate.Year })
                 .ToListAsync();
