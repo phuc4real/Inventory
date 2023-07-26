@@ -26,16 +26,16 @@ namespace Inventory.API.Controllers
         [HttpGet("list")]
         [ProducesResponseType(typeof(List<AppUser>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetList()
+        public async Task<IActionResult> GetList([FromQuery] string? filter)
         {
-            var result = await _userService.GetList();
+            var result = await _userService.GetList(filter);
 
             return result.Status == ResponseCode.Success ?
                 Ok(result.Data) : NoContent();
         }
 
         [HttpGet("info/{id}")]
-        [ProducesResponseType(typeof(AppUser), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AppUserDetail), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> InfoOfId(string id)
         {
@@ -46,7 +46,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("info")]
-        [ProducesResponseType(typeof(AppUser), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(AppUserDetail), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UserInfo()
         {

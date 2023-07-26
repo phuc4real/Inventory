@@ -89,11 +89,11 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(OrderWithHistory), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out Order order))
+            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out OrderWithHistory order))
             {
                 return Ok(order);
             }

@@ -149,16 +149,16 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<Order>> GetById(int id)
+        public async Task<ResultResponse<OrderWithHistory>> GetById(int id)
         {
-            ResultResponse<Order> response = new();
+            ResultResponse<OrderWithHistory> response = new();
 
             var order = await _order.GetById(id);
 
             if (order != null)
             {
                 response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<Order>(order);
+                response.Data = _mapper.Map<OrderWithHistory>(order);
             }
             else
             {

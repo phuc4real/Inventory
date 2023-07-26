@@ -10,6 +10,10 @@
         public AppUser? UpdatedByUser { get; set; }
 
         public DateTime? CompleteDate { get; set; }
+    }
+
+    public class OrderWithHistory : Order
+    {
         public IList<OrderInfo>? History { get; set; }
     }
 }

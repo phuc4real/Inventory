@@ -23,9 +23,18 @@ namespace Inventory.Repository.Repositories
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public async Task<IEnumerable<AppUserEntity>> GetList()
+        public async Task<IEnumerable<AppUserEntity>> GetList(string? filter)
         {
-            return await _userManager.Users.ToListAsync();
+            var list = await _userManager.Users.ToListAsync();
+            if (filter != null)
+            {
+                filter = filter.ToLower();
+                list = list.Where(x =>
+                                  x.UserName!.Contains(filter) ||
+                                  x.Email!.Contains(filter))
+                            .ToList();
+            }
+            return list;
         }
 
         public async Task<Permission> CheckRole(string userId)

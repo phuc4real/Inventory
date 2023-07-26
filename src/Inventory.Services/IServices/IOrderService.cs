@@ -8,7 +8,7 @@ namespace Inventory.Services.IServices
     {
         Task<ResultResponse<IEnumerable<Order>>> GetList();
         Task<PaginationResponse<Order>> GetPagination(PaginationRequest request);
-        Task<ResultResponse<Order>> GetById(int id);
+        Task<ResultResponse<OrderWithHistory>> GetById(int id);
         Task<ResultResponse<Order>> Create(string token, UpdateOrderInfo dto);
         Task<ResultResponse> Decide(string token, int id, UpdateDecision decision);
         Task<ResultResponse> UpdateStatus(string token, int id);

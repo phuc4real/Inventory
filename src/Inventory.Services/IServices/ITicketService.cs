@@ -8,7 +8,7 @@ namespace Inventory.Services.IServices
     {
         Task<PaginationResponse<Ticket>> GetPagination(string token, PaginationRequest request);
         Task<ResultResponse<IEnumerable<Ticket>>> GetList();
-        Task<ResultResponse<Ticket>> GetById(string token, int id);
+        Task<ResultResponse<TicketWithHistory>> GetById(string token, int id);
         Task<ResultResponse<Ticket>> Create(string token, UpdateTicketInfo dto);
         Task<ResultResponse> Cancel(string token, int id);
         Task<ResultResponse> LeaderDecide(string token, int id, UpdateDecision decision);

@@ -66,11 +66,11 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<AppUser>>> GetList()
+        public async Task<ResultResponse<IEnumerable<AppUser>>> GetList(string? filter)
         {
             ResultResponse<IEnumerable<AppUser>> response = new();
 
-            var list = await _user.GetList();
+            var list = await _user.GetList(filter);
 
             if (list.Any())
             {

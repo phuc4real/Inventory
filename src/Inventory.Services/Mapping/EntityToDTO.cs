@@ -22,6 +22,7 @@ namespace Inventory.Services.Mapping
                         .ToDescriptionString()));
 
             CreateMap<OrderEntity, Order>();
+            CreateMap<OrderEntity, OrderWithHistory>();
             CreateMap<OrderInfoEntity, OrderInfo>()
                 .ForMember(dest => dest.Status, opt => opt
                     .MapFrom(src => src.Status
@@ -30,10 +31,11 @@ namespace Inventory.Services.Mapping
             CreateMap<OrderDetailEntity, OrderDetail>();
 
             CreateMap<ExportEntity, Export>();
-            CreateMap<ExportDetail, ExportDetail>();
-
+            CreateMap<ExportDetailEntity, ExportDetail>();
+            CreateMap<ExportDetailEntity, InUse>();
 
             CreateMap<TicketEntity, Ticket>();
+            CreateMap<TicketEntity, TicketWithHistory>();
             CreateMap<TicketInfoEntity, TicketInfo>()
                 .ForMember(dest => dest.Purpose, opt => opt
                     .MapFrom(src => src.Purpose.ToDescriptionString()))

@@ -1,6 +1,4 @@
-﻿using Inventory.Core.Enums;
-
-namespace Inventory.Core.ViewModel
+﻿namespace Inventory.Core.ViewModel
 {
     public class Export
     {

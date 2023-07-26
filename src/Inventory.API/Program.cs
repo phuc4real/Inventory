@@ -149,7 +149,7 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins(builder.Configuration["Client:Origin"]!)
-                .WithExposedHeaders(new []{ "Location" })
+                .WithExposedHeaders(new[] { "Location" })
                 .AllowAnyHeader()
                 .AllowAnyMethod();
     });
@@ -187,11 +187,18 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    var context = services.GetRequiredService<AppDbContext>();
-    if (context.Database.GetPendingMigrations().Any())
+    try
     {
-        context.Database.Migrate();
+        var context = services.GetRequiredService<AppDbContext>();
+        if (context.Database.GetPendingMigrations().Any())
+        {
+            context.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex.ToString());
     }
 }
-
+Log.Information("Inventory API started!");
 app.Run();

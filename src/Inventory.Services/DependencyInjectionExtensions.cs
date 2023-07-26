@@ -18,13 +18,12 @@ namespace Inventory.Services
     {
         public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<AppDbContext>(
-                options =>
-                {
-                    options.UseNpgsql(configuration.GetConnectionString("PostgresNeonCloud"));
-                    options.ConfigureWarnings(builder =>
-                        builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
-                });
+            services.AddDbContext<AppDbContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString("PostgresNeonCloud"));
+                options.ConfigureWarnings(builder =>
+                    builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
+            });
 
             services.AddIdentity<AppUserEntity, IdentityRole>(
             options =>

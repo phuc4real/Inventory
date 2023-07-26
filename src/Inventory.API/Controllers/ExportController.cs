@@ -98,7 +98,7 @@ namespace Inventory.API.Controllers
             }
         }
 
-        [HttpDelete("{id:int}/update-status")]
+        [HttpPut("{id:int}/update-status")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus(int id)

@@ -10,6 +10,10 @@
         public AppUser? UpdatedByUser { get; set; }
 
         public DateTime? CloseDate { get; set; }
+    }
+
+    public class TicketWithHistory : Ticket
+    {
         public IList<TicketInfo>? History { get; set; }
     }
 }

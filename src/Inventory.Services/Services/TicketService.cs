@@ -100,9 +100,9 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public async Task<ResultResponse<Ticket>> GetById(string token, int id)
+        public async Task<ResultResponse<TicketWithHistory>> GetById(string token, int id)
         {
-            ResultResponse<Ticket> response = new();
+            ResultResponse<TicketWithHistory> response = new();
 
             var userId = _tokenService.GetuserId(token);
             var user = await _userManager.FindByIdAsync(userId);
@@ -136,7 +136,7 @@ namespace Inventory.Services.Services
             else
             {
                 response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<Ticket>(ticket);
+                response.Data = _mapper.Map<TicketWithHistory>(ticket);
             }
 
             return response;

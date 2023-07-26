@@ -2,7 +2,6 @@
 {
     public class OrderDetail
     {
-        public int OrderInfoId { get; set; }
         public Item? Item { get; set; }
         public int Quantity { get; set; }
         public long MinPrice { get; set; }

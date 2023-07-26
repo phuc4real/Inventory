@@ -46,7 +46,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(Ticket), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TicketWithHistory), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
@@ -75,7 +75,7 @@ namespace Inventory.API.Controllers
         }
 
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id:int}/cancel")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
