@@ -29,64 +29,64 @@ namespace Inventory.Services.Services
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<TokenModel>> ExternalLoginAsync()
-        {
-            ResultResponse<TokenModel> response = new();
+        //public async Task<ResultResponse<TokenModel>> ExternalLoginAsync()
+        //{
+        //    ResultResponse<TokenModel> response = new();
 
-            var info = await _signInManager.GetExternalLoginInfoAsync();
+        //    var info = await _signInManager.GetExternalLoginInfoAsync();
 
-            if (info == null)
-            {
-                response.Status = ResponseCode.BadRequest;
-                response.Message = new("Error", "Something went wrong!");
-            }
-            else
-            {
-                var signinResult = await _signInManager.ExternalLoginSignInAsync(info!.LoginProvider, info.ProviderKey, false);
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                var user = await _userManager.FindByEmailAsync(email!);
+        //    if (info == null)
+        //    {
+        //        response.Status = ResponseCode.BadRequest;
+        //        response.Message = new("Error", "Something went wrong!");
+        //    }
+        //    else
+        //    {
+        //        var signinResult = await _signInManager.ExternalLoginSignInAsync(info!.LoginProvider, info.ProviderKey, false);
+        //        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+        //        var user = await _userManager.FindByEmailAsync(email!);
 
-                if (!signinResult.Succeeded)
-                {
-                    if (user != null)
-                    {
-                        response.Status = ResponseCode.Conflict;
-                        response.Message = new("User", "Email already use!");
-                    }
-                    else
-                    {
-                        AppUserEntity newUser = new()
-                        {
-                            UserName = Guid.NewGuid().ToString().Replace("-", ""),
-                            Email = email,
-                            FirstName = info.Principal.FindFirstValue(ClaimTypes.GivenName),
-                            LastName = info.Principal.FindFirstValue(ClaimTypes.Surname)
-                        };
+        //        if (!signinResult.Succeeded)
+        //        {
+        //            if (user != null)
+        //            {
+        //                response.Status = ResponseCode.Conflict;
+        //                response.Message = new("User", "Email already use!");
+        //            }
+        //            else
+        //            {
+        //                AppUserEntity newUser = new()
+        //                {
+        //                    UserName = Guid.NewGuid().ToString().Replace("-", ""),
+        //                    Email = email,
+        //                    FirstName = info.Principal.FindFirstValue(ClaimTypes.GivenName),
+        //                    LastName = info.Principal.FindFirstValue(ClaimTypes.Surname)
+        //                };
 
-                        var res = await CreateUser(newUser, StringHelper.PasswordGenerate(16));
+        //                var res = await CreateUser(newUser, StringHelper.PasswordGenerate(16));
 
-                        if (res)
-                        {
-                            response.Status = ResponseCode.Success;
-                            await _userManager.AddToRoleAsync(newUser, InventoryRoles.NormalUser);
-                            await _userManager.AddLoginAsync(newUser, info);
-                            response.Message = new("User", "User created successfully!");
-                        }
-                        else
-                        {
-                            response.Status = ResponseCode.BadRequest;
-                            response.Message = new("User", "User info invalid!");
-                        }
+        //                if (res)
+        //                {
+        //                    response.Status = ResponseCode.Success;
+        //                    await _userManager.AddToRoleAsync(newUser, InventoryRoles.NormalUser);
+        //                    await _userManager.AddLoginAsync(newUser, info);
+        //                    response.Message = new("User", "User created successfully!");
+        //                }
+        //                else
+        //                {
+        //                    response.Status = ResponseCode.BadRequest;
+        //                    response.Message = new("User", "User info invalid!");
+        //                }
 
-                        return response;
-                    }
-                }
+        //                return response;
+        //            }
+        //        }
 
-                response.Data = await GetTokens(user!);
-                response.Status = ResponseCode.Success;
-            }
-            return response;
-        }
+        //        response.Data = await GetTokens(user!);
+        //        response.Status = ResponseCode.Success;
+        //    }
+        //    return response;
+        //}
 
         public async Task<ResultResponse<TokenModel>> SignInAsync(Login dto)
         {
@@ -162,13 +162,13 @@ namespace Inventory.Services.Services
             return response;
         }
 
-        public AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl)
-        {
-            var url = $"https://localhost:5001/api/auth/external-login-callback?returnUrl={returnUrl}";
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, url);
-            properties.AllowRefresh = true;
-            return properties;
-        }
+        //public AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl)
+        //{
+        //    var url = $"https://localhost:5001/api/auth/external-login-callback?returnUrl={returnUrl}";
+        //    var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, url);
+        //    properties.AllowRefresh = true;
+        //    return properties;
+        //}
 
         public async Task<ResultResponse> SignOutAsync(string token)
         {
