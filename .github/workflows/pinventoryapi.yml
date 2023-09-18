@@ -6,7 +6,7 @@ on:
 env:
   AZURE_WEBAPP_NAME: pinventoryapi
   AZURE_WEBAPP_PACKAGE_PATH: ./publish
-  CONFIGURATION: Release
+  CONFIGURATION: Production
   DOTNET_CORE_VERSION: 7.0.x
   WORKING_DIRECTORY: ./src
 jobs:
