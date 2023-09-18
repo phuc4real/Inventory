@@ -56,29 +56,29 @@ namespace Inventory.API.Controllers
                     Ok(result.Data) : StatusCode((int)result.Status, result.Message);
         }
 
-        [AllowAnonymous]
-        [HttpGet("external-login")]
-        public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/")
-        {
-            var properties = _authService.CreateAuthenticationProperties(provider!, returnUrl!);
-            return new ChallengeResult(provider!, properties);
-        }
+        //[AllowAnonymous]
+        //[HttpGet("external-login")]
+        //public IActionResult ExternalLogin(string? provider = "Google", string? returnUrl = "/")
+        //{
+        //    var properties = _authService.CreateAuthenticationProperties(provider!, returnUrl!);
+        //    return new ChallengeResult(provider!, properties);
+        //}
 
-        [AllowAnonymous]
-        [HttpGet("external-login-callback")]
-        [ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
-        public async Task<IActionResult> ExternalLoginCallback(string returnUrl)
-        {
-            var result = await _authService.ExternalLoginAsync();
+        //[AllowAnonymous]
+        //[HttpGet("external-login-callback")]
+        //[ProducesResponseType(typeof(TokenModel), StatusCodes.Status200OK)]
+        //[ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
+        //[ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status409Conflict)]
+        //public async Task<IActionResult> ExternalLoginCallback(string returnUrl)
+        //{
+        //    var result = await _authService.ExternalLoginAsync();
 
-            HttpContext.Response.Headers.Location = returnUrl;
+        //    HttpContext.Response.Headers.Location = returnUrl;
 
-            return result.Status == ResponseCode.Success ?
-                    Ok(result.Data) : StatusCode((int)result.Status, result.Message);
+        //    return result.Status == ResponseCode.Success ?
+        //            Ok(result.Data) : StatusCode((int)result.Status, result.Message);
 
-        }
+        //}
 
         [HttpDelete("logout")]
         [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]

@@ -6,7 +6,7 @@ namespace Inventory.Repository.Model
     {
         public DateTime CreatedDate { get; set; }
         public string? CreatedById { get; set; }
-        [ForeignKey(nameof(CreatedById))]
+        [ForeignKey(nameof(CreatedById))]   
         public AppUserEntity? CreatedByUser { get; set; }
 
         public DateTime UpdatedDate { get; set; }

@@ -1,7 +1,6 @@
 using Inventory.Core.Options;
 using Inventory.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -21,15 +20,13 @@ using Inventory.Repository.DbContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services
-    .AddOptions<JWTOption>()
-    .Bind(builder.Configuration.GetSection(JWTOption.JWTBearer));
+builder.Services.AddOptions<JWTOption>()
+                .Bind(builder.Configuration.GetSection(JWTOption.JWTBearer));
 
-builder.Services
-    .AddDatabase(builder.Configuration)
-    .AddRedisCache(builder.Configuration)
-    .AddRepository()
-    .AddServices();
+builder.Services.AddDatabase(builder.Configuration)
+                .AddRedisCache(builder.Configuration)
+                .AddRepository()
+                .AddServices();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -37,49 +34,48 @@ builder.Services.AddAuthentication(options =>
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer(jwtOptions =>
-        {
-            jwtOptions.SaveToken = true;
-            jwtOptions.TokenValidationParameters = new TokenValidationParameters()
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidAudience = builder.Configuration["JWTBearer:ValidAudience"],
-                ValidIssuer = builder.Configuration["JWTBearer:ValidIssuer"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["JWTBearer:SecretKey"]!))
-            };
-        })
-    .AddGoogle(googleOptions =>
-        {
-            googleOptions.ClientId = builder.Configuration["OAuth:Google:ClientID"]!;
-            googleOptions.ClientSecret = builder.Configuration["OAuth:Google:Secret"]!;
-            googleOptions.SignInScheme = IdentityConstants.ExternalScheme;
-        }
-    );
+                .AddJwtBearer(jwtOptions =>
+                    {
+                        jwtOptions.SaveToken = true;
+                        jwtOptions.TokenValidationParameters = new TokenValidationParameters()
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidAudience = builder.Configuration["JWTBearer:ValidAudience"],
+                            ValidIssuer = builder.Configuration["JWTBearer:ValidIssuer"],
+                            IssuerSigningKey = new SymmetricSecurityKey(
+                                Encoding.UTF8.GetBytes(builder.Configuration["JWTBearer:SecretKey"]!))
+                        };
+                    });
+//.AddGoogle(googleOptions =>
+//    {
+//        googleOptions.ClientId = builder.Configuration["OAuth:Google:ClientID"]!;
+//        googleOptions.ClientSecret = builder.Configuration["OAuth:Google:Secret"]!;
+//        googleOptions.SignInScheme = IdentityConstants.ExternalScheme;
+//    });
 
 builder.Services.AddControllers(options =>
     {
         options.Conventions
             .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
     })
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    })
-    .ConfigureApiBehaviorOptions(options =>
-    {
-        options.InvalidModelStateResponseFactory = (errorContext) =>
-        {
-            var errors = errorContext.ModelState
-                .Where(m => m.Value!.Errors.Any())
-                .Select(m => new ResponseMessage(
-                    m.Key,
-                    m.Value!.Errors.FirstOrDefault()!.ErrorMessage))
-                .ToList();
-            return new BadRequestObjectResult(errors);
-        };
-    });
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                })
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = (errorContext) =>
+                    {
+                        var errors = errorContext.ModelState
+                            .Where(m => m.Value!.Errors.Any())
+                            .Select(m => new ResponseMessage(
+                                m.Key,
+                                m.Value!.Errors.FirstOrDefault()!.ErrorMessage))
+                            .ToList();
+                        return new BadRequestObjectResult(errors);
+                    };
+                });
 
 builder.Services.AddRateLimiter(option =>
     {
@@ -106,7 +102,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 100,
+                    PermitLimit = 300,
                     Window = TimeSpan.FromMinutes(1)
                 });
             }),
@@ -116,7 +112,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 5000,
+                    PermitLimit = 20000,
                     Window = TimeSpan.FromMinutes(60)
                 });
             })
@@ -125,8 +121,7 @@ builder.Services.AddRateLimiter(option =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(
-    options =>
+builder.Services.AddSwaggerGen(options =>
     {
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
@@ -138,17 +133,15 @@ builder.Services.AddSwaggerGen(
             Scheme = "Bearer"
         });
         options.OperationFilter<AuthorizationOperationFilter>();
-    }
-);
+    });
 
-builder.Host.UseSerilog((context, configuration) =>
-    configuration.ReadFrom.Configuration(context.Configuration));
+builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(builder.Configuration["Client:Origin"]!)
+        policy.WithOrigins(builder.Configuration["Cors"]!)
                 .WithExposedHeaders(new[] { "Location" })
                 .AllowAnyHeader()
                 .AllowAnyMethod();
@@ -158,16 +151,23 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(
-        options =>
-        {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger");
-            options.RoutePrefix = string.Empty;
-        });
-}
+//if (app.Environment.IsDevelopment())
+//{
+//    app.UseSwagger();
+//    app.UseSwaggerUI(
+//        options =>
+//        {
+//            options.SwaggerEndpoint("/swagger/v1/swagger.json", "Swagger");
+//            options.RoutePrefix = string.Empty;
+//        });
+//}
+app.UseSwagger();
+app.UseSwaggerUI(
+    options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Inventory.API");
+        options.RoutePrefix = string.Empty;
+    });
 
 app.UseRateLimiter();
 
@@ -185,15 +185,20 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-
     try
     {
+        var services = scope.ServiceProvider;
+
         var context = services.GetRequiredService<AppDbContext>();
+        Log.Information("Started Migration");
         if (context.Database.GetPendingMigrations().Any())
         {
             context.Database.Migrate();
         }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Cannot connect to Database Server!");
     }
     catch (Exception ex)
     {

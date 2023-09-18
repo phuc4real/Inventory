@@ -9,9 +9,9 @@ namespace Inventory.Services.IServices
     {
         Task<ResultResponse<TokenModel>> SignInAsync(Login dto);
         Task<ResultResponse> SignUpAsync(Register dto);
-        Task<ResultResponse<TokenModel>> ExternalLoginAsync();
+        //Task<ResultResponse<TokenModel>> ExternalLoginAsync();
         Task<ResultResponse> SignOutAsync(string token);
         Task<ResultResponse<TokenModel>> RefreshToken(string accessToken, string refreshToken);
-        AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl);
+        //AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl);
     }
 }
