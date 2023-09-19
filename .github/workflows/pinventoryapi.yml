@@ -46,7 +46,6 @@ jobs:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.pinventoryapi_583A }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-        files: api-artifact/appsettings.Production.json
       env:
         ConnectionStrings.DbConnect: ${{ secrets.SQL_SERVER }}
         ConnectionStrings.Redis: ${{ secrets.REDIS_SERVER }}

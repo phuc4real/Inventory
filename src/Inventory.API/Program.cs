@@ -185,12 +185,13 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
+    Log.Information("Started Migration");
+    Log.Information(builder.Configuration.GetConnectionString("Redis")!);
     try
     {
         var services = scope.ServiceProvider;
-
         var context = services.GetRequiredService<AppDbContext>();
-        Log.Information("Started Migration");
+
         if (context.Database.GetPendingMigrations().Any())
         {
             context.Database.Migrate();
