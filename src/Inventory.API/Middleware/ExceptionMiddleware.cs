@@ -18,19 +18,19 @@ namespace Inventory.API.Middleware
             {
                 await _next(httpContext);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Log.Error(ex.ToString());
-                await HandleExceptionAsync(httpContext);
+                await HandleExceptionAsync(httpContext, ex);
             }
         }
 
-        private static async Task HandleExceptionAsync(HttpContext context)
+        private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            await context.Response.WriteAsync(new ResponseMessage("Internal Server Error - 500", "Something went wrong!!").ToString());
+            await context.Response.WriteAsync(new ResponseMessage("Internal Server Error - 500", exception.ToString()).ToString());
         }
     }
 
@@ -38,7 +38,7 @@ namespace Inventory.API.Middleware
     {
         public static IApplicationBuilder UseExceptionMiddleware(this IApplicationBuilder app)
         {
-           return  app.UseMiddleware<ExceptionMiddleware>();
+            return app.UseMiddleware<ExceptionMiddleware>();
         }
     }
 }
