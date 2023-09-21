@@ -40,38 +40,6 @@ jobs:
       with:
         name: webapp
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-    - name: Set Web App Settings
-      uses: Azure/appservice-settings@v1
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.pinventoryapi_583A }}
-        app-settings-json: |
-            [
-                {
-                    "name": "ConnectionStrings__DbConnect",
-                    "value": "${{ secrets.SQL_SERVER }}"
-                },
-                {
-                    "name": "ConnectionStrings__Redis",
-                    "value": "${{ secrets.REDIS_SERVER }}"
-                },
-                {
-                    "name": "JWTBearer__ValidAudience",
-                    "value": "${{ secrets.JWT_AUDIENCE }}"
-                },
-                {
-                    "name": "JWTBearer__SecretKey",
-                    "value": "${{ secrets.JWT_KEY }}"
-                },
-                {
-                    "name": "Cors",
-                    "value": "${{ secrets.CORS }}"
-                },
-                {
-                    "name": "PAppName",
-                    "value": "${{ secrets.PAPPNAME }}"
-                }
-            ]
 
     - name: Deploy to Azure WebApp
       uses: azure/webapps-deploy@v2
