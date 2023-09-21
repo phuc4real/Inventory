@@ -52,4 +52,4 @@ jobs:
         JWTBearer.ValidAudience: ${{ secrets.JWT_AUDIENCE}}
         JWTBearer.SecretKey: ${{ secrets.JWT_KEY}}
         Cors: ${{secrets.CORS}}
-        AppName: ${{secrects.APPNAME}}
+        AppName: ${{secrets.APPNAME}}
