@@ -1,11 +1,12 @@
 {
   "dependencies": {
     "mssql1": {
-      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/pinventoryapi/providers/Microsoft.ServiceLinker/linkers/DbConnect_F8CC0AC18E",
+      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/pinventoryapi/providers/Microsoft.ServiceLinker/linkers/ConnectionStringsDbConnect_41EB6EC73B",
       "secretStore": "AzureAppSettings",
       "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Sql/servers/pinventory/databases/InventoryDB",
       "type": "mssql.azure",
-      "connectionId": "DbConnect"
+      "connectionId": "ConnectionStrings:DbConnect",
+      "dynamicId": null
     }
   }
 }
