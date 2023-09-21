@@ -1,4 +1,4 @@
-name: Build and deploy .NET Core application to Web App pinventoryapi
+name: Build & deploy Inventory WebAPI
 on:
   push:
     branches:
@@ -40,16 +40,46 @@ jobs:
       with:
         name: webapp
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    - name: Set Web App Settings
+      uses: azure/appservice-settings@v1
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        app-settings-json: |
+          [
+            {
+              "name": "ConnectionStrings__DbConnect",
+              "value": "${{ secrets.SQL_SERVER }}",
+              "slotSetting": false
+            },
+            {
+              "name": "ConnectionStrings__Redis",
+              "value": "${{ secrets.REDIS_SERVER }}",
+              "slotSetting": false
+            },
+            {
+              "name": "JWTBearer__ValidAudience",
+              "value": "${{ secrets.JWT_AUDIENCE }}",
+              "slotSetting": false
+            },
+            {
+              "name": "JWTBearer__SecretKey",
+              "value": "${{ secrets.JWT_KEY }}",
+              "slotSetting": false
+            },
+            {
+              "name": "Cors",
+              "value": "${{ secrets.CORS }}",
+              "slotSetting": false
+            },
+            {
+              "name": "PAppName",
+              "value": "${{ secrets.PAPPNAME }}",
+              "slotSetting": false
+            }
+          ]
     - name: Deploy to Azure WebApp
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.pinventoryapi_583A }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-      env:
-        ConnectionStrings.DbConnect: ${{ secrets.SQL_SERVER }}
-        ConnectionStrings.Redis: ${{ secrets.REDIS_SERVER }}
-        JWTBearer.ValidAudience: ${{ secrets.JWT_AUDIENCE }}
-        JWTBearer.SecretKey: ${{ secrets.JWT_KEY}}
-        Cors: ${{ secrets.CORS }}
-        PAppName: ${{ secrets.PAPPNAME }}
