@@ -135,7 +135,7 @@ builder.Services.AddSwaggerGen(options =>
             Scheme = "Bearer"
         });
         options.OperationFilter<AuthorizationOperationFilter>();
-        options.SwaggerDoc("v1", new OpenApiInfo { Title = builder.Configuration["AppName"], Version = "v1" });
+        options.SwaggerDoc("v1", new OpenApiInfo { Title = builder.Configuration["PAppName"], Version = "v1" });
 
     });
 

@@ -49,7 +49,7 @@ jobs:
       env:
         ConnectionStrings.DbConnect: ${{ secrets.SQL_SERVER }}
         ConnectionStrings.Redis: ${{ secrets.REDIS_SERVER }}
-        JWTBearer.ValidAudience: ${{ secrets.JWT_AUDIENCE}}
+        JWTBearer.ValidAudience: ${{ secrets.JWT_AUDIENCE }}
         JWTBearer.SecretKey: ${{ secrets.JWT_KEY}}
-        Cors: ${{secrets.CORS}}
-        AppName: ${{secrets.APPNAME}}
+        Cors: ${{ secrets.CORS }}
+        PAppName: ${{ secrets.PAPPNAME }}
