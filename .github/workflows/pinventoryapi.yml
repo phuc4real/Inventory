@@ -41,9 +41,10 @@ jobs:
         name: webapp
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
     - name: Set Web App Settings
-      uses: azure/appservice-settings@v1
+      uses: Azure/appservice-settings@v1
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.pinventoryapi_583A }}
         app-settings-json: |
             [
                 {
@@ -69,11 +70,7 @@ jobs:
                 {
                     "name": "PAppName",
                     "value": "${{ secrets.PAPPNAME }}"
-                },
-                {
-                    "name": "ConnectionStrings__DbConnect",
-                    "value": "${{ secrets.SQL_SERVER }}"
-                },
+                }
             ]
 
     - name: Deploy to Azure WebApp
