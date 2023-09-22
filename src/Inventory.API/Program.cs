@@ -141,7 +141,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
-var allowedCors = builder.Configuration.GetSection("Cors").Get<string[]>() ?? Array.Empty<string>();
+var allowedCors = builder.Configuration.GetSection("AllowedCORS").Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {
