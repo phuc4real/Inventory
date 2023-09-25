@@ -206,10 +206,6 @@ using (var scope = app.Services.CreateScope())
     {
         Log.Error(ex, "Cannot connect to Database Server!");
     }
-    catch (Exception ex)
-    {
-        Log.Error(ex.ToString());
-    }
 }
 Log.Information("Inventory API started!");
 app.Run();
