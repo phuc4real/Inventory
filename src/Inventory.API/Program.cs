@@ -28,6 +28,7 @@ builder.Services.AddDatabase(builder.Configuration)
                 .AddRepository()
                 .AddServices();
 
+
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -121,6 +122,7 @@ builder.Services.AddRateLimiter(option =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
     {
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -133,15 +135,19 @@ builder.Services.AddSwaggerGen(options =>
             Scheme = "Bearer"
         });
         options.OperationFilter<AuthorizationOperationFilter>();
+        options.SwaggerDoc("v1", new OpenApiInfo { Title = builder.Configuration["PAppName"], Version = "v1" });
+
     });
 
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
+
+var allowedCors = builder.Configuration.GetSection("AllowedCORS").Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(builder.Configuration["Cors"]!)
+        policy.WithOrigins(allowedCors)
                 .WithExposedHeaders(new[] { "Location" })
                 .AllowAnyHeader()
                 .AllowAnyMethod();
@@ -185,12 +191,12 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
+    Log.Information("Started Migration");
     try
     {
         var services = scope.ServiceProvider;
-
         var context = services.GetRequiredService<AppDbContext>();
-        Log.Information("Started Migration");
+
         if (context.Database.GetPendingMigrations().Any())
         {
             context.Database.Migrate();
