@@ -10,6 +10,6 @@
         public string? ImageUrl { get; set; }
 
         public int Quantity { get; set; }
-        public AppUser? ForUser { get; set; }
+        public AppUsers? ForUser { get; set; }
     }
 }

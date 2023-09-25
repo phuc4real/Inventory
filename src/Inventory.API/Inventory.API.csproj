@@ -34,7 +34,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Inventory.Services\Inventory.Services.csproj" />
+		<ProjectReference Include="..\Inventory.Services\Inventory.Service.csproj" />
 		<ProjectReference Include="..\Shared\Inventory.Core\Inventory.Core.csproj" />
 	</ItemGroup>
 

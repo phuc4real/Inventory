@@ -3,7 +3,9 @@ using Inventory.Core.Extensions;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using Inventory.Services.IServices;
+using Inventory.Service;
+using Inventory.Service.Common.Request;
+using Inventory.Service.Common.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

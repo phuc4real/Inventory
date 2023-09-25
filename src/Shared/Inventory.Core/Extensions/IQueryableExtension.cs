@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using Inventory.Core.Helper;
+using Inventory.Core.Request;
+using System.Linq.Expressions;
 
 namespace Inventory.Core.Extensions
 {
@@ -13,6 +15,23 @@ namespace Inventory.Core.Extensions
             Type[] types = new Type[] { q.ElementType, exp.Body.Type };
             var mce = Expression.Call(typeof(Queryable), method, types, q.Expression, exp);
             return q.Provider.CreateQuery<T>(mce);
+        }
+
+        public static IQueryable<T> Pagination<T>(this IQueryable<T> query, PaginationRequest request, ref int totalRecord)
+        {
+            if (request.SortField != null && request.SortField != "undefined")
+            {
+                string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
+
+                var isAsc = request.SortDirection == "asc";
+
+                query = query.OrderByField(columnName, isAsc);
+            }
+
+            totalRecord = query.Count();
+
+            return query.Skip(request.PageIndex * request.PageSize)
+                        .Take(request.PageSize);
         }
     }
 }

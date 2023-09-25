@@ -1,12 +1,12 @@
 ﻿using Inventory.Core.ViewModel;
 using Inventory.Core.Common;
 using Inventory.Core.Response;
-using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.RateLimiting;
 using Inventory.Core.Enums;
+using Inventory.Service;
 
 namespace Inventory.API.Controllers
 {

@@ -1,5 +1,4 @@
 using Inventory.Core.Options;
-using Inventory.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
@@ -17,6 +16,7 @@ using System.Threading.RateLimiting;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Inventory.Repository.DbContext;
+using Inventory.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,10 +60,10 @@ builder.Services.AddControllers(options =>
         options.Conventions
             .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
     })
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-                })
+                //.AddJsonOptions(options =>
+                //{
+                //    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                //})
                 .ConfigureApiBehaviorOptions(options =>
                 {
                     options.InvalidModelStateResponseFactory = (errorContext) =>

@@ -4,7 +4,7 @@ using Inventory.Core.Extensions;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
-using Inventory.Services.IServices;
+using Inventory.Service;
 using Inventory.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +24,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(List<AppUser>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<AppUsers>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetList([FromQuery] string? filter)
         {

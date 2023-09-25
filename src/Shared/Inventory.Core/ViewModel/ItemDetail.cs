@@ -7,9 +7,9 @@
         public bool IsDeleted { get; set; }
 
         public DateTime CreatedDate { get; set; }
-        public AppUser? CreatedByUser { get; set; }
+        public AppUsers? CreatedByUser { get; set; }
         public DateTime UpdatedDate { get; set; }
-        public AppUser? UpdatedByUser { get; set; }
+        public AppUsers? UpdatedByUser { get; set; }
 
         public IList<ExportDetail>? ExportDetails { get; set; }
     }

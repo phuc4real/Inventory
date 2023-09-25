@@ -6,7 +6,7 @@ namespace Inventory.Core.ViewModel
     {
         public string? Status { get; set; }
         public DateTime Date { get; set; }
-        public AppUser? ByUser { get; set; }
+        public AppUsers? ByUser { get; set; }
         public string? Message { get; set; }
     }
 

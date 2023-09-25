@@ -1,12 +1,14 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Core.Response;
-using Inventory.Services.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Inventory.Core.Request;
 using Inventory.Core.Enums;
 using Inventory.Core.ViewModel;
+using Inventory.Service;
+using Inventory.Service.Common.Request;
+using Inventory.Service.Common.Response;
 
 namespace Inventory.API.Controllers
 {
