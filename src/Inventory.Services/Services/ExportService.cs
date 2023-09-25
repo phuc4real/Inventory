@@ -168,7 +168,7 @@ namespace Inventory.Services.Services
                         if (res.Status != ResponseCode.Success)
                             return res;
 
-                        export.Status = ExportStatus.Processing;
+                        export.Status++;
                         export.UpdatedDate = DateTime.UtcNow;
                         export.UpdatedById = userId;
 
@@ -179,7 +179,7 @@ namespace Inventory.Services.Services
                         break;
 
                     case ExportStatus.Processing:
-                        export.Status = ExportStatus.Processing;
+                        export.Status++;
                         export.UpdatedDate = DateTime.UtcNow;
                         export.UpdatedById = userId;
 

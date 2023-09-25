@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Inventory.Core.Extensions;
 using Inventory.Core.ViewModel;
 using Inventory.Repository.Model;
@@ -21,7 +21,15 @@ namespace Inventory.Services.Mapping
                     .MapFrom(src => src.Status
                         .ToDescriptionString()));
 
-            CreateMap<OrderEntity, Order>();
+            CreateMap<OrderEntity, Order>()
+                .ForMember(dest => dest.Status, opt => opt
+                    .MapFrom(src => src.History!
+                                        .OrderByDescending(x => x.CreatedAt)
+                                        .First()
+                                        .Status
+                                        .ToDescriptionString()
+                                        )
+                    );
             CreateMap<OrderEntity, OrderWithHistory>();
             CreateMap<OrderInfoEntity, OrderInfo>()
                 .ForMember(dest => dest.Status, opt => opt

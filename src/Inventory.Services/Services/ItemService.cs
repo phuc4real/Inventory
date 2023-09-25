@@ -194,7 +194,7 @@ namespace Inventory.Services.Services
                 var i = details.Find(x => x.ItemId == item.Id);
                 if (i!.Quantity > item.InStock)
                 {
-                    response.Message = new("Item", "Item #" + item.Id + "out of stock");
+                    response.Message = new("Item", "Item #" + item.Name + " out of stock");
                     response.Status = ResponseCode.BadRequest;
                     return response;
                 }

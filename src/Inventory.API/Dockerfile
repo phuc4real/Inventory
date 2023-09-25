@@ -2,11 +2,11 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
-
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
+COPY ["Directory.Packages.props", "."]
 COPY ["Inventory.API/Inventory.API.csproj", "Inventory.API/"]
 COPY ["Inventory.Services/Inventory.Services.csproj", "Inventory.Services/"]
 COPY ["Inventory.Repository/Inventory.Repository.csproj", "Inventory.Repository/"]

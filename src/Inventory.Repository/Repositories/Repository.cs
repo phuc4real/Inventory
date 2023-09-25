@@ -50,8 +50,7 @@ namespace Inventory.Repository.Repositories
 
         public void UpdateRage(List<T> entities)
         {
-            foreach (T entity in entities)
-                _dbSet.Update(entity);
+            _dbSet.UpdateRange(entities);
         }
     }
 }
