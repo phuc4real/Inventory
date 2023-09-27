@@ -8,6 +8,8 @@ namespace Inventory.Service.Implement
 {
     public class RedisCacheService : IRedisCacheService
     {
+        #region Ctor & Field
+
         private readonly IConnectionMultiplexer _conn;
 
         public RedisCacheService(IConnectionMultiplexer conn)
@@ -15,19 +17,26 @@ namespace Inventory.Service.Implement
             _conn = conn;
         }
 
+        #endregion
+
+        #region Private
+
+        private IDatabase redisDb => _conn.GetDatabase();
+
+        #endregion
+
+        #region Method
+
         public async Task RemoveCacheAsync(string key)
         {
-            var redis = _conn.GetDatabase();
-            await redis.KeyDeleteAsync(key);
+            await redisDb.KeyDeleteAsync(key);
         }
 
         public async Task RemoveCacheAsync(string[] keys)
         {
-            var redis = _conn.GetDatabase();
-
             foreach (var key in keys)
             {
-                await redis.KeyDeleteAsync(key);
+                await redisDb.KeyDeleteAsync(key);
             }
         }
 
@@ -44,28 +53,26 @@ namespace Inventory.Service.Implement
 
         public async Task SetCacheAsync<T>(string key, T value)
         {
-            var redis = _conn.GetDatabase();
-
             var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
 
-            await redis.StringSetAsync(key, bytes);
-            await redis.KeyExpireAsync(key, TimeSpan.FromMinutes(10));
+            await redisDb.StringSetAsync(key, bytes, TimeSpan.FromMinutes(10));
         }
 
         public bool TryGetCacheAsync<T>(string key, out T value)
         {
-            var redis = _conn.GetDatabase();
+            var storedCache = redisDb.StringGetAsync(key).Result;
 
-            var storedCache = redis.StringGetAsync(key).Result;
+            value = default!;
 
-            if (!storedCache.HasValue)
+            if (storedCache.HasValue)
             {
-                value = default!;
-                return false;
+                value = JsonSerializer.Deserialize<T>(storedCache)!;
+                return true;
             }
 
-            value = JsonSerializer.Deserialize<T>(storedCache)!;
-            return true;
+            return false;
         }
+
+        #endregion
     }
 }

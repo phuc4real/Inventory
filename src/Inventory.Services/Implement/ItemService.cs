@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
@@ -7,8 +8,6 @@ using Inventory.Repository;
 using Inventory.Repository.Model;
 using Inventory.Service;
 using Inventory.Service.Common;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
 
 namespace Inventory.Service.Implement
 {
@@ -18,14 +17,14 @@ namespace Inventory.Service.Implement
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        private readonly ICatalogServices _catalogService;
+        private readonly ICategoryServices _catalogService;
 
         public ItemService(
             IItemRepository item,
             IUnitOfWork unitOfWork,
             IMapper mapper,
             ITokenService tokenService,
-            ICatalogServices catalogService)
+            ICategoryServices catalogService)
         {
             _item = item;
             _unitOfWork = unitOfWork;
@@ -44,7 +43,7 @@ namespace Inventory.Service.Implement
 
             if (catalogExists.Status != ResponseCode.Success)
             {
-                response.Status = catalogExists.Status;
+                response.StatusCode = catalogExists.Status;
                 response.Message = catalogExists.Message;
             }
             else
@@ -61,7 +60,7 @@ namespace Inventory.Service.Implement
                 response.Data = _mapper.Map<Item>(item);
 
                 response.Message = new("Item", $"Item created!");
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
             }
             return response;
         }
@@ -74,11 +73,11 @@ namespace Inventory.Service.Implement
 
             if (items.Any())
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Item>>(items);
             }
             else
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
 
             return response;
         }
@@ -97,11 +96,11 @@ namespace Inventory.Service.Implement
             {
                 response.TotalPages = items.TotalPages;
                 response.TotalRecords = items.TotalRecords;
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Item>>(items.Data);
             }
             else
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
 
             return response;
         }
@@ -114,12 +113,12 @@ namespace Inventory.Service.Implement
 
             if (item == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Item", "Item not found!");
             }
             else
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<ItemDetail>(item);
             }
 
@@ -135,7 +134,7 @@ namespace Inventory.Service.Implement
 
             if (item == null || item.IsDeleted)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Item", "Item not found!");
             }
             else
@@ -151,7 +150,7 @@ namespace Inventory.Service.Implement
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Message = new("Item", "Item updated!");
             }
 
@@ -167,7 +166,7 @@ namespace Inventory.Service.Implement
 
             if (item == null || item.IsDeleted)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Item", "Item not found!");
             }
             else
@@ -179,7 +178,7 @@ namespace Inventory.Service.Implement
                 _item.Update(item);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Message = new("Item", "Item deleted!");
             }
 
@@ -198,7 +197,7 @@ namespace Inventory.Service.Implement
                 if (i!.Quantity > item.InStock)
                 {
                     response.Message = new("Item", "Item #" + item.Name + " out of stock");
-                    response.Status = ResponseCode.BadRequest;
+                    response.StatusCode = ResponseCode.BadRequest;
                     return response;
                 }
                 else
@@ -211,7 +210,7 @@ namespace Inventory.Service.Implement
             _item.UpdateRage(res.ToList());
             await _unitOfWork.SaveAsync();
 
-            response.Status = ResponseCode.Success;
+            response.StatusCode = ResponseCode.Success;
 
             return response;
         }
@@ -232,11 +231,11 @@ namespace Inventory.Service.Implement
                         message.Value += $" {id}";
 
                 response.Message = message;
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
             }
             else
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
             }
 
             return response;
@@ -257,7 +256,7 @@ namespace Inventory.Service.Implement
             _item.UpdateRage(res.ToList());
             await _unitOfWork.SaveAsync();
 
-            response.Status = ResponseCode.Success;
+            response.StatusCode = ResponseCode.Success;
 
             return response;
         }

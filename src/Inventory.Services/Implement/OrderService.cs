@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
@@ -6,8 +7,6 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository;
 using Inventory.Repository.Model;
 using Inventory.Service.Common;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
 
 namespace Inventory.Service.Implement
 {
@@ -43,12 +42,12 @@ namespace Inventory.Service.Implement
 
             if (orders.Any())
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Order>>(orders);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
             return response;
         }
@@ -67,12 +66,12 @@ namespace Inventory.Service.Implement
             {
                 response.TotalRecords = orders.TotalRecords;
                 response.TotalPages = orders.TotalPages;
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Order>>(orders.Data);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;
@@ -93,7 +92,7 @@ namespace Inventory.Service.Implement
             if (res.Status != ResponseCode.Success)
             {
                 response.Message = res.Message;
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 return response;
             }
 
@@ -104,7 +103,7 @@ namespace Inventory.Service.Implement
 
                 if (isMinDetailTotalValid && isMaxDetailTotalValid)
                 {
-                    response.Status = ResponseCode.BadRequest;
+                    response.StatusCode = ResponseCode.BadRequest;
                     response.Message = new("Order Detail", "Detail total not match!");
                     return response;
                 }
@@ -116,7 +115,7 @@ namespace Inventory.Service.Implement
 
             if (minTotal != dto.MinTotal && maxTotal != dto.MaxTotal)
             {
-                response.Status = ResponseCode.BadRequest;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Order", "Order total not match!");
                 return response;
             }
@@ -146,7 +145,7 @@ namespace Inventory.Service.Implement
             await _unitOfWork.SaveAsync();
 
             response.Data = _mapper.Map<Order>(order);
-            response.Status = ResponseCode.Created;
+            response.StatusCode = ResponseCode.Created;
             response.Message = new("Order", "Order created!");
             return response;
         }
@@ -159,12 +158,12 @@ namespace Inventory.Service.Implement
 
             if (order != null)
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<OrderWithHistory>(order);
             }
             else
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Order", "Order not found!");
             }
 
@@ -180,7 +179,7 @@ namespace Inventory.Service.Implement
             var order = await _order.GetById(id);
             if (order == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Order", "Order not found!");
             }
             else
@@ -199,7 +198,7 @@ namespace Inventory.Service.Implement
                             _order.Update(order);
                             await _unitOfWork.SaveAsync();
 
-                            response.Status = ResponseCode.Success;
+                            response.StatusCode = ResponseCode.Success;
                             response.Message = new("Order", "Order status changed!");
                             break;
                         }
@@ -217,13 +216,13 @@ namespace Inventory.Service.Implement
                             _order.Update(order);
                             await _unitOfWork.SaveAsync();
 
-                            response.Status = ResponseCode.Success;
+                            response.StatusCode = ResponseCode.Success;
                             response.Message = new("Order", "Order status changed!");
                             break;
                         }
                     default:
                         {
-                            response.Status = ResponseCode.BadRequest;
+                            response.StatusCode = ResponseCode.BadRequest;
                             response.Message = new("Order", "Order status cannot change!");
                             break;
                         }
@@ -241,7 +240,7 @@ namespace Inventory.Service.Implement
             var order = await _order.GetById(id);
             if (order == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Order", "Order not found!");
 
             }
@@ -251,7 +250,7 @@ namespace Inventory.Service.Implement
 
                 if (orderInfo.Status == OrderStatus.Done || orderInfo.Status == OrderStatus.Cancel)
                 {
-                    response.Status = ResponseCode.BadRequest;
+                    response.StatusCode = ResponseCode.BadRequest;
                     response.Message = new("Order", "Order already cancelled!");
                 }
                 else
@@ -264,7 +263,7 @@ namespace Inventory.Service.Implement
                     _order.Update(order);
                     await _unitOfWork.SaveAsync();
 
-                    response.Status = ResponseCode.Success;
+                    response.StatusCode = ResponseCode.Success;
                     response.Message = new("Order", "Order canceled!");
                 }
             }
@@ -280,7 +279,7 @@ namespace Inventory.Service.Implement
 
             if (order == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Order", "Order not found!");
             }
             else
@@ -302,7 +301,7 @@ namespace Inventory.Service.Implement
                 _order.Update(order);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Message = new("Decision", "Success");
             }
 

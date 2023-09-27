@@ -7,8 +7,7 @@ using Inventory.Core.Request;
 using Inventory.Core.Enums;
 using Inventory.Core.ViewModel;
 using Inventory.Service;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
+using Inventory.Service.Common;
 
 namespace Inventory.API.Controllers
 {
@@ -17,11 +16,11 @@ namespace Inventory.API.Controllers
     [Authorize]
     public class CatalogController : ControllerBase
     {
-        private readonly ICatalogServices _catalogServices;
+        private readonly ICategoryServices _catalogServices;
         private readonly IRedisCacheService _cacheService;
         private const string redisKey = "Inventory.Catalog";
 
-        public CatalogController(ICatalogServices catalogServices, IRedisCacheService cacheService)
+        public CatalogController(ICategoryServices catalogServices, IRedisCacheService cacheService)
         {
             _catalogServices = catalogServices;
             _cacheService = cacheService;

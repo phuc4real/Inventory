@@ -7,8 +7,7 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository;
 using Inventory.Repository.Model;
 using Inventory.Service;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
+using Inventory.Service.Common;
 using Microsoft.AspNetCore.Identity;
 
 namespace Inventory.Service.Implement
@@ -64,12 +63,12 @@ namespace Inventory.Service.Implement
             {
                 response.TotalRecords = result.TotalRecords;
                 response.TotalPages = result.TotalPages;
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<InUse>>(result.Data);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;

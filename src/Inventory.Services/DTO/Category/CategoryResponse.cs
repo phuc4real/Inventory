@@ -1,4 +1,4 @@
-﻿using Inventory.Service.Common.Response;
+﻿using Inventory.Service.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +14,8 @@ namespace Inventory.Service.DTO.Category
     }
 
     public class CategoryListResponse : ListResponse<CategoryResponse> { }
+
+    public class CategoryObjectResponse : ObjectResponse<CategoryResponse> { }
 
     public class CategoryPaginationResponse : PaginationResponse<CategoryResponse> { }
 }

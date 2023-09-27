@@ -1,4 +1,4 @@
-﻿using Inventory.Service.Common.Response;
+﻿using Inventory.Service.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;

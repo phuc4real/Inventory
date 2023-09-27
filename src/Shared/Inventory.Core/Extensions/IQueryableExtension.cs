@@ -1,5 +1,5 @@
-﻿using Inventory.Core.Helper;
-using Inventory.Core.Request;
+﻿using Inventory.Core.Common;
+using Inventory.Core.Helper;
 using System.Linq.Expressions;
 
 namespace Inventory.Core.Extensions

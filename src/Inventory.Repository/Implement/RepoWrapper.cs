@@ -14,15 +14,17 @@ namespace Inventory.Repository.Implement
         private readonly AppDbContext _context;
         public RepoWrapper(AppDbContext context) => _context = context;
 
-
         #endregion
 
+        #region Method
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
         }
 
-        #region Repo
+        #endregion
+
+        #region Private
 
         private CategoryRepository? _category;
         private CommentRepository? _comment;
@@ -37,7 +39,6 @@ namespace Inventory.Repository.Implement
         private TicketRepository? _ticket;
         private TicketRecordRepository? _ticketRecord;
         private TicketTypeRepository? _ticketType;
-        private UserRepository? _user;
 
         #endregion
 
@@ -145,14 +146,6 @@ namespace Inventory.Repository.Implement
             {
                 _ticketType ??= new TicketTypeRepository(_context);
                 return _ticketType;
-            }
-        }
-        public IUserRepository User
-        {
-            get
-            {
-                _user ??= new UserRepository(_context);
-                return _user;
             }
         }
 

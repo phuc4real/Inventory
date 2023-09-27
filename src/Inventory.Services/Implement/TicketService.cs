@@ -6,8 +6,7 @@ using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Repository;
 using Inventory.Repository.Model;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
+using Inventory.Service.Common;
 using Microsoft.AspNetCore.Identity;
 using StackExchange.Redis;
 
@@ -71,12 +70,12 @@ namespace Inventory.Service.Implement
             {
                 response.TotalRecords = tickets.TotalRecords;
                 response.TotalPages = tickets.TotalPages;
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Ticket>>(tickets.Data);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;
@@ -90,12 +89,12 @@ namespace Inventory.Service.Implement
 
             if (list.Any())
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Ticket>>(list);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;
@@ -131,12 +130,12 @@ namespace Inventory.Service.Implement
 
             if (ticket == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Ticket", "Ticket not found!");
             }
             else
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<TicketWithHistory>(ticket);
             }
 
@@ -152,7 +151,7 @@ namespace Inventory.Service.Implement
 
             if (res.Status != ResponseCode.Success)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = res.Message;
                 return response;
             }
@@ -182,7 +181,7 @@ namespace Inventory.Service.Implement
             await _unitOfWork.SaveAsync();
 
             response.Data = _mapper.Map<Ticket>(ticket);
-            response.Status = ResponseCode.Created;
+            response.StatusCode = ResponseCode.Created;
             response.Message = new("Ticket", "Ticket created!");
 
             return response;
@@ -197,7 +196,7 @@ namespace Inventory.Service.Implement
 
             if (ticket == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Ticket", "Ticket not found!");
             }
             else
@@ -206,14 +205,14 @@ namespace Inventory.Service.Implement
 
                 if (ticket.CreatedById != userId)
                 {
-                    response.Status = ResponseCode.Forbidden;
+                    response.StatusCode = ResponseCode.Forbidden;
                     response.Message = new("Forbidden", "You don't have access");
                 }
                 else
                 {
                     if (ticket.CloseDate != null)
                     {
-                        response.Status = ResponseCode.BadRequest;
+                        response.StatusCode = ResponseCode.BadRequest;
                         response.Message = new("Ticket", "Ticket already closed");
                     }
                     else
@@ -229,7 +228,7 @@ namespace Inventory.Service.Implement
                         _ticket.Update(ticket);
                         await _unitOfWork.SaveAsync();
 
-                        response.Status = ResponseCode.Success;
+                        response.StatusCode = ResponseCode.Success;
                         response.Message = new("Ticket", "Cancel ticket success!");
                     }
                 }
@@ -246,7 +245,7 @@ namespace Inventory.Service.Implement
 
             if (ticket == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Ticket", "Ticket not found!");
             }
             else
@@ -268,7 +267,7 @@ namespace Inventory.Service.Implement
                 _ticket.Update(ticket);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Message = new("Decision", "Success");
             }
             return response;
@@ -283,7 +282,7 @@ namespace Inventory.Service.Implement
 
             if (ticket == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Ticket", "Ticket not found!");
             }
             else
@@ -305,7 +304,7 @@ namespace Inventory.Service.Implement
                 _ticket.Update(ticket);
                 await _unitOfWork.SaveAsync();
 
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Message = new("Decision", "Success");
             }
             return response;
@@ -320,7 +319,7 @@ namespace Inventory.Service.Implement
 
             if (ticket == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Ticket", "Ticket not found!");
             }
             else
@@ -344,7 +343,7 @@ namespace Inventory.Service.Implement
                             await _unitOfWork.SaveAsync();
                             await _exportService.CreateFromTicket(userId, ticket.CreatedById!, ticketInfo);
 
-                            response.Status = ResponseCode.Success;
+                            response.StatusCode = ResponseCode.Success;
                             response.Message = new("Ticket", "Change status successfully!");
                             break;
 
@@ -357,24 +356,24 @@ namespace Inventory.Service.Implement
                             _ticket.Update(ticket);
                             await _unitOfWork.SaveAsync();
 
-                            response.Status = ResponseCode.Success;
+                            response.StatusCode = ResponseCode.Success;
                             response.Message = new("Ticket", "Change status successfully!");
                             break;
 
                         case TicketStatus.Reject:
-                            response.Status = ResponseCode.BadRequest;
+                            response.StatusCode = ResponseCode.BadRequest;
                             response.Message = new("Ticket", "Ticket is rejected!");
                             break;
 
                         default:
-                            response.Status = ResponseCode.BadRequest;
+                            response.StatusCode = ResponseCode.BadRequest;
                             response.Message = new("Ticket", "Ticket is closed!");
                             break;
                     }
                 }
                 else
                 {
-                    response.Status = ResponseCode.BadRequest;
+                    response.StatusCode = ResponseCode.BadRequest;
                     response.Message = new("Ticket", "Please, waiting for Team Leader & Admin approve the ticket!!");
                 }
             }

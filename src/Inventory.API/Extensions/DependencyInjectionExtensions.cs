@@ -80,8 +80,8 @@ namespace Inventory.API.Extensions
         {
             services.AddAutoMapper(typeof(DependencyInjectionExtensions).Assembly);
             services.AddScoped<ITokenService, TokenService>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<ICatalogServices, CatalogService>();
+            services.AddScoped<IIdentityService, IdentityService>();
+            services.AddScoped<ICategoryServices, CategoryServices>();
             services.AddScoped<IItemService, ItemService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IExportService, ExportService>();

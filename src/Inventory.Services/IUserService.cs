@@ -1,12 +1,12 @@
-﻿using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
+﻿
+using Inventory.Service.DTO.User;
 
 namespace Inventory.Service
 {
     public interface IUserService
     {
-        Task<ResultResponse<IEnumerable<AppUsers>>> GetList(string? filter);
-        Task<ResultResponse<AppUserDetail>> GetById(string id);
-        Task<ResultResponse<AppUserDetail>> GetByToken(string token);
+        public Task<UserListResponse> GetListAsync(string? search);
+        public Task<UserObjectResponse> GetByIdAsync(string id);
+        public Task<UserObjectResponse> GetAsync(string token);
     }
 }

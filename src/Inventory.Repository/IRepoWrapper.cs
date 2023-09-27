@@ -23,6 +23,5 @@ namespace Inventory.Repository
         ITicketEntryRepository TicketEntry { get; }
         ITicketRecordRepository TicketRecord { get; }
         ITicketTypeRepository TicketType { get; }
-        IUserRepository User { get; }
     }
 }

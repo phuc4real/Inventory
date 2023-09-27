@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Core.Request;
 using Inventory.Core.Response;
@@ -6,8 +7,6 @@ using Inventory.Core.ViewModel;
 using Inventory.Repository;
 using Inventory.Repository.Model;
 using Inventory.Service.Common;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
 
 namespace Inventory.Service.Implement
 {
@@ -65,7 +64,7 @@ namespace Inventory.Service.Implement
             await _unitOfWork.SaveAsync();
 
             response.Data = _mapper.Map<Export>(export);
-            response.Status = ResponseCode.Success;
+            response.StatusCode = ResponseCode.Success;
             response.Message = new("Export", "Export created!");
 
             return response;
@@ -79,12 +78,12 @@ namespace Inventory.Service.Implement
 
             if (export == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Export", "Export not found!");
             }
             else
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<Export>(export);
             }
 
@@ -97,7 +96,7 @@ namespace Inventory.Service.Implement
 
             var result = await _export.GetCount();
 
-            response.Status = ResponseCode.Success;
+            response.StatusCode = ResponseCode.Success;
             response.Data = result;
 
             return response;
@@ -111,12 +110,12 @@ namespace Inventory.Service.Implement
 
             if (exports.Any())
             {
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Export>>(exports);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;
@@ -136,12 +135,12 @@ namespace Inventory.Service.Implement
             {
                 response.TotalRecords = lists.TotalRecords;
                 response.TotalPages = lists.TotalPages;
-                response.Status = ResponseCode.Success;
+                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<IEnumerable<Export>>(lists.Data);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;
@@ -156,7 +155,7 @@ namespace Inventory.Service.Implement
 
             if (export == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Export", "Export not found");
             }
             else
@@ -192,7 +191,7 @@ namespace Inventory.Service.Implement
                         break;
                     case ExportStatus.Done:
                         response.Message = new("Export", "Export already done!");
-                        response.Status = ResponseCode.BadRequest;
+                        response.StatusCode = ResponseCode.BadRequest;
                         break;
                 }
 

@@ -12,18 +12,15 @@
 		<PackageReference Include="Microsoft.AspNetCore.Identity" />
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
 		<PackageReference Include="Serilog" />
-		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Inventory.Model\Inventory.Model.csproj" />
 		<ProjectReference Include="..\Inventory.Repository\Inventory.Repository.csproj" />
 		<ProjectReference Include="..\Shared\Inventory.Core\Inventory.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="DTO\UseUnit\" />
-		<Folder Include="DTO\Order\" />
 		<Folder Include="DTO\Ticket\" />
 	</ItemGroup>
 

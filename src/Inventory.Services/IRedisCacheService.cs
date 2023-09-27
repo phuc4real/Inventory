@@ -2,10 +2,10 @@
 {
     public interface IRedisCacheService
     {
-        bool TryGetCacheAsync<T>(string key, out T value);
-        Task SetCacheAsync<T>(string key, T value);
-        Task RemoveCacheAsync(string key);
-        Task RemoveCacheAsync(string[] keys);
-        Task RemoveCacheTreeAsync(string treeKey);
+        public bool TryGetCacheAsync<T>(string key, out T value);
+        public Task SetCacheAsync<T>(string key, T value);
+        public Task RemoveCacheAsync(string key);
+        public Task RemoveCacheAsync(string[] keys);
+        public Task RemoveCacheTreeAsync(string treeKey);
     }
 }

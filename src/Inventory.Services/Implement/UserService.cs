@@ -1,88 +1,102 @@
 ﻿using AutoMapper;
+using Inventory.Core.Common;
 using Inventory.Core.Enums;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
-using Inventory.Repository;
-using Inventory.Service;
+using Inventory.Model.Entity;
+using Inventory.Service.DTO.User;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
 {
     public class UserService : IUserService
     {
-        private readonly IUserRepository _user;
+        #region Ctor & Field
+
+        private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
 
         public UserService(
-            IUserRepository user,
+            UserManager<AppUser> userManager,
             IMapper mapper,
             ITokenService tokenService)
         {
-            _user = user;
+            _userManager = userManager;
             _mapper = mapper;
             _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<AppUserDetail>> GetById(string id)
-        {
-            ResultResponse<AppUserDetail> response = new();
+        #endregion
 
-            var user = await _user.GetById(id);
+        #region Method
+
+        public async Task<UserObjectResponse> GetByIdAsync(string id)
+        {
+            UserObjectResponse response = new();
+
+            var user = await _userManager.FindByIdAsync(id);
 
             if (user == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("User", "User not exist");
             }
             else
             {
-                response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<AppUserDetail>(user);
-                response.Data.Permission = await _user.CheckRole(id); ;
+                response.Data = _mapper.Map<UserResponse>(user);
+                response.StatusCode = ResponseCode.Success;
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<AppUserDetail>> GetByToken(string token)
+        public async Task<UserObjectResponse> GetAsync(string token)
         {
-            ResultResponse<AppUserDetail> response = new();
+            UserObjectResponse response = new();
 
-            var userId = _tokenService.GetuserId(token);
-            var user = await _user.GetById(userId);
+            var user = await _userManager.FindByIdAsync(_tokenService.GetUserId(token));
 
             if (user == null)
             {
-                response.Status = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("User", "User not exist");
             }
             else
             {
-                response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<AppUserDetail>(user);
-                response.Data.Permission = await _user.CheckRole(userId); ;
+                response.Data = _mapper.Map<UserResponse>(user);
+
+                var roles = await _userManager.GetRolesAsync(user);
+                response.Data.Permission = new UserPermission
+                {
+                    IsSuperAdmin = roles.Contains(InventoryRoles.SuperAdmin),
+                    IsAdmin = roles.Contains(InventoryRoles.Admin),
+                };
+
+                response.StatusCode = ResponseCode.Success;
             }
 
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<AppUsers>>> GetList(string? filter)
+        public async Task<UserListResponse> GetListAsync(string? search)
         {
-            ResultResponse<IEnumerable<AppUsers>> response = new();
+            UserListResponse response = new();
 
-            var list = await _user.GetList(filter);
-
+            var list = await _userManager.Users.Where(x => x.UserName!.Contains(search)
+                                                        || x.Email!.Contains(search)).ToListAsync();
             if (list.Any())
             {
-                response.Status = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<AppUsers>>(list);
+                response.StatusCode = ResponseCode.Success;
+                response.Data = _mapper.Map<List<UserResponse>>(list);
             }
             else
             {
-                response.Status = ResponseCode.NoContent;
+                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;
         }
+
+        #endregion
     }
 }

@@ -15,9 +15,9 @@ namespace Inventory.API.Controllers
     [Authorize]
     public class AuthController : ControllerBase
     {
-        private readonly IAuthService _authService;
+        private readonly IIdentityService _authService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IIdentityService authService)
         {
             _authService = authService;
         }

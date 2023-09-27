@@ -1,18 +1,17 @@
-﻿using Inventory.Core.Request;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace Inventory.Repository
 {
     public interface IBaseRepository<T> where T : class
     {
-        IQueryable<T> FindAll();
-        IQueryable<T> FindByCondition(Expression<Func<T, bool>>? filter = null);
-        //Task AddAsync(T entity);
-        //Task AddRangeAsync(List<T> entities);
-        //void Update(T entity);
-        //void UpdateRage(List<T> entities);
-        //void Remove(T entity);
-        //void RemoveRange(List<T> entities);
-        //Task<bool> AnyAsync(Expression<Func<T, bool>> filter);
+        public IQueryable<T> FindAll();
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>>? filter = null);
+        public Task AddAsync(T entity);
+        public Task AddRangeAsync(List<T> entities);
+        public void Update(T entity);
+        public void UpdateRage(List<T> entities);
+        public void Remove(T entity);
+        public void RemoveRange(List<T> entities);
+        public Task<bool> AnyAsync(Expression<Func<T, bool>> filter);
     }
 }

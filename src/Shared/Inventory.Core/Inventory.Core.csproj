@@ -7,10 +7,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions"/>
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core"/>
-		<PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions"/>
-		<PackageReference Include="Microsoft.IdentityModel.Tokens"/>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
+		<PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" />
 	</ItemGroup>
 
 </Project>

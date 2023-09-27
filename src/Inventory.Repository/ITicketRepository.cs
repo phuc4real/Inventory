@@ -1,6 +1,4 @@
-﻿using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
+﻿using Inventory.Model.Entity;
 
 namespace Inventory.Repository
 {

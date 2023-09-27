@@ -1,8 +1,6 @@
 ﻿using Azure.Core;
 using Inventory.Core.Extensions;
 using Inventory.Core.Helper;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
 using Inventory.Database.DbContext;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -23,10 +21,13 @@ namespace Inventory.Repository.Implement
 
         #endregion
 
+        #region Default method
+
         public IQueryable<T> FindAll()
         {
             return _dbSet;
         }
+
         public IQueryable<T> FindByCondition(Expression<Func<T, bool>>? filter = null)
         {
             IQueryable<T> query = _dbSet;
@@ -38,8 +39,6 @@ namespace Inventory.Repository.Implement
 
             return query;
         }
-
-        #region Default method
 
         public async Task AddAsync(T entity)
         {
@@ -79,6 +78,25 @@ namespace Inventory.Repository.Implement
         public void UpdateRage(List<T> entities)
         {
             _dbSet.UpdateRange(entities);
+        }
+
+        #endregion
+
+        #region Private
+
+        private void CreateLog()
+        {
+
+        }
+
+        private void UpdateLog()
+        {
+
+        }
+
+        private void Deactive()
+        {
+
         }
 
         #endregion

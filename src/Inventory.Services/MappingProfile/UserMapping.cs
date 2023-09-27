@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Model.Entity;
-using Inventory.Service.DTO.Auth;
+using Inventory.Service.DTO.User;
 using System;
 using System.Collections.Generic;
 using System.Linq;

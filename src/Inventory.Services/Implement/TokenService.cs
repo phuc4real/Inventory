@@ -1,6 +1,5 @@
-﻿using Inventory.Core.Options;
-using Inventory.Repository.Model;
-using Inventory.Service;
+﻿using Inventory.Core.Configurations;
+using Inventory.Model.Entity;
 using Inventory.Service.Common;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -12,49 +11,71 @@ namespace Inventory.Service.Implement
 {
     public class TokenService : ITokenService
     {
-        private readonly JWTOption _option;
-        public TokenService(IOptionsSnapshot<JWTOption> option)
+        #region Ctor & Field
+
+        private readonly JwtConfig _config;
+        public TokenService(IOptionsSnapshot<JwtConfig> config)
         {
-            _option = option.Value;
+            _config = config.Value;
         }
-        public SecurityToken GenerateToken(AppUserEntity user, IList<string> userRoles)
+
+        #endregion
+
+        #region Method
+
+        public SecurityToken GenerateToken(AppUser user, List<string> userRoles)
         {
-            var authClaims = new List<Claim>
+            var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Name, user.UserName!),
                         new Claim(ClaimTypes.NameIdentifier, user.Id!),
                         new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    };
+            };
 
-            foreach (var role in userRoles)
-            {
-                authClaims.Add(new Claim(ClaimTypes.Role, role));
-            }
+            userRoles.ForEach(x => claims.Add(new Claim(ClaimTypes.Role, x)));
+            //foreach (var role in userRoles)
+            //{
+            //    claims.Add(new Claim(ClaimTypes.Role, role));
+            //}
 
-            var secretKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_option.SecretKey));
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.SecretKey));
 
             var token = new JwtSecurityToken(
-                 audience: _option.ValidAudience,
-                 issuer: _option.ValidIssuer,
-                 expires: DateTime.UtcNow.AddMinutes(_option.ExpireTimeMinutes),
-                 claims: authClaims,
-                 signingCredentials: new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256)
-                 );
+                 audience: _config.Audience,
+                 issuer: _config.Issuer,
+                 expires: DateTime.UtcNow.AddMinutes(_config.ExpireMinutes),
+                 claims: claims,
+                 signingCredentials: new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256));
 
             return token;
         }
 
-        public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        public string? GetUserId(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return null;
+            }
+
+            var principal = GetPrincipalFromToken(token);
+
+            return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        }
+
+        #endregion
+
+        #region Private
+
+        private ClaimsPrincipal GetPrincipalFromToken(string token)
         {
             var tokenValidateParameter = new TokenValidationParameters
             {
                 ValidateIssuer = true,
-                ValidIssuer = _option.ValidIssuer,
+                ValidIssuer = _config.Issuer,
                 ValidateAudience = true,
-                ValidAudience = _option.ValidAudience,
+                ValidAudience = _config.Audience,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_option.SecretKey)),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.SecretKey)),
                 ValidateLifetime = false
             };
 
@@ -62,35 +83,14 @@ namespace Inventory.Service.Implement
             var principal = tokenHandler.ValidateToken(token, tokenValidateParameter, out SecurityToken securityToken);
 
             if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-                !jwtSecurityToken.Header.Alg
-                    .Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new SecurityTokenException("Invalid access token");
+                throw new SecurityTokenException("Cannot get principal, invalid access token");
             }
 
             return principal;
         }
 
-        public string GetuserId(string token)
-        {
-            var principal = GetPrincipalFromExpiredToken(token);
-
-            return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
-        }
-
-        public bool TryGetuserId(string token, out ResultMessage result)
-        {
-
-            if (string.IsNullOrEmpty(token))
-            {
-                result = new("Token", "Token is Null or Empty");
-                return false;
-            }
-            else
-            {
-                result = new("userId", GetuserId(token));
-                return true;
-            }
-        }
+        #endregion
     }
 }

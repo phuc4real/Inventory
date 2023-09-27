@@ -1,9 +1,8 @@
-﻿using Inventory.Core.Request;
+﻿using Inventory.Core.Common;
+using Inventory.Core.Request;
 using Inventory.Core.Response;
 using Inventory.Core.ViewModel;
 using Inventory.Service.Common;
-using Inventory.Service.Common.Request;
-using Inventory.Service.Common.Response;
 
 namespace Inventory.Service
 {
