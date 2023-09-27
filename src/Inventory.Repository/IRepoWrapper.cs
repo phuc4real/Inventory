@@ -10,6 +10,8 @@ namespace Inventory.Repository
     {
         Task SaveAsync();
 
+        void SetUserContext(string userId);
+
         ICategoryRepository Category { get; }
         ICommentRepository Comment { get; }
         IExportEntryRepository ExportEntry { get; }

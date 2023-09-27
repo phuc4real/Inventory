@@ -6,6 +6,7 @@ namespace Inventory.Repository
     {
         public IQueryable<T> FindAll();
         public IQueryable<T> FindByCondition(Expression<Func<T, bool>>? filter = null);
+        public Task<List<T>> GetAsync(Expression<Func<T, bool>>? filter = null);
         public Task AddAsync(T entity);
         public Task AddRangeAsync(List<T> entities);
         public void Update(T entity);

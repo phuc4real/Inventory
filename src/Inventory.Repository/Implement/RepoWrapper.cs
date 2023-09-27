@@ -12,6 +12,7 @@ namespace Inventory.Repository.Implement
         #region Ctor
 
         private readonly AppDbContext _context;
+        private string? _userContext;
         public RepoWrapper(AppDbContext context) => _context = context;
 
         #endregion
@@ -20,6 +21,11 @@ namespace Inventory.Repository.Implement
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public void SetUserContext(string userId)
+        {
+            _userContext = userId;
         }
 
         #endregion
@@ -42,13 +48,14 @@ namespace Inventory.Repository.Implement
 
         #endregion
 
-        #region Repo Interface
+        #region Interface
 
         public ICategoryRepository Category
         {
             get
             {
                 _category ??= new CategoryRepository(_context);
+                _category.SetUserContext(_userContext);
                 return _category;
             }
         }
@@ -57,6 +64,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _comment ??= new CommentRepository(_context);
+                _comment.SetUserContext(_userContext);
                 return _comment;
             }
         }
@@ -65,6 +73,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _exportEntry ??= new ExportEntryRepository(_context);
+                _exportEntry.SetUserContext(_userContext);
                 return _exportEntry;
             }
         }
@@ -73,6 +82,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _export ??= new ExportRepository(_context);
+                _export.SetUserContext(_userContext);
                 return _export;
             }
         }
@@ -81,6 +91,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _item ??= new ItemRepository(_context);
+                _item.SetUserContext(_userContext);
                 return _item;
             }
         }
@@ -89,6 +100,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _orderEntry ??= new OrderEntryRepository(_context);
+                _orderEntry.SetUserContext(_userContext);
                 return _orderEntry;
             }
         }
@@ -97,6 +109,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _orderRecord ??= new OrderRecordRepository(_context);
+                _orderRecord.SetUserContext(_userContext);
                 return _orderRecord;
             }
         }
@@ -105,6 +118,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _order ??= new OrderRepository(_context);
+                _order.SetUserContext(_userContext);
                 return _order;
             }
         }
@@ -113,6 +127,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _status ??= new StatusRepository(_context);
+                _status.SetUserContext(_userContext);
                 return _status;
             }
         }
@@ -121,6 +136,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _ticket ??= new TicketRepository(_context);
+                _ticket.SetUserContext(_userContext);
                 return _ticket;
             }
         }
@@ -129,6 +145,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _ticketEntry ??= new TicketEntryRepository(_context);
+                _ticketEntry.SetUserContext(_userContext);
                 return _ticketEntry;
             }
         }
@@ -137,6 +154,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _ticketRecord ??= new TicketRecordRepository(_context);
+                _ticketRecord.SetUserContext(_userContext);
                 return _ticketRecord;
             }
         }
@@ -145,6 +163,7 @@ namespace Inventory.Repository.Implement
             get
             {
                 _ticketType ??= new TicketTypeRepository(_context);
+                _ticketType.SetUserContext(_userContext);
                 return _ticketType;
             }
         }

@@ -9,14 +9,14 @@ using Inventory.Core.Common;
 
 namespace Inventory.Service.Implement
 {
-    public class CategoryServices : ICategoryServices
+    public class CategoryService : ICategoryService
     {
         #region Ctor & Field
 
         private readonly IRepoWrapper _repoWrapper;
         private readonly IMapper _mapper;
 
-        public CategoryServices(IRepoWrapper repoWrapper, IMapper mapper)
+        public CategoryService(IRepoWrapper repoWrapper, IMapper mapper)
         {
             _repoWrapper = repoWrapper;
             _mapper = mapper;
@@ -65,12 +65,12 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<CategoryObjectResponse> CreateAsync(CategoryUpdateRequest request)
+        public async Task<CategoryObjectResponse> CreateAsync(CategoryUpdateRequest request, string)
         {
             CategoryObjectResponse response = new();
             Category cate = _mapper.Map<Category>(request);
 
-            await _repoWrapper.Category.
+            await _repoWrapper.Category.AddAsync(cate);
             await _unitOfWork.SaveAsync();
 
             response.StatusCode = ResponseCode.Created;

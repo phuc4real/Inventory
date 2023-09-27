@@ -17,14 +17,14 @@ namespace Inventory.Service.Implement
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly ITokenService _tokenService;
-        private readonly ICategoryServices _catalogService;
+        private readonly ICategoryService _catalogService;
 
         public ItemService(
             IItemRepository item,
             IUnitOfWork unitOfWork,
             IMapper mapper,
             ITokenService tokenService,
-            ICategoryServices catalogService)
+            ICategoryService catalogService)
         {
             _item = item;
             _unitOfWork = unitOfWork;

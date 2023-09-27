@@ -4,7 +4,7 @@ using Inventory.Service.DTO.Category;
 
 namespace Inventory.Service
 {
-    public interface ICategoryServices
+    public interface ICategoryService
     {
         public Task<CategoryListResponse> GetListAsync();
         public Task<CategoryPaginationResponse> GetPaginationAsync(PaginationRequest request);

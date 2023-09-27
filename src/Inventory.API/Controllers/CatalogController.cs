@@ -16,11 +16,11 @@ namespace Inventory.API.Controllers
     [Authorize]
     public class CatalogController : ControllerBase
     {
-        private readonly ICategoryServices _catalogServices;
+        private readonly ICategoryService _catalogServices;
         private readonly IRedisCacheService _cacheService;
         private const string redisKey = "Inventory.Catalog";
 
-        public CatalogController(ICategoryServices catalogServices, IRedisCacheService cacheService)
+        public CatalogController(ICategoryService catalogServices, IRedisCacheService cacheService)
         {
             _catalogServices = catalogServices;
             _cacheService = cacheService;
