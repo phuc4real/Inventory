@@ -25,7 +25,7 @@ namespace Inventory.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(PaginationResponse<InUse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+
         public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest request)
         {
             var result = await _inUseService.GetPagination(await HttpContext.GetAccessToken(), request);

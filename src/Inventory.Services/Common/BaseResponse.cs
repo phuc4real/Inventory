@@ -12,7 +12,8 @@ namespace Inventory.Service.Common
     public class BaseResponse
     {
         [JsonIgnore]
-        public ResponseCode StatusCode { get; set; }
+        public ResponseCode StatusCode { get; set; } = ResponseCode.Success;
+
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public ResultMessage? Message { get; set; }
     }

@@ -1,13 +1,11 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Core.Enums;
-using Inventory.Core.ViewModel;
 using Inventory.Model.Entity;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Identity;
 using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace Inventory.Service.Implement
 {
@@ -63,7 +61,6 @@ namespace Inventory.Service.Implement
                     await _userManager.UpdateAsync(user);
 
                     response.Data = tokens;
-                    response.StatusCode = ResponseCode.Success;
                 }
                 else
                 {
@@ -99,7 +96,6 @@ namespace Inventory.Service.Implement
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, InventoryRoles.NormalUser);
-                    response.StatusCode = ResponseCode.Success;
                     response.Message = new("User", "User created successfully!");
                 }
                 else
@@ -132,7 +128,6 @@ namespace Inventory.Service.Implement
                 await _userManager.UpdateAsync(user);
                 await _userManager.UpdateSecurityStampAsync(user);
 
-                response.StatusCode = ResponseCode.Success;
                 response.Message = new("User", "User logout!");
             }
 
@@ -166,9 +161,7 @@ namespace Inventory.Service.Implement
 
                     if (isValid)
                     {
-                        var newToken = await GetJwtToken(user);
-                        response.StatusCode = ResponseCode.Success;
-                        response.Data = newToken;
+                        response.Data = await GetJwtToken(user);
                     }
                     else
                     {
@@ -186,26 +179,6 @@ namespace Inventory.Service.Implement
 
                 return response;
             }
-        }
-
-        private async Task<TokenResponse> GetJwtToken(AppUser user)
-        {
-            var userRoles = await _userManager.GetRolesAsync(user);
-
-            var token = _tokenService.GenerateToken(user, userRoles.ToList());
-
-            var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory Indentity", "rs-" + user.Id);
-
-            await _userManager.SetAuthenticationTokenAsync(user, "Inventory Indentity", "Refresh Token", refreshToken);
-
-            TokenResponse res = new()
-            {
-                AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
-                RefreshToken = refreshToken,
-                ExpireTime = token.ValidTo
-            };
-
-            return res;
         }
 
         //public AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl)
@@ -278,6 +251,26 @@ namespace Inventory.Service.Implement
         #endregion
 
         #region Private
+
+        private async Task<TokenResponse> GetJwtToken(AppUser user)
+        {
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var token = _tokenService.GenerateToken(user, userRoles.ToList());
+
+            var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory Indentity", "rs-" + user.Id);
+
+            await _userManager.SetAuthenticationTokenAsync(user, "Inventory Indentity", "Refresh Token", refreshToken);
+
+            TokenResponse res = new()
+            {
+                AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
+                RefreshToken = refreshToken,
+                ExpireTime = token.ValidTo
+            };
+
+            return res;
+        }
 
         private static bool IsEmail(string email) => new EmailAddressAttribute().IsValid(email);
 

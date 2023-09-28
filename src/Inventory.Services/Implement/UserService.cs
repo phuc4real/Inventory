@@ -44,7 +44,6 @@ namespace Inventory.Service.Implement
             else
             {
                 response.Data = _mapper.Map<UserResponse>(user);
-                response.StatusCode = ResponseCode.Success;
             }
 
             return response;
@@ -71,8 +70,6 @@ namespace Inventory.Service.Implement
                     IsSuperAdmin = roles.Contains(InventoryRoles.SuperAdmin),
                     IsAdmin = roles.Contains(InventoryRoles.Admin),
                 };
-
-                response.StatusCode = ResponseCode.Success;
             }
 
             return response;
@@ -86,12 +83,7 @@ namespace Inventory.Service.Implement
                                                         || x.Email!.Contains(search)).ToListAsync();
             if (list.Any())
             {
-                response.StatusCode = ResponseCode.Success;
                 response.Data = _mapper.Map<List<UserResponse>>(list);
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.NoContent;
             }
 
             return response;

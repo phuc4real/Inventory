@@ -13,8 +13,6 @@ namespace Inventory.Service.DTO.Category
         public string? Name { get; set; }
     }
 
-    public class CategoryListResponse : ListResponse<CategoryResponse> { }
-
     public class CategoryObjectResponse : ObjectResponse<CategoryResponse> { }
 
     public class CategoryPaginationResponse : PaginationResponse<CategoryResponse> { }

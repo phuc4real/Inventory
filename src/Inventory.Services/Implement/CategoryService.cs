@@ -6,6 +6,7 @@ using Inventory.Service.DTO.Category;
 using Microsoft.EntityFrameworkCore;
 using Inventory.Service.Common;
 using Inventory.Core.Common;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Inventory.Service.Implement
 {
@@ -15,34 +16,18 @@ namespace Inventory.Service.Implement
 
         private readonly IRepoWrapper _repoWrapper;
         private readonly IMapper _mapper;
+        private readonly IRedisCacheService _cacheService;
 
-        public CategoryService(IRepoWrapper repoWrapper, IMapper mapper)
+        public CategoryService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
         {
             _repoWrapper = repoWrapper;
             _mapper = mapper;
+            _cacheService = cacheService;
         }
 
         #endregion
 
         #region Method
-
-        public async Task<CategoryListResponse> GetListAsync()
-        {
-            CategoryListResponse response = new();
-
-            var categories = await _repoWrapper.Category.FindAll()
-                                                       .ToListAsync();
-
-            if (categories.Any())
-            {
-                response.Data = _mapper.Map<List<CategoryResponse>>(categories);
-                response.StatusCode = ResponseCode.Success;
-            }
-            else
-                response.StatusCode = ResponseCode.NoContent;
-
-            return response;
-        }
 
         public async Task<CategoryObjectResponse> GetByIdAsync(int id)
         {
@@ -56,53 +41,54 @@ namespace Inventory.Service.Implement
                 response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Catalog", "Not found!");
             }
-            else
-            {
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<CategoryResponse>(category);
-            }
+
+            response.Data = _mapper.Map<CategoryResponse>(category);
 
             return response;
         }
 
-        public async Task<CategoryObjectResponse> CreateAsync(CategoryUpdateRequest request, string)
+        public async Task<CategoryObjectResponse> CreateAsync(CategoryUpdateRequest request)
         {
             CategoryObjectResponse response = new();
+
+            _repoWrapper.SetUserContext(request.GetUserContext());
+
             Category cate = _mapper.Map<Category>(request);
 
             await _repoWrapper.Category.AddAsync(cate);
-            await _unitOfWork.SaveAsync();
+            await _repoWrapper.SaveAsync();
 
-            response.StatusCode = ResponseCode.Created;
-            response.Data = _mapper.Map<Catalog>(catalog);
-            response.Message = new("Catalog", "Catalog created!");
+            response.Data = _mapper.Map<CategoryResponse>(cate);
 
             return response;
         }
 
-        public async Task<ResultResponse> Update(int id, UpdateCatalog dto)
+        public async Task<CategoryObjectResponse> UpdateAsync(int id, CategoryUpdateRequest request)
         {
-            ResultResponse response = new();
+            CategoryObjectResponse response = new();
 
-            var catalog = await _catalog.GetById(id);
-            if (catalog == null || catalog.IsDeleted)
+            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
+                                                    .FirstOrDefaultAsync();
+
+            if (category == null || category.IsInactive)
             {
                 response.StatusCode = ResponseCode.NotFound;
                 response.Message = new("Catalog", "Catalog not exists!");
             }
             else
             {
-                catalog.Name = dto.Name;
-                _catalog.Update(catalog);
-                await _unitOfWork.SaveAsync();
+                category.Name = request.Name;
 
-                response.StatusCode = ResponseCode.Success;
-                response.Message = new("Catalog", "Catalog updated!");
+                _repoWrapper.Category.Update(category);
+                await _repoWrapper.SaveAsync();
+
+                response.Data = _mapper.Map<CategoryResponse>(category);
+
             }
             return response;
         }
 
-        public async Task<ResultResponse> Delete(int id)
+        public async Task<BaseResponse> DeactiveAsync(int id)
         {
             ResultResponse response = new();
 

@@ -6,7 +6,6 @@ namespace Inventory.Service
 {
     public interface ICategoryService
     {
-        public Task<CategoryListResponse> GetListAsync();
         public Task<CategoryPaginationResponse> GetPaginationAsync(PaginationRequest request);
         public Task<CategoryObjectResponse> GetByIdAsync(int id);
         public Task<CategoryObjectResponse> CreateAsync(CategoryUpdateRequest request);

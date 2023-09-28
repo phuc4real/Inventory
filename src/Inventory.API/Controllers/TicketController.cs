@@ -25,7 +25,7 @@ namespace Inventory.API.Controllers
 
         [HttpGet]
         [ProducesResponseType(typeof(PaginationResponse<Ticket>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+
         public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest request)
         {
             var result = await _ticketService.GetPagination(await HttpContext.GetAccessToken(), request);
@@ -37,7 +37,7 @@ namespace Inventory.API.Controllers
         [HttpGet("list")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(List<Ticket>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+
         public async Task<IActionResult> ListTicket()
         {
             var result = await _ticketService.GetList();

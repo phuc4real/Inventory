@@ -10,7 +10,7 @@ namespace Inventory.Repository.Implement
 
         private readonly DbSet<T> _dbSet;
 
-        private string? _userContext;
+        protected string? _userContext;
 
         public BaseRepository(AppDbContext context)
         {

@@ -1,80 +1,48 @@
 ﻿using Inventory.Core.Common;
-using Inventory.Core.Response;
 using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using Inventory.Core.Request;
 using Inventory.Core.Enums;
-using Inventory.Core.ViewModel;
 using Inventory.Service;
-using Inventory.Service.Common;
+using Inventory.Service.DTO.Category;
+using Azure.Core;
 
 namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class CatalogController : ControllerBase
+    public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _catalogServices;
-        private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "Inventory.Catalog";
 
-        public CatalogController(ICategoryService catalogServices, IRedisCacheService cacheService)
+        public CategoryController(ICategoryService catalogServices)
         {
             _catalogServices = catalogServices;
-            _cacheService = cacheService;
         }
 
         [HttpGet]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(PaginationResponse<Catalog>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CategoryPaginationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            var queryString = Request.QueryString.ToString();
+            request.SetContext(HttpContext);
 
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Catalog> catalogs))
-            {
-                return Ok(catalogs);
-            }
-            else
-            {
-                var result = await _catalogServices.GetPagination(request);
+            var result = await _catalogServices.GetPaginationAsync(request);
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
-                    return Ok(result);
-                }
-
-                return StatusCode((int)result.Status);
-            }
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(IEnumerable<Catalog>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(CategoryListResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> List()
         {
-            var queryString = Request.QueryString.ToString();
+            Core.Common.Request request = new ore.Common.Request();
+            request.SetContext(HttpContext);
 
-            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out IEnumerable<Catalog> catalogs))
-            {
-                return Ok(catalogs);
-            }
-            else
-            {
-                var result = await _catalogServices.GetList();
+            var result = await _catalogServices.GetListAsync();
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + ".List" + queryString, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return StatusCode((int)result.Status);
-            }
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("{id:int}")]

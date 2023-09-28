@@ -1,11 +1,8 @@
-﻿using Inventory.Core.Common;
-using Inventory.Core.Enums;
+﻿using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
 using Inventory.Service;
-using Inventory.Services.Services;
+using Inventory.Service.Common;
+using Inventory.Service.DTO.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,36 +21,32 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(List<AppUsers>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> GetList([FromQuery] string? filter)
+        [ProducesResponseType(typeof(UserListResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetList([FromQuery] string? search)
         {
-            var result = await _userService.GetList(filter);
+            var result = await _userService.GetListAsync(search);
 
-            return result.Status == ResponseCode.Success ?
-                Ok(result.Data) : NoContent();
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("info/{id}")]
-        [ProducesResponseType(typeof(AppUserDetail), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> InfoOfId(string id)
         {
-            var result = await _userService.GetById(id);
+            var result = await _userService.GetByIdAsync(id);
 
-            return result.Status == ResponseCode.Success ?
-                Ok(result.Data) : StatusCode((int)result.Status, result.Message);
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("info")]
-        [ProducesResponseType(typeof(AppUserDetail), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UserInfo()
         {
-            var result = await _userService.GetByToken(await HttpContext.GetAccessToken());
+            var result = await _userService.GetAsync(await HttpContext.GetAccessToken());
 
-            return result.Status == ResponseCode.Success ?
-                Ok(result.Data) : StatusCode((int)result.Status, result.Message);
+            return StatusCode((int)result.StatusCode, result);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Inventory.Core.Common
 {
-    public class PaginationRequest
+    public class PaginationRequest : Request
     {
         public int PageIndex { get; set; }
         public int PageSize { get; set; }
