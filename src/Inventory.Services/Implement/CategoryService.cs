@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Inventory.Service.Common;
 using Inventory.Core.Common;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Inventory.Core.Extensions;
+using Azure.Core;
 
 namespace Inventory.Service.Implement
 {
@@ -31,19 +33,27 @@ namespace Inventory.Service.Implement
 
         public async Task<CategoryObjectResponse> GetByIdAsync(int id)
         {
-            CategoryObjectResponse response = new();
+            var cacheKey = "category?id=" + id;
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out CategoryObjectResponse response))
+            {
+                return response;
+            };
+
+            response = new CategoryObjectResponse();
 
             var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
                                                     .FirstOrDefaultAsync();
-
             if (category == null)
             {
                 response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Catalog", "Not found!");
+                response.Message = new("Category", "Not found!");
+                return response;
             }
 
             response.Data = _mapper.Map<CategoryResponse>(category);
 
+            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 
@@ -60,6 +70,7 @@ namespace Inventory.Service.Implement
 
             response.Data = _mapper.Map<CategoryResponse>(cate);
 
+            await _cacheService.RemoveCacheTreeAsync("category");
             return response;
         }
 
@@ -67,87 +78,73 @@ namespace Inventory.Service.Implement
         {
             CategoryObjectResponse response = new();
 
+            _repoWrapper.SetUserContext(request.GetUserContext());
+
             var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
                                                     .FirstOrDefaultAsync();
 
             if (category == null || category.IsInactive)
             {
                 response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Catalog", "Catalog not exists!");
-            }
-            else
-            {
-                category.Name = request.Name;
-
-                _repoWrapper.Category.Update(category);
-                await _repoWrapper.SaveAsync();
-
-                response.Data = _mapper.Map<CategoryResponse>(category);
+                response.Message = new("Category", "Category not exists!");
+                return response;
 
             }
+
+            category.Name = request.Name;
+            _repoWrapper.Category.Update(category);
+            await _repoWrapper.SaveAsync();
+
+            response.Data = _mapper.Map<CategoryResponse>(category);
+
+            await _cacheService.RemoveCacheTreeAsync("category");
             return response;
         }
 
-        public async Task<BaseResponse> DeactiveAsync(int id)
+        public async Task<BaseResponse> DeactiveAsync(int id, BaseRequest request)
         {
-            ResultResponse response = new();
+            BaseResponse response = new();
 
-            var catalog = await _catalog.GetById(id);
-            if (catalog == null || catalog.IsDeleted)
+            _repoWrapper.SetUserContext(request.GetUserContext());
+
+            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
+                                                      .FirstOrDefaultAsync();
+
+            if (category == null || category.IsInactive)
             {
                 response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Catalog", "Catalog not exists!");
+                response.Message = new("Category", "Category not exists!");
+                return response;
             }
-            else
-            {
-                catalog.IsDeleted = true;
-                _catalog.Update(catalog);
-                await _unitOfWork.SaveAsync();
 
-                response.StatusCode = ResponseCode.Success;
-                response.Message = new("Catalog", "Catalog deleted!");
-            }
+            category.IsInactive = true;
+            _repoWrapper.Category.Update(category);
+            await _repoWrapper.SaveAsync();
+
+            response.Message = new("Category", "Category deleted!");
+            await _cacheService.RemoveCacheAsync("category");
             return response;
         }
 
-        public async Task<PaginationResponse<Catalog>> GetPagination(PaginationRequest request)
+        public async Task<CategoryPaginationResponse> GetPaginationAsync(PaginationRequest request)
         {
-            PaginationResponse<Catalog> response = new()
+            var cacheKey = "category" + request.GetQueryString();
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out CategoryPaginationResponse response))
             {
-                PageIndex = request.PageIndex,
-                PageSize = request.PageSize
+                return response;
             };
 
-            var catalogs = await _catalog.GetPagination(request);
+            response = new CategoryPaginationResponse();
 
-            if (catalogs.Data!.Any())
-            {
-                response.TotalRecords = catalogs.TotalRecords;
-                response.TotalPages = catalogs.TotalPages;
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<Catalog>>(catalogs.Data);
-            }
-            else
-                response.StatusCode = ResponseCode.NoContent;
+            var categories = _repoWrapper.Category.FindByCondition(x => x.IsInactive == request.IsInactive);
 
-            return response;
-        }
+            response.Count = await categories.CountAsync();
 
-        public async Task<ResultResponse> Any(int id)
-        {
-            ResultResponse response = new();
+            var result = await categories.Pagination(request).ToListAsync();
 
-            if (await _catalog.AnyAsync(x => x.Id == id))
-            {
-                response.StatusCode = ResponseCode.Success;
-                response.Message = new("Catalog", $"Catalog #{id} exist!");
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Catalog", $"Catalog #{id} not exist!");
-            }
-
+            response.Data = _mapper.Map<List<CategoryResponse>>(result);
+            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 

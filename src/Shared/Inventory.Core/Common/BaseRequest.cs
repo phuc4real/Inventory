@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Inventory.Core.Common
 {
-    public class Request
+    public class BaseRequest
     {
         private string? _userContext;
         private string? _query;

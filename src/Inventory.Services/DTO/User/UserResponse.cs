@@ -1,4 +1,5 @@
-﻿using Inventory.Service.Common;
+﻿using Azure;
+using Inventory.Service.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,6 @@ namespace Inventory.Service.DTO.User
 
     public class UserObjectResponse : ObjectResponse<UserResponse> { }
 
-    public class UserListResponse : ListResponse<UserResponse> { }
+    public class UserPaginationResponse : PaginationResponse<UserResponse> { }
 
 }

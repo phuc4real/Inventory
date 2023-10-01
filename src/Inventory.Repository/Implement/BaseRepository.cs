@@ -72,18 +72,6 @@ namespace Inventory.Repository.Implement
             //_dbSet.RemoveRange(entities);
         }
 
-        public async Task<List<T>> GetAsync(Expression<Func<T, bool>>? filter = null)
-        {
-            IQueryable<T> query = _dbSet;
-
-            if (filter != null)
-            {
-                query = query.Where(filter);
-            }
-
-            return await query.ToListAsync();
-        }
-
         public void Update(T entity)
         {
             BeforeUpdate(entity, _userContext);

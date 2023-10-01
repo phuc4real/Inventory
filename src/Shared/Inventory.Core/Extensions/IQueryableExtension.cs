@@ -17,21 +17,26 @@ namespace Inventory.Core.Extensions
             return q.Provider.CreateQuery<T>(mce);
         }
 
-        public static IQueryable<T> Pagination<T>(this IQueryable<T> query, PaginationRequest request, ref int totalRecord)
+        public static IQueryable<T> Pagination<T>(this IQueryable<T> query, PaginationRequest request)
         {
-            if (request.SortField != null && request.SortField != "undefined")
+            if (request.Sort != null && request.Sort != "undefined")
             {
-                string columnName = StringHelper.CapitalizeFirstLetter(request.SortField);
+                string columnName = StringHelper.CapitalizeFirstLetter(request.Sort);
 
                 var isAsc = request.SortDirection == "asc";
 
                 query = query.OrderByField(columnName, isAsc);
             }
 
-            totalRecord = query.Count();
+            int index = request.Index.GetValueOrDefault(0);
+            int size = request.Size.GetValueOrDefault(0);
 
-            return query.Skip(request.PageIndex * request.PageSize)
-                        .Take(request.PageSize);
+            if (size > 0)
+            {
+                query = query.Skip(index * size).Take(size);
+            }
+
+            return query;
         }
     }
 }

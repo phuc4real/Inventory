@@ -10,6 +10,6 @@ namespace Inventory.Service
         public Task<CategoryObjectResponse> GetByIdAsync(int id);
         public Task<CategoryObjectResponse> CreateAsync(CategoryUpdateRequest request);
         public Task<CategoryObjectResponse> UpdateAsync(int id, CategoryUpdateRequest request);
-        public Task<BaseResponse> DeactiveAsync(int id);
+        public Task<BaseResponse> DeactiveAsync(int id, BaseRequest request);
     }
 }

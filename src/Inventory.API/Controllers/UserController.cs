@@ -1,4 +1,5 @@
-﻿using Inventory.Core.Enums;
+﻿using Inventory.Core.Common;
+using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Service;
 using Inventory.Service.Common;
@@ -21,10 +22,10 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("list")]
-        [ProducesResponseType(typeof(UserListResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetList([FromQuery] string? search)
+        [ProducesResponseType(typeof(UserPaginationResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetList(PaginationRequest request)
         {
-            var result = await _userService.GetListAsync(search);
+            var result = await _userService.GetListAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
         }

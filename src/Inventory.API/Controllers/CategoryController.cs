@@ -6,6 +6,7 @@ using Inventory.Core.Enums;
 using Inventory.Service;
 using Inventory.Service.DTO.Category;
 using Azure.Core;
+using Inventory.Service.Common;
 
 namespace Inventory.API.Controllers
 {
@@ -14,11 +15,11 @@ namespace Inventory.API.Controllers
     [Authorize]
     public class CategoryController : ControllerBase
     {
-        private readonly ICategoryService _catalogServices;
+        private readonly ICategoryService _categoryService;
 
-        public CategoryController(ICategoryService catalogServices)
+        public CategoryController(ICategoryService categoryService)
         {
-            _catalogServices = catalogServices;
+            _categoryService = categoryService;
         }
 
         [HttpGet]
@@ -28,98 +29,61 @@ namespace Inventory.API.Controllers
         {
             request.SetContext(HttpContext);
 
-            var result = await _catalogServices.GetPaginationAsync(request);
-
-            return StatusCode((int)result.StatusCode, result);
-        }
-
-        [HttpGet("list")]
-        [ProducesResponseType(typeof(CategoryListResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> List()
-        {
-            Core.Common.Request request = new ore.Common.Request();
-            request.SetContext(HttpContext);
-
-            var result = await _catalogServices.GetListAsync();
+            var result = await _categoryService.GetPaginationAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(Catalog), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out Catalog catalog))
-            {
-                return Ok(catalog);
-            }
-            else
-            {
-                var result = await _catalogServices.GetById(id);
+            var result = await _categoryService.GetByIdAsync(id);
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return StatusCode((int)result.Status, result.Message);
-            }
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpPost]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Create(UpdateCatalog dto)
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Create(CategoryUpdateRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            request.SetContext(HttpContext);
 
-            var result = await _catalogServices.Create(dto);
+            var result = await _categoryService.CreateAsync(request);
 
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return Created("catalog/" + result.Data!.Id, result.Message);
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(int id, UpdateCatalog dto)
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(int id, CategoryUpdateRequest request)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            request.SetContext(HttpContext);
 
-            var result = await _catalogServices.Update(id, dto);
+            var result = await _categoryService.UpdateAsync(id, request);
 
-            if (result.Status == ResponseCode.Success)
-                await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return StatusCode((int)result.Status, result.Message);
+            return StatusCode((int)result.StatusCode, result);
         }
 
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id)
         {
-            var result = await _catalogServices.Delete(id);
+            var request = new BaseRequest();
+            request.SetContext(HttpContext);
 
-            if (result.Status == ResponseCode.Success)
+            var result = await _categoryService.DeactiveAsync(id, request);
 
-                await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return StatusCode((int)result.Status, result.Message);
+            return StatusCode((int)result.StatusCode, result);
         }
     }
 }

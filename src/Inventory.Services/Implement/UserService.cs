@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
 using Inventory.Core.Enums;
+using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Service.DTO.User;
 using Microsoft.AspNetCore.Identity;
@@ -75,16 +76,23 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<UserListResponse> GetListAsync(string? search)
+        public async Task<UserPaginationResponse> GetListAsync(PaginationRequest request)
         {
-            UserListResponse response = new();
+            UserPaginationResponse response = new();
 
-            var list = await _userManager.Users.Where(x => x.UserName!.Contains(search)
-                                                        || x.Email!.Contains(search)).ToListAsync();
-            if (list.Any())
+            var users = await _userManager.Users.ToListAsync();
+
+            if (request.SearchKeyword != null)
             {
-                response.Data = _mapper.Map<List<UserResponse>>(list);
+                var searchToLower = request.SearchKeyword.ToLower();
+                users = users.Where(x => x.UserName!.Contains(searchToLower) || x.Email!.Contains(searchToLower)).ToList();
             }
+
+            response.Count = users.Count;
+
+            var result = await users.AsQueryable().Pagination(request).ToListAsync();
+
+            response.Data = _mapper.Map<List<UserResponse>>(result);
 
             return response;
         }

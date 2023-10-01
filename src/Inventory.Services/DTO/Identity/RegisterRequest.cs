@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Inventory.Service.DTO.Identity
 {
-    public class RegisterRequest : Request
+    public class RegisterRequest : BaseRequest
     {
         public string? Email { get; set; }
         public string? Username { get; set; }

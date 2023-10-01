@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Inventory.Service.DTO.Item
 {
-    public class ItemUpdateRequest : Request
+    public class ItemUpdateRequest : BaseRequest
     {
         public string? Code { get; set; }
         public string? Name { get; set; }
