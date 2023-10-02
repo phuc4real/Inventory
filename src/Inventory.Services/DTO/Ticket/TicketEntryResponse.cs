@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Service
+namespace Inventory.Service.DTO.Ticket
 {
-    public interface IBaseService
+    internal class TicketEntryResponse
     {
     }
 }

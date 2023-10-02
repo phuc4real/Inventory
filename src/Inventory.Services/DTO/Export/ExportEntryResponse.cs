@@ -17,5 +17,5 @@ namespace Inventory.Service.DTO.Export
         public string? Note { get; set; }
     }
 
-    public class ExportEntryListResponse : ListResponse<ExportEntryResponse> { }
+    public class ExportEntryListResponse : PaginationResponse<ExportEntryResponse> { }
 }

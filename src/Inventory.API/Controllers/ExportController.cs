@@ -1,11 +1,8 @@
-﻿using Inventory.Core.Common;
-using Inventory.Core.Enums;
-using Inventory.Core.Extensions;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
+﻿using Azure.Core;
+using Inventory.Core.Common;
 using Inventory.Service;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Export;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,95 +24,44 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PaginationResponse<Export>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ExportPaginationResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            var queryString = Request.QueryString.ToString();
+            request.SetContext(HttpContext);
 
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Export> catalogs))
-            {
-                return Ok(catalogs);
-            }
-            else
-            {
-                var result = await _exportService.GetPagination(request);
+            var result = await _exportService.GetPaginationAsync(request);
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
-                    return Ok(result);
-                }
-
-                return StatusCode((int)result.Status);
-            }
-        }
-
-        [HttpGet("list")]
-        [ProducesResponseType(typeof(IEnumerable<Export>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> List()
-        {
-            var queryString = Request.QueryString.ToString();
-
-            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out IEnumerable<Export> exports))
-            {
-                return Ok(exports);
-            }
-            else
-            {
-                var result = await _exportService.GetList();
-
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + ".List" + queryString, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return StatusCode((int)result.Status);
-            }
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(Export), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(int id)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out Export export))
-            {
-                return Ok(export);
-            }
-            else
-            {
-                var result = await _exportService.GetById(id);
+            var result = await _exportService.GetByIdAsync(id);
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return StatusCode((int)result.Status, result.Message);
-            }
+            return StatusCode((int)result.StatusCode, result);
         }
 
         [HttpPut("{id:int}/update-status")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus(int id)
         {
-            var result = await _exportService.UpdateStatus(await HttpContext.GetAccessToken(), id);
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-            return StatusCode((int)result.Status, result.Message);
+            BaseRequest request = new();
+            request.SetContext(HttpContext);
+
+            var result = await _exportService.UpdateExportStatusAsync(id, request);
+
+            return StatusCode((int)result.StatusCode, result);
         }
 
-        [HttpGet("count-by-month")]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        [HttpGet("chart-data")]
+        [ProducesResponseType(typeof(ExportChartDataResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCount()
         {
-            var result = await _exportService.GetCountByMonth();
-
-            return StatusCode((int)result.Status, result.Data);
+            return StatusCode(200, await _exportService.GetChartDataAsync());
         }
     }
 }

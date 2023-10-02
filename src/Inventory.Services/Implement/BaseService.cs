@@ -8,26 +8,20 @@ using System.Threading.Tasks;
 
 namespace Inventory.Service.Implement
 {
-    internal class BaseService : IBaseService
+    public class BaseService : IBaseService
     {
         #region Ctor & Field
 
-        private readonly IRepoWrapper _repoWrapper;
-        private readonly IMapper _mapper;
+        protected readonly IMapper _mapper;
+        protected readonly IRepoWrapper _repoWrapper;
+        protected readonly IRedisCacheService _cacheService;
 
-        public BaseService(IRepoWrapper repoWrapper, IMapper mapper)
+
+        public BaseService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
         {
             _repoWrapper = repoWrapper;
             _mapper = mapper;
-        }
-
-        #endregion
-
-        #region Private
-
-        private void SetContext()
-        {
-            _repoWrapper.SetUserContext("");
+            _cacheService = cacheService;
         }
 
         #endregion

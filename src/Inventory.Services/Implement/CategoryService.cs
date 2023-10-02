@@ -12,19 +12,14 @@ using Azure.Core;
 
 namespace Inventory.Service.Implement
 {
-    public class CategoryService : ICategoryService
+    public class CategoryService : BaseService, ICategoryService
     {
+
         #region Ctor & Field
 
-        private readonly IRepoWrapper _repoWrapper;
-        private readonly IMapper _mapper;
-        private readonly IRedisCacheService _cacheService;
-
         public CategoryService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
+            : base(repoWrapper, mapper, cacheService)
         {
-            _repoWrapper = repoWrapper;
-            _mapper = mapper;
-            _cacheService = cacheService;
         }
 
         #endregion

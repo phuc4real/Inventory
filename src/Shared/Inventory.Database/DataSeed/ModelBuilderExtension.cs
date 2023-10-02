@@ -1,4 +1,5 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Const;
 using Inventory.Model.Entity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -84,6 +85,23 @@ namespace Inventory.Database.DataSeed
                     RoleId = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
                     UserId = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8"
                 });
+
+            #endregion
+
+            #region Seed Status
+
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 1, Name = StatusConstant.Pending, Description = "Pending" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 2, Name = StatusConstant.Processing, Description = "Procesing" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 3, Name = StatusConstant.Cancel, Description = "Cancel" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 4, Name = StatusConstant.Rejected, Description = "Rejected" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 5, Name = StatusConstant.Close, Description = "Close" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 6, Name = StatusConstant.Done, Description = "Done" });
 
             #endregion
         }

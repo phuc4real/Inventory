@@ -23,5 +23,7 @@ namespace Inventory.Service.DTO.Export
         public string? InactiveBy { get; set; }
     }
 
+    public class ExportObjectResponse : ObjectResponse<ExportResponse> { }
+
     public class ExportPaginationResponse : PaginationResponse<ExportResponse> { }
 }
