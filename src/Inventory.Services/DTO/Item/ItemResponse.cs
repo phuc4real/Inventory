@@ -31,7 +31,5 @@ namespace Inventory.Service.DTO.Item
 
     public class ItemObjectResponse : ObjectResponse<ItemResponse> { }
 
-    public class ItemListResponse : ListResponse<ItemResponse> { }
-
     public class ItemPaginationResponse : PaginationResponse<ItemResponse> { }
 }

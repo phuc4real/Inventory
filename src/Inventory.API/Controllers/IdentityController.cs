@@ -29,9 +29,16 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            var result = await _authService.SignUpAsync(request);
+            if (ModelState.IsValid)
+            {
+                var result = await _authService.SignUpAsync(request);
 
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [AllowAnonymous]
@@ -41,9 +48,16 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
-            var result = await _authService.SignInAsync(request);
+            if (ModelState.IsValid)
+            {
+                var result = await _authService.SignInAsync(request);
 
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpDelete("logout")]

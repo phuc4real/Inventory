@@ -1,5 +1,5 @@
-﻿using Azure.Core;
-using Inventory.Core.Common;
+﻿using Inventory.Core.Common;
+using Inventory.Core.Extensions;
 using Inventory.Service;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Export;
@@ -14,52 +14,71 @@ namespace Inventory.API.Controllers
     public class ExportController : ControllerBase
     {
         private readonly IExportService _exportService;
-        private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "Inventory.Export";
 
-        public ExportController(IExportService exportService, IRedisCacheService cacheService)
+        public ExportController(IExportService exportService)
         {
             _exportService = exportService;
-            _cacheService = cacheService;
         }
 
         [HttpGet]
         [ProducesResponseType(typeof(ExportPaginationResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _exportService.GetPaginationAsync(request);
 
-            var result = await _exportService.GetPaginationAsync(request);
-
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(ExportRequest request)
         {
-            var result = await _exportService.GetByIdAsync(id);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _exportService.GetByIdAsync(request);
 
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpPut("{id:int}/update-status")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateStatus(int id)
+        public async Task<IActionResult> UpdateStatus(ExportRequest request)
         {
-            BaseRequest request = new();
-            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _exportService.UpdateExportStatusAsync(request);
 
-            var result = await _exportService.UpdateExportStatusAsync(id, request);
-
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpGet("chart-data")]
         [ProducesResponseType(typeof(ExportChartDataResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetCount()
+        public async Task<IActionResult> ExportDataChart()
         {
             return StatusCode(200, await _exportService.GetChartDataAsync());
         }

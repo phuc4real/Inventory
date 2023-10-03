@@ -1,11 +1,8 @@
 ﻿using Inventory.Core.Common;
-using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
 using Inventory.Service;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Item;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,134 +14,108 @@ namespace Inventory.API.Controllers
     public class ItemController : ControllerBase
     {
         private readonly IItemService _itemService;
-        private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "Inventory.Item";
 
-        public ItemController(IItemService itemService, IRedisCacheService cacheService)
+        public ItemController(IItemService itemService)
         {
             _itemService = itemService;
-            _cacheService = cacheService;
-        }
-
-        [HttpGet("list")]
-        [ProducesResponseType(typeof(List<Item>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> List([FromQuery] string? name)
-        {
-            var queryString = Request.QueryString.ToString();
-            if (_cacheService.TryGetCacheAsync(redisKey + ".List" + queryString, out List<Item> response))
-            {
-                return Ok(response);
-            }
-            else
-            {
-                var result = await _itemService.GetList(name);
-
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + ".List" + queryString, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return StatusCode((int)result.Status);
-            }
         }
 
         [HttpGet]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(PaginationResponse<Item>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> Pagination([FromQuery] PaginationRequest requestParams)
+        [ProducesResponseType(typeof(ItemPaginationResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            var queryString = Request.QueryString.ToString();
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Item> response))
+            if (ModelState.IsValid)
             {
-                return Ok(response);
+                request.SetContext(HttpContext);
+                var result = await _itemService.GetPaginationAsync(request);
+
+                return StatusCode((int)result.StatusCode, result);
             }
             else
             {
-                var result = await _itemService.GetPagination(requestParams);
-
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
-                    return Ok(result);
-                }
-
-                return StatusCode((int)result.Status);
+                return BadRequest(ModelState.GetErrorMessages());
             }
         }
 
         [HttpGet("{id:Guid}")]
-        [ProducesResponseType(typeof(ItemDetail), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(Guid id)
+        [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Get(ItemRequest request)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out ItemDetail items))
+            if (ModelState.IsValid)
             {
-                return Ok(items);
+                request.SetContext(HttpContext);
+                var result = await _itemService.GetByIdAsync(request);
+
+                return StatusCode((int)result.StatusCode, result);
             }
             else
             {
-                var result = await _itemService.GetById(id);
-
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
-                    return Ok(result.Data);
-                }
-
-                return StatusCode((int)result.Status, result.Message);
+                return BadRequest(ModelState.GetErrorMessages());
             }
         }
 
         [HttpPost]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Create(UpdateItem item)
+        [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Create(ItemUpdateRequest request)
         {
-            if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _itemService.CreateAsync(request);
 
-            var result = await _itemService.Create(await HttpContext.GetAccessToken(), item);
-
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return result.Status == ResponseCode.Success ?
-                Created("item/" + result.Data!.Id, result.Message) :
-                StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpPut("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(Guid id, UpdateItem item)
+        [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(ItemUpdateRequest request)
         {
-            if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _itemService.UpdateAsync(request);
 
-            var result = await _itemService.Update(await HttpContext.GetAccessToken(), id, item);
-
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return result.Status == ResponseCode.Success ?
-                    Ok(result.Message) : StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpDelete("{id:Guid}")]
         [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(Guid id)
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Delete(ItemRequest request)
         {
-            var result = await _itemService.Delete(await HttpContext.GetAccessToken(), id);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _itemService.DeactiveAsync(request);
 
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return result.Status == ResponseCode.Success ?
-                    Ok(result.Message) : StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
     }
 }

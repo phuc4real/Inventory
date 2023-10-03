@@ -7,9 +7,9 @@ namespace Inventory.Service
     public interface IExportService
     {
         Task<ExportPaginationResponse> GetPaginationAsync(PaginationRequest request);
-        Task<ExportObjectResponse> GetByIdAsync(int id);
+        Task<ExportObjectResponse> GetByIdAsync(ExportRequest request);
         //Task<ExportObjectResponse> CreateFromTicketAsync(string adminId, string forUserId, TicketInfoEntity dto);
-        Task<BaseResponse> UpdateExportStatusAsync(int id, BaseRequest request);
+        Task<BaseResponse> UpdateExportStatusAsync(ExportRequest request);
         Task<ExportChartDataResponse> GetChartDataAsync();
     }
 }

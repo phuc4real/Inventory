@@ -1,264 +1,151 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
 using Inventory.Core.Enums;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
+using Inventory.Core.Extensions;
+using Inventory.Model.Entity;
 using Inventory.Repository;
-using Inventory.Repository.Model;
-using Inventory.Service;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Item;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
 {
-    public class ItemService : IItemService
+    public class ItemService : BaseService, IItemService
     {
-        private readonly IItemRepository _item;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-        private readonly ITokenService _tokenService;
-        private readonly ICategoryService _catalogService;
+        #region Ctor & Field
 
-        public ItemService(
-            IItemRepository item,
-            IUnitOfWork unitOfWork,
-            IMapper mapper,
-            ITokenService tokenService,
-            ICategoryService catalogService)
+        public ItemService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
+            : base(repoWrapper, mapper, cacheService)
         {
-            _item = item;
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-            _tokenService = tokenService;
-            _catalogService = catalogService;
         }
 
-        public async Task<ResultResponse<Item>> Create(string token, UpdateItem dto)
+        #endregion
+
+        #region Method
+
+        public async Task<ItemObjectResponse> CreateAsync(ItemUpdateRequest request)
         {
-            ResultResponse<Item> response = new();
+            ItemObjectResponse response = new();
 
-            var userId = _tokenService.GetuserId(token);
+            _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var catalogExists = await _catalogService.Any(dto.CatalogId);
+            request.Id = null;
 
-            if (catalogExists.Status != ResponseCode.Success)
-            {
-                response.StatusCode = catalogExists.Status;
-                response.Message = catalogExists.Message;
-            }
-            else
-            {
-                ItemEntity item = _mapper.Map<ItemEntity>(dto);
-                item.CreatedById = userId;
-                item.CreatedDate = DateTime.UtcNow;
-                item.UpdatedById = userId;
-                item.UpdatedDate = DateTime.UtcNow;
+            Item item = _mapper.Map<Item>(request);
 
-                await _item.AddAsync(item);
-                await _unitOfWork.SaveAsync();
+            await _repoWrapper.Item.AddAsync(item);
+            await _repoWrapper.SaveAsync();
 
-                response.Data = _mapper.Map<Item>(item);
+            response.Data = _mapper.Map<ItemResponse>(item);
 
-                response.Message = new("Item", $"Item created!");
-                response.StatusCode = ResponseCode.Success;
-            }
+            await _cacheService.RemoveCacheTreeAsync("item");
             return response;
         }
 
-        public async Task<ResultResponse<IEnumerable<Item>>> GetList(string? filter)
+        public async Task<ItemPaginationResponse> GetPaginationAsync(PaginationRequest request)
         {
-            ResultResponse<IEnumerable<Item>> response = new();
-
-            var items = await _item.GetList(filter!);
-
-            if (items.Any())
+            var cacheKey = "item" + request.GetQueryString();
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out ItemPaginationResponse response))
             {
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<Item>>(items);
-            }
-            else
-                response.StatusCode = ResponseCode.NoContent;
-
-            return response;
-        }
-
-        public async Task<PaginationResponse<Item>> GetPagination(PaginationRequest request)
-        {
-            PaginationResponse<Item> response = new()
-            {
-                PageIndex = request.PageIndex,
-                PageSize = request.PageSize
+                return response;
             };
 
-            var items = await _item.GetPagination(request);
+            response = new ItemPaginationResponse();
 
-            if (items.Data!.Any())
-            {
-                response.TotalPages = items.TotalPages;
-                response.TotalRecords = items.TotalRecords;
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<Item>>(items.Data);
-            }
-            else
-                response.StatusCode = ResponseCode.NoContent;
+            var items = _repoWrapper.Item.FindByCondition(x => x.IsInactive == request.IsInactive);
+
+            response.Count = await items.CountAsync();
+
+            var result = await items.Pagination(request).ToListAsync();
+
+            response.Data = _mapper.Map<List<ItemResponse>>(result);
+            await _cacheService.SetCacheAsync(cacheKey, response);
 
             return response;
         }
 
-        public async Task<ResultResponse<ItemDetail>> GetById(Guid id)
+        public async Task<ItemObjectResponse> GetByIdAsync(ItemRequest request)
         {
-            ResultResponse<ItemDetail> response = new();
+            var cacheKey = "item?id=" + request.Id!.Value;
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out ItemObjectResponse response))
+            {
+                return response;
+            };
 
-            var item = await _item.GetById(id);
+            response = new ItemObjectResponse();
 
+            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id.Value)
+                                                    .FirstOrDefaultAsync();
             if (item == null)
             {
                 response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Item", "Item not found!");
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<ItemDetail>(item);
+                response.Message = new("Item", "Not found!");
+                return response;
             }
 
+            response.Data = _mapper.Map<ItemResponse>(item);
+
+            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 
-        public async Task<ResultResponse> Update(string token, Guid id, UpdateItem dto)
+        public async Task<ItemObjectResponse> UpdateAsync(ItemUpdateRequest request)
         {
-            ResultResponse response = new();
+            ItemObjectResponse response = new();
 
-            var userId = _tokenService.GetuserId(token);
-            var item = await _item.GetById(id);
+            _repoWrapper.SetUserContext(request.GetUserContext());
 
-            if (item == null || item.IsDeleted)
+            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id)
+                                                    .FirstOrDefaultAsync();
+
+            if (item == null || item.IsInactive)
             {
                 response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Item", "Item not found!");
-            }
-            else
-            {
-                item.Code = dto.Code;
-                item.Name = dto.Name;
-                item.Description = dto.Description;
-                item.ImageUrl = dto.ImageUrl;
-                item.CatalogId = dto.CatalogId;
-                item.UpdatedById = userId;
-                item.UpdatedDate = DateTime.UtcNow;
-
-                _item.Update(item);
-                await _unitOfWork.SaveAsync();
-
-                response.StatusCode = ResponseCode.Success;
-                response.Message = new("Item", "Item updated!");
+                response.Message = new("Item", "Item not exists!");
+                return response;
             }
 
+            item.Code = request.Code;
+            item.Name = request.Name;
+            item.Description = request.Description;
+            item.ImageUrl = request.ImageUrl;
+            item.CategoryId = request.CategoryId;
+
+            _repoWrapper.Item.Update(item);
+            await _repoWrapper.SaveAsync();
+
+            response.Data = _mapper.Map<ItemResponse>(item);
+
+            await _cacheService.RemoveCacheTreeAsync("item");
             return response;
         }
 
-        public async Task<ResultResponse> Delete(string token, Guid id)
+        public async Task<BaseResponse> DeactiveAsync(ItemRequest request)
         {
-            ResultResponse response = new();
+            BaseResponse response = new();
 
-            var userId = _tokenService.GetuserId(token);
-            var item = await _item.GetById(id);
+            _repoWrapper.SetUserContext(request.GetUserContext());
 
-            if (item == null || item.IsDeleted)
+            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id)
+                                                      .FirstOrDefaultAsync();
+
+            if (item == null || item.IsInactive)
             {
                 response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Item", "Item not found!");
-            }
-            else
-            {
-                item.IsDeleted = true;
-                item.UpdatedById = userId;
-                item.UpdatedDate = DateTime.UtcNow;
-
-                _item.Update(item);
-                await _unitOfWork.SaveAsync();
-
-                response.StatusCode = ResponseCode.Success;
-                response.Message = new("Item", "Item deleted!");
+                response.Message = new("Item", "Item not exists!");
+                return response;
             }
 
+            _repoWrapper.Item.Remove(item);
+            await _repoWrapper.SaveAsync();
+
+            response.Message = new("Item", "Item deleted!");
+            await _cacheService.RemoveCacheAsync("item");
             return response;
         }
 
-        public async Task<ResultResponse> Export(List<ExportDetailEntity> details)
-        {
-            ResultResponse response = new();
-
-            var res = await _item.GetRange(details.Select(x => x.ItemId).ToList());
-
-            foreach (var item in res)
-            {
-                var i = details.Find(x => x.ItemId == item.Id);
-                if (i!.Quantity > item.InStock)
-                {
-                    response.Message = new("Item", "Item #" + item.Name + " out of stock");
-                    response.StatusCode = ResponseCode.BadRequest;
-                    return response;
-                }
-                else
-                {
-                    item.InStock -= i.Quantity;
-                    item.InUsing += i.Quantity;
-                }
-            }
-
-            _item.UpdateRage(res.ToList());
-            await _unitOfWork.SaveAsync();
-
-            response.StatusCode = ResponseCode.Success;
-
-            return response;
-        }
-
-        public async Task<ResultResponse> Exists(List<Guid> ids)
-        {
-            ResultResponse response = new();
-            ResultMessage message = new("Item not exists", "");
-            var res = await _item.GetRange(ids);
-
-            if (res.Count() != ids.Count)
-            {
-                var listId = res.Select(x => x.Id)
-                                .ToList();
-
-                foreach (var id in ids)
-                    if (!listId.Contains(id))
-                        message.Value += $" {id}";
-
-                response.Message = message;
-                response.StatusCode = ResponseCode.NotFound;
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.Success;
-            }
-
-            return response;
-        }
-
-        public async Task<ResultResponse> Order(List<OrderDetailEntity> details)
-        {
-            ResultResponse response = new();
-
-            var res = await _item.GetRange(details.Select(x => x.ItemId).ToList());
-
-            foreach (var item in res)
-            {
-                var i = details.Find(x => x.ItemId == item.Id);
-                item.InStock += i!.Quantity;
-            }
-
-            _item.UpdateRage(res.ToList());
-            await _unitOfWork.SaveAsync();
-
-            response.StatusCode = ResponseCode.Success;
-
-            return response;
-        }
+        #endregion
     }
 }

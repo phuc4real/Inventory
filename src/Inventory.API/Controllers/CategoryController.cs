@@ -2,10 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Inventory.Core.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using Inventory.Core.Enums;
 using Inventory.Service;
 using Inventory.Service.DTO.Category;
-using Azure.Core;
 using Inventory.Service.Common;
 
 namespace Inventory.API.Controllers
@@ -25,23 +23,39 @@ namespace Inventory.API.Controllers
         [HttpGet]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(CategoryPaginationResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _categoryService.GetPaginationAsync(request);
 
-            var result = await _categoryService.GetPaginationAsync(request);
-
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(int id)
+        public async Task<IActionResult> Get(CategoryRequest request)
         {
-            var result = await _categoryService.GetByIdAsync(id);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _categoryService.GetByIdAsync(request);
 
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpPost]
@@ -50,11 +64,17 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(CategoryUpdateRequest request)
         {
-            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _categoryService.CreateAsync(request);
 
-            var result = await _categoryService.CreateAsync(request);
-
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
         [HttpPut("{id:int}")]
@@ -62,28 +82,40 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(int id, CategoryUpdateRequest request)
+        public async Task<IActionResult> Update(CategoryUpdateRequest request)
         {
-            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _categoryService.UpdateAsync(request);
 
-            var result = await _categoryService.UpdateAsync(id, request);
-
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
 
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(CategoryRequest request)
         {
-            var request = new BaseRequest();
-            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _categoryService.DeactiveAsync(request);
 
-            var result = await _categoryService.DeactiveAsync(id, request);
-
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
         }
     }
 }

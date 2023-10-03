@@ -6,9 +6,7 @@ using Inventory.Service.DTO.Category;
 using Microsoft.EntityFrameworkCore;
 using Inventory.Service.Common;
 using Inventory.Core.Common;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Inventory.Core.Extensions;
-using Azure.Core;
 
 namespace Inventory.Service.Implement
 {
@@ -26,9 +24,9 @@ namespace Inventory.Service.Implement
 
         #region Method
 
-        public async Task<CategoryObjectResponse> GetByIdAsync(int id)
+        public async Task<CategoryObjectResponse> GetByIdAsync(CategoryRequest request)
         {
-            var cacheKey = "category?id=" + id;
+            var cacheKey = "category?id=" + request.GetQueryString();
             //try get from redis cache
             if (_cacheService.TryGetCacheAsync(cacheKey, out CategoryObjectResponse response))
             {
@@ -37,7 +35,7 @@ namespace Inventory.Service.Implement
 
             response = new CategoryObjectResponse();
 
-            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
+            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == request.Id)
                                                     .FirstOrDefaultAsync();
             if (category == null)
             {
@@ -58,6 +56,8 @@ namespace Inventory.Service.Implement
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
+            request.Id = null;
+
             Category cate = _mapper.Map<Category>(request);
 
             await _repoWrapper.Category.AddAsync(cate);
@@ -69,13 +69,13 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<CategoryObjectResponse> UpdateAsync(int id, CategoryUpdateRequest request)
+        public async Task<CategoryObjectResponse> UpdateAsync(CategoryUpdateRequest request)
         {
             CategoryObjectResponse response = new();
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
+            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == request.Id)
                                                     .FirstOrDefaultAsync();
 
             if (category == null || category.IsInactive)
@@ -96,13 +96,13 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<BaseResponse> DeactiveAsync(int id, BaseRequest request)
+        public async Task<BaseResponse> DeactiveAsync(CategoryRequest request)
         {
             BaseResponse response = new();
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == id)
+            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == request.Id)
                                                       .FirstOrDefaultAsync();
 
             if (category == null || category.IsInactive)
@@ -112,8 +112,7 @@ namespace Inventory.Service.Implement
                 return response;
             }
 
-            category.IsInactive = true;
-            _repoWrapper.Category.Update(category);
+            _repoWrapper.Category.Remove(category);
             await _repoWrapper.SaveAsync();
 
             response.Message = new("Category", "Category deleted!");

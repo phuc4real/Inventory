@@ -51,9 +51,9 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<ExportObjectResponse> GetByIdAsync(int id)
+        public async Task<ExportObjectResponse> GetByIdAsync(ExportRequest request)
         {
-            var cacheKey = "export?id=" + id;
+            var cacheKey = "export?id=" + request.GetQueryString();
             //try get from redis cache
             if (_cacheService.TryGetCacheAsync(cacheKey, out ExportObjectResponse response))
             {
@@ -62,7 +62,7 @@ namespace Inventory.Service.Implement
 
             response = new ExportObjectResponse();
 
-            var export = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive && x.Id == id)
+            var export = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive && x.Id == request.Id)
                                                     .FirstOrDefaultAsync();
             if (export == null)
             {
@@ -78,6 +78,80 @@ namespace Inventory.Service.Implement
             return response;
         }
 
+        public async Task<ExportChartDataResponse> GetChartDataAsync()
+        {
+            var cacheKey = "export.chartdata";
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out ExportChartDataResponse response))
+            {
+                return response;
+            };
+            response = new ExportChartDataResponse();
+
+            var last12Month = DateTime.UtcNow.AddMonths(-11);
+            last12Month = last12Month.AddDays(1 - last12Month.Day);
+
+            var query = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive)
+                .Where(x => x.CreatedAt > last12Month)
+                .GroupBy(x => new { x.CreatedAt.Month, x.CreatedAt.Year })
+                .ToListAsync();
+
+            response.Data = query.Select(x => new ExportChartData
+            {
+                Month = x.Key.Month + "/" + x.Key.Year,
+                Value = x.Count()
+            }).ToList();
+
+            await _cacheService.SetCacheAsync(cacheKey, response);
+            return response;
+        }
+
+        public async Task<BaseResponse> UpdateExportStatusAsync(ExportRequest request)
+        {
+            BaseResponse response = new();
+
+            _repoWrapper.SetUserContext(request.GetUserContext());
+
+            var status = await _repoWrapper.Status
+                .FindByCondition(x => x.Name == StatusConstant.Pending
+                                   || x.Name == StatusConstant.Processing
+                                   || x.Name == StatusConstant.Done)
+                .ToListAsync();
+
+            var export = await _repoWrapper.Export
+                .FindByCondition(x => x.Id == request.Id
+                                   && status.Where(x => x.Name == StatusConstant.Pending
+                                                     || x.Name == StatusConstant.Processing)
+                                   .Select(x => x.Id)
+                                   .Contains(x.StatusId))
+                .FirstOrDefaultAsync();
+
+            if (export == null)
+            {
+                response.StatusCode = ResponseCode.NotFound;
+                response.Message = new("Export", "Export not found");
+                return response;
+            }
+
+            var statusPending = status.Where(x => x.Name == StatusConstant.Pending).Select(x => x.Id).FirstOrDefault();
+            var statusProcessing = status.Where(x => x.Name == StatusConstant.Done).Select(x => x.Id).FirstOrDefault();
+            var statusDone = status.Where(x => x.Name == StatusConstant.Done).Select(x => x.Id).FirstOrDefault();
+
+            if (export.StatusId == statusPending)
+            {
+                export.StatusId = statusProcessing;
+            }
+            else
+            {
+                export.StatusId = statusDone;
+            }
+
+            _repoWrapper.Export.Update(export);
+            await _repoWrapper.SaveAsync();
+            await _cacheService.RemoveCacheTreeAsync("export");
+
+            return response;
+        }
 
         //public async Task<ExportObjectResponse> CreateFromTicket(string adminId, string forUserId, TicketInfoEntity dto)
         //{
@@ -116,81 +190,6 @@ namespace Inventory.Service.Implement
 
         //    return response;
         //}
-
-        public async Task<ExportChartDataResponse> GetChartDataAsync()
-        {
-            var cacheKey = "export.chartdata";
-            //try get from redis cache
-            if (_cacheService.TryGetCacheAsync(cacheKey, out ExportChartDataResponse response))
-            {
-                return response;
-            };
-            response = new ExportChartDataResponse();
-
-            var last12Month = DateTime.UtcNow.AddMonths(-11);
-            last12Month = last12Month.AddDays(1 - last12Month.Day);
-
-            var query = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive)
-                .Where(x => x.CreatedAt > last12Month)
-                .GroupBy(x => new { x.CreatedAt.Month, x.CreatedAt.Year })
-                .ToListAsync();
-
-            response.Data = query.Select(x => new ExportChartData
-            {
-                Month = x.Key.Month + "/" + x.Key.Year,
-                Value = x.Count()
-            }).ToList();
-
-            await _cacheService.SetCacheAsync(cacheKey, response);
-            return response;
-        }
-
-        public async Task<BaseResponse> UpdateExportStatusAsync(int id, BaseRequest request)
-        {
-            BaseResponse response = new();
-
-            _repoWrapper.SetUserContext(request.GetUserContext());
-
-            var status = await _repoWrapper.Status
-                .FindByCondition(x => x.Name == StatusConstant.Pending
-                                   || x.Name == StatusConstant.Processing
-                                   || x.Name == StatusConstant.Done)
-                .ToListAsync();
-
-            var export = await _repoWrapper.Export
-                .FindByCondition(x => x.Id == id
-                                   && status.Where(x => x.Name == StatusConstant.Pending
-                                                     || x.Name == StatusConstant.Processing)
-                                   .Select(x => x.Id)
-                                   .Contains(x.StatusId))
-                .FirstOrDefaultAsync();
-
-            if (export == null)
-            {
-                response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Export", "Export not found");
-                return response;
-            }
-
-            var statusPending = status.Where(x => x.Name == StatusConstant.Pending).Select(x => x.Id).FirstOrDefault();
-            var statusProcessing = status.Where(x => x.Name == StatusConstant.Done).Select(x => x.Id).FirstOrDefault();
-            var statusDone = status.Where(x => x.Name == StatusConstant.Done).Select(x => x.Id).FirstOrDefault();
-
-            if (export.StatusId == statusPending)
-            {
-                export.StatusId = statusProcessing;
-            }
-            else
-            {
-                export.StatusId = statusDone;
-            }
-
-            _repoWrapper.Export.Update(export);
-            await _repoWrapper.SaveAsync();
-            await _cacheService.RemoveCacheTreeAsync("export");
-
-            return response;
-        }
 
         #endregion
     }

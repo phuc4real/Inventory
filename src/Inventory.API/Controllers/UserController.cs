@@ -21,19 +21,28 @@ namespace Inventory.API.Controllers
             _userService = userService;
         }
 
-        [HttpGet("list")]
+        [HttpGet()]
         [ProducesResponseType(typeof(UserPaginationResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetList(PaginationRequest request)
         {
-            var result = await _userService.GetListAsync(request);
+            if (ModelState.IsValid)
+            {
+                var result = await _userService.GetListAsync(request);
 
-            return StatusCode((int)result.StatusCode, result);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
+
         }
 
         [HttpGet("info/{id}")]
         [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> InfoOfId(string id)
+        public async Task<IActionResult> GetInfoOfUserId(string id)
         {
             var result = await _userService.GetByIdAsync(id);
 
