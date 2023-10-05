@@ -10,6 +10,6 @@ namespace Inventory.Service
         Task<ExportObjectResponse> GetByIdAsync(ExportRequest request);
         //Task<ExportObjectResponse> CreateFromTicketAsync(string adminId, string forUserId, TicketInfoEntity dto);
         Task<BaseResponse> UpdateExportStatusAsync(ExportRequest request);
-        Task<ExportChartDataResponse> GetChartDataAsync();
+        Task<ChartDataResponse> GetChartDataAsync();
     }
 }

@@ -77,7 +77,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("chart-data")]
-        [ProducesResponseType(typeof(ExportChartDataResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> ExportDataChart()
         {
             return StatusCode(200, await _exportService.GetChartDataAsync());

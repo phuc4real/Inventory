@@ -8,10 +8,9 @@ namespace Inventory.Service
     {
         Task<OrderPageResponse> GetPaginationAsync(PaginationRequest request);
         Task<OrderObjectResponse> GetByIdAsync(OrderRequest request);
-        Task<OrderObjectResponse> CreateAsync(string token, UpdateOrderInfo dto);
-        Task<ResultResponse> Decide(string token, int id, UpdateDecision decision);
-        Task<ResultResponse> UpdateStatus(string token, int id);
-        Task<ResultResponse> Cancel(string token, int id);
-        Task<ResultResponse<IEnumerable<ResultMessage>>> GetCountByMonth();
+        Task<OrderObjectResponse> CreateAsync(OrderUpdateRequest request);
+        Task<BaseResponse> UpdateOrderStatusAsync(OrderRequest request);
+        Task<BaseResponse> CancelOrderAsync(OrderRequest request);
+        Task<ChartDataResponse> GetOrderChartAsync();
     }
 }

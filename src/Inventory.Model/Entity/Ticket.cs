@@ -4,6 +4,5 @@
     {
         public int Id { get; set; }
         public DateTime? CloseDate { get; set; }
-        public List<TicketRecord>? Records { get; set; }
     }
 }

@@ -1,322 +1,294 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Const;
 using Inventory.Core.Enums;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
+using Inventory.Core.Extensions;
+using Inventory.Model.Entity;
 using Inventory.Repository;
-using Inventory.Repository.Model;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Category;
+using Inventory.Service.DTO.Order;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
 {
-    public class OrderService : IOrderService
+    public class OrderService : BaseService, IOrderService
     {
-        private readonly IOrderRepository _order;
-        private readonly IOrderEntryRepository _orderInfo;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-        private readonly IItemService _itemService;
-        private readonly ITokenService _tokenService;
+        #region Ctor & Field
 
-        public OrderService(
-            IOrderRepository order,
-            IOrderEntryRepository orderInfo,
-            IUnitOfWork unitOfWork,
-            IMapper mapper,
-            IItemService itemService,
-            ITokenService tokenService)
+        public OrderService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
+            : base(repoWrapper, mapper, cacheService)
         {
-            _order = order;
-            _orderInfo = orderInfo;
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-            _itemService = itemService;
-            _tokenService = tokenService;
         }
 
-        public async Task<ResultResponse<IEnumerable<Order>>> GetList()
-        {
-            ResultResponse<IEnumerable<Order>> response = new();
-            var orders = await _order.GetList();
+        #endregion
 
-            if (orders.Any())
-            {
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<Order>>(orders);
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.NoContent;
-            }
-            return response;
-        }
 
-        public async Task<PaginationResponse<Order>> GetPagination(PaginationRequest request)
+        #region Method
+
+        public async Task<OrderPageResponse> GetPaginationAsync(PaginationRequest request)
         {
-            PaginationResponse<Order> response = new()
+            var cacheKey = "order" + request.GetQueryString();
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out OrderPageResponse response))
             {
-                PageIndex = request.PageIndex,
-                PageSize = request.PageSize
+                return response;
             };
 
-            var orders = await _order.GetPagination(request);
+            response = new OrderPageResponse();
 
-            if (orders.Data!.Any())
-            {
-                response.TotalRecords = orders.TotalRecords;
-                response.TotalPages = orders.TotalPages;
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<IEnumerable<Order>>(orders.Data);
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.NoContent;
-            }
+            var listOrder = await (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
+                                   join record in _repoWrapper.OrderRecord.FindAll()
+                                   on order.Id equals record.OrderId
+                                   join status in _repoWrapper.Status.FindAll()
+                                   on record.StatusId equals status.Id
+                                   select new OrderResponse
+                                   {
+                                       OrderId = order.Id,
+                                       RecordId = record.Id,
+                                       Description = record.Description,
+                                       Status = status.Name,
+                                       IsCompleted = order.CompleteDate != null,
+                                       CompletedDate = order.CompleteDate.GetValueOrDefault(),
+                                       CreatedAt = record.CreatedAt,
+                                       CreatedBy = record.CreatedBy,
+                                       UpdatedAt = record.UpdatedAt,
+                                       UpdatedBy = record.UpdatedBy
+                                   })
+                                   .OrderBy(x => x.UpdatedAt)
+                                   .ToListAsync();
 
+            var orders = listOrder.GroupBy(x => x.OrderId).Select(x => x.FirstOrDefault()).ToList();
+
+            response.Count = orders.Count();
+
+            var result = await orders.AsQueryable().Pagination(request).ToListAsync();
+
+            response.Data = _mapper.Map<List<OrderResponse>>(result);
+            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 
-        public async Task<ResultResponse<Order>> Create(string token, UpdateOrderInfo dto)
+        public async Task<OrderObjectResponse> CreateAsync(OrderUpdateRequest request)
         {
-            ResultResponse<Order> response = new();
-            List<OrderDetailEntity> orderDetails = new();
+            OrderObjectResponse response = new();
 
-            var userId = _tokenService.GetuserId(token);
-            long minTotal = 0;
-            long maxTotal = 0;
-
-            var res = await _itemService.Exists(dto.Details!
-                                                .Select(x => x.ItemId).ToList());
-
-            if (res.Status != ResponseCode.Success)
+            //Add Order 
+            var order = new Order()
             {
-                response.Message = res.Message;
-                response.StatusCode = ResponseCode.NotFound;
+                CompleteDate = null
+            };
+
+            await _repoWrapper.Order.AddAsync(order);
+
+            //Add Order record
+            var status = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Pending)
+                                                    .FirstOrDefaultAsync();
+            var record = new OrderRecord()
+            {
+                OrderId = order.Id,
+                Description = request.Description,
+                StatusId = status!.Id,
+            };
+
+            await _repoWrapper.OrderRecord.AddAsync(record);
+
+            //Add Order Entry
+            var entries = _mapper.Map<List<OrderEntry>>(request.OrderEntries);
+
+            entries.ForEach(x => x.RecordId = record.Id);
+
+            await _repoWrapper.OrderEntry.AddRangeAsync(entries);
+
+            await _repoWrapper.SaveAsync();
+
+            response.Data = new OrderResponse()
+            {
+                OrderId = order.Id,
+                RecordId = record.Id,
+                Description = record.Description,
+                Status = status.Name,
+                IsCompleted = order.CompleteDate != null,
+                CompletedDate = order.CompleteDate.GetValueOrDefault(),
+                CreatedAt = record.CreatedAt,
+                CreatedBy = record.CreatedBy,
+                UpdatedAt = record.UpdatedAt,
+                UpdatedBy = record.UpdatedBy
+            };
+
+            await _cacheService.RemoveCacheTreeAsync("order");
+            return response;
+        }
+
+        public async Task<OrderObjectResponse> GetByIdAsync(OrderRequest request)
+        {
+            var cacheKey = "order" + request.GetQueryString();
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out OrderObjectResponse response))
+            {
                 return response;
-            }
+            };
 
-            foreach (var detail in dto.Details!)
-            {
-                bool isMinDetailTotalValid = detail.MinPrice * detail.Quantity == detail.MinTotal;
-                bool isMaxDetailTotalValid = detail.MaxPrice * detail.Quantity == detail.MaxTotal;
+            response = new OrderObjectResponse();
 
-                if (isMinDetailTotalValid && isMaxDetailTotalValid)
-                {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Order Detail", "Detail total not match!");
-                    return response;
-                }
+            var result = await (from record in _repoWrapper.OrderRecord.FindByCondition(x => !x.IsInactive && x.Id == request.RecordId)
+                                join order in _repoWrapper.Order.FindByCondition(x => !x.IsInactive)
+                                on record.OrderId equals order.Id
+                                join status in _repoWrapper.Status.FindAll()
+                                on record.StatusId equals status.Id
+                                select new OrderResponse
+                                {
+                                    OrderId = order.Id,
+                                    RecordId = record.Id,
+                                    Description = record.Description,
+                                    Status = status.Name,
+                                    IsCompleted = order.CompleteDate != null,
+                                    CompletedDate = order.CompleteDate.GetValueOrDefault(),
+                                    CreatedAt = record.CreatedAt,
+                                    CreatedBy = record.CreatedBy,
+                                    UpdatedAt = record.UpdatedAt,
+                                    UpdatedBy = record.UpdatedBy
+                                }).FirstOrDefaultAsync();
 
-                minTotal += detail.MinTotal;
-                maxTotal += detail.MaxTotal;
-                orderDetails.Add(_mapper.Map<OrderDetailEntity>(detail));
-            }
-
-            if (minTotal != dto.MinTotal && maxTotal != dto.MaxTotal)
+            if (result == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Order", "Order total not match!");
+                response.Message = new("Order", "Order not found!");
                 return response;
             }
 
-            OrderInfoEntity orderInfo = new()
+            response.Data = result;
+
+            await _cacheService.SetCacheAsync(cacheKey, response);
+            return response;
+        }
+
+        public async Task<BaseResponse> UpdateOrderStatusAsync(OrderRequest request)
+        {
+            BaseResponse response = new();
+
+            var record = await _repoWrapper.OrderRecord.FindByCondition(x => x.Id == request.RecordId)
+                                                       .FirstOrDefaultAsync();
+
+            if (record == null)
             {
-                Status = OrderStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                MinTotal = dto.MinTotal,
-                MaxTotal = dto.MaxTotal,
-                Description = dto.Description,
-                Details = orderDetails
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = new("Order", "Order not found!");
+
+                return response;
+            }
+
+            var listStatus = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Pending
+                                                                         || x.Name == StatusConstant.Processing
+                                                                         || x.Name == StatusConstant.Done)
+                                                      .ToListAsync();
+
+            var pending = listStatus.Where(x => x.Name == StatusConstant.Pending)
+                                    .FirstOrDefault();
+
+            var processing = listStatus.Where(x => x.Name == StatusConstant.Processing)
+                                       .FirstOrDefault();
+
+            var done = listStatus.Where(x => x.Name == StatusConstant.Done)
+                                 .FirstOrDefault();
+
+            if (record.StatusId == pending.Id)
+            {
+                record.StatusId = processing.Id;
+            }
+
+            if (record.StatusId == processing.Id)
+            {
+                record.StatusId = done.Id;
+
+                //Set order complete date
+                var order = await _repoWrapper.Order.FindByCondition(x => x.Id == record.OrderId)
+                                                    .FirstOrDefaultAsync();
+
+                order.CompleteDate = DateTime.UtcNow;
+                _repoWrapper.Order.Update(order);
+            }
+
+            _repoWrapper.OrderRecord.Update(record);
+
+            await _repoWrapper.SaveAsync();
+
+            response.Message = new("Order", "Update status successfully");
+
+            await _cacheService.RemoveCacheTreeAsync("order");
+            return response;
+        }
+
+        public async Task<BaseResponse> CancelOrderAsync(OrderRequest request)
+        {
+            BaseResponse response = new();
+
+            var record = await _repoWrapper.OrderRecord.FindByCondition(x => x.Id == request.RecordId)
+                                                       .FirstOrDefaultAsync();
+
+            if (record == null)
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = new("Order", "Order not found!");
+
+                return response;
+            }
+
+            var listStatus = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Done
+                                                                         || x.Name == StatusConstant.Cancel)
+                                                      .ToListAsync();
+
+            var cancel = listStatus.Where(x => x.Name == StatusConstant.Cancel)
+                                   .FirstOrDefault();
+
+            var done = listStatus.Where(x => x.Name == StatusConstant.Done)
+                                 .FirstOrDefault();
+
+            if (record.StatusId != done.Id && record.StatusId != cancel.Id)
+            {
+                record.StatusId = cancel.Id;
+                _repoWrapper.OrderRecord.Update(record);
+                await _repoWrapper.SaveAsync();
+
+                response.Message = new("Order", "Order has been canceled");
+
+                await _cacheService.RemoveCacheTreeAsync("order");
+                return response;
+            }
+            response.Message = new("Order", "Cannot cancel order");
+
+            return response;
+        }
+
+        public async Task<ChartDataResponse> GetOrderChartAsync()
+        {
+            var cacheKey = "order.chartdata";
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out ChartDataResponse response))
+            {
+                return response;
             };
 
-            OrderEntity order = new()
+            response = new ChartDataResponse();
+
+            var last12Month = DateTime.UtcNow.AddMonths(-11);
+            last12Month = last12Month.AddDays(1 - last12Month.Day);
+
+            var query = await _repoWrapper.Order.FindByCondition(x => !x.IsInactive)
+                .Where(x => x.CreatedAt > last12Month)
+                .GroupBy(x => new { x.CreatedAt.Month, x.CreatedAt.Year })
+                .ToListAsync();
+
+            response.Data = query.Select(x => new ChartData
             {
-                CreatedDate = DateTime.UtcNow,
-                CreatedById = userId,
-                UpdatedDate = DateTime.UtcNow,
-                UpdatedById = userId,
-                History = new List<OrderInfoEntity>()
-            };
+                Month = x.Key.Month + "/" + x.Key.Year,
+                Value = x.Count()
+            }).ToList();
 
-            order.History.Add(orderInfo);
-
-            await _order.AddAsync(order);
-            await _unitOfWork.SaveAsync();
-
-            response.Data = _mapper.Map<Order>(order);
-            response.StatusCode = ResponseCode.Created;
-            response.Message = new("Order", "Order created!");
+            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 
-        public async Task<ResultResponse<OrderWithHistory>> GetById(int id)
-        {
-            ResultResponse<OrderWithHistory> response = new();
-
-            var order = await _order.GetById(id);
-
-            if (order != null)
-            {
-                response.StatusCode = ResponseCode.Success;
-                response.Data = _mapper.Map<OrderWithHistory>(order);
-            }
-            else
-            {
-                response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Order", "Order not found!");
-            }
-
-            return response;
-        }
-
-        public async Task<ResultResponse> UpdateStatus(string token, int id)
-        {
-            ResultResponse response = new();
-
-            var userId = _tokenService.GetuserId(token);
-
-            var order = await _order.GetById(id);
-            if (order == null)
-            {
-                response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Order", "Order not found!");
-            }
-            else
-            {
-                var orderInfo = order.History!.OrderByDescending(x => x.CreatedAt).First();
-
-                switch (orderInfo.Status)
-                {
-                    case OrderStatus.Pending:
-                        {
-                            orderInfo.Status++;
-                            order.UpdatedDate = DateTime.UtcNow;
-                            order.UpdatedById = userId;
-
-                            _orderInfo.Update(orderInfo);
-                            _order.Update(order);
-                            await _unitOfWork.SaveAsync();
-
-                            response.StatusCode = ResponseCode.Success;
-                            response.Message = new("Order", "Order status changed!");
-                            break;
-                        }
-                    case OrderStatus.Processing:
-                        {
-                            orderInfo.Status++;
-                            order.CompleteDate = DateTime.UtcNow;
-                            order.UpdatedDate = DateTime.UtcNow;
-                            order.UpdatedById = userId;
-
-                            var res = await _itemService.Order(orderInfo.Details!.ToList());
-                            if (res.Status != ResponseCode.Success) return res;
-
-                            _orderInfo.Update(orderInfo);
-                            _order.Update(order);
-                            await _unitOfWork.SaveAsync();
-
-                            response.StatusCode = ResponseCode.Success;
-                            response.Message = new("Order", "Order status changed!");
-                            break;
-                        }
-                    default:
-                        {
-                            response.StatusCode = ResponseCode.BadRequest;
-                            response.Message = new("Order", "Order status cannot change!");
-                            break;
-                        }
-                };
-            }
-            return response;
-        }
-
-        public async Task<ResultResponse> Cancel(string token, int id)
-        {
-            ResultResponse response = new();
-
-            var userId = _tokenService.GetuserId(token);
-
-            var order = await _order.GetById(id);
-            if (order == null)
-            {
-                response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Order", "Order not found!");
-
-            }
-            else
-            {
-                var orderInfo = order.History!.OrderByDescending(x => x.CreatedAt).First();
-
-                if (orderInfo.Status == OrderStatus.Done || orderInfo.Status == OrderStatus.Cancel)
-                {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Order", "Order already cancelled!");
-                }
-                else
-                {
-                    orderInfo.Status = OrderStatus.Cancel;
-                    order.UpdatedDate = DateTime.UtcNow;
-                    order.UpdatedById = userId;
-
-                    _orderInfo.Update(orderInfo);
-                    _order.Update(order);
-                    await _unitOfWork.SaveAsync();
-
-                    response.StatusCode = ResponseCode.Success;
-                    response.Message = new("Order", "Order canceled!");
-                }
-            }
-            return response;
-        }
-
-        public async Task<ResultResponse> Decide(string token, int id, UpdateDecision decision)
-        {
-            ResultResponse response = new();
-
-            var userId = _tokenService.GetuserId(token);
-            var order = await _order.GetById(id);
-
-            if (order == null)
-            {
-                response.StatusCode = ResponseCode.NotFound;
-                response.Message = new("Order", "Order not found!");
-            }
-            else
-            {
-                var orderInfo = order.History!.OrderByDescending(x => x.CreatedAt).First();
-
-                orderInfo.Decision = new()
-                {
-                    Status = decision.Status,
-                    ById = userId,
-                    Date = DateTime.UtcNow,
-                    Message = decision.Message
-                };
-
-                order.UpdatedDate = DateTime.UtcNow;
-                order.UpdatedById = userId;
-
-                _orderInfo.Update(orderInfo);
-                _order.Update(order);
-                await _unitOfWork.SaveAsync();
-
-                response.StatusCode = ResponseCode.Success;
-                response.Message = new("Decision", "Success");
-            }
-
-            return response;
-        }
-
-        public async Task<ResultResponse<IEnumerable<ResultMessage>>> GetCountByMonth()
-        {
-            ResultResponse<IEnumerable<ResultMessage>> response = new()
-            {
-                Status = ResponseCode.Success,
-                Data = await _order.GetCount()
-            };
-
-            return response;
-        }
+        #endregion
     }
 }

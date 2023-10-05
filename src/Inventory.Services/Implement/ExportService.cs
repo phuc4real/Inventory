@@ -16,7 +16,6 @@ namespace Inventory.Service.Implement
 {
     public class ExportService : BaseService, IExportService
     {
-
         #region Ctor & Field
         public ExportService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
             : base(repoWrapper, mapper, cacheService)
@@ -24,7 +23,6 @@ namespace Inventory.Service.Implement
         }
 
         #endregion
-
 
         #region Method
 
@@ -66,7 +64,7 @@ namespace Inventory.Service.Implement
                                                     .FirstOrDefaultAsync();
             if (export == null)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Export", "Not found!");
                 return response;
             }
@@ -78,15 +76,15 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<ExportChartDataResponse> GetChartDataAsync()
+        public async Task<ChartDataResponse> GetChartDataAsync()
         {
             var cacheKey = "export.chartdata";
             //try get from redis cache
-            if (_cacheService.TryGetCacheAsync(cacheKey, out ExportChartDataResponse response))
+            if (_cacheService.TryGetCacheAsync(cacheKey, out ChartDataResponse response))
             {
                 return response;
             };
-            response = new ExportChartDataResponse();
+            response = new ChartDataResponse();
 
             var last12Month = DateTime.UtcNow.AddMonths(-11);
             last12Month = last12Month.AddDays(1 - last12Month.Day);
@@ -96,7 +94,7 @@ namespace Inventory.Service.Implement
                 .GroupBy(x => new { x.CreatedAt.Month, x.CreatedAt.Year })
                 .ToListAsync();
 
-            response.Data = query.Select(x => new ExportChartData
+            response.Data = query.Select(x => new ChartData
             {
                 Month = x.Key.Month + "/" + x.Key.Year,
                 Value = x.Count()
@@ -128,7 +126,7 @@ namespace Inventory.Service.Implement
 
             if (export == null)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Export", "Export not found");
                 return response;
             }
