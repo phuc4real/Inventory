@@ -35,17 +35,13 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             if (ModelState.IsValid)
@@ -54,15 +50,11 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpDelete("logout")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Logout()
         {
             var result = await _authService.SignOutAsync(await HttpContext.GetAccessToken());

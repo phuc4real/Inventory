@@ -9,7 +9,6 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
-		<PackageReference Include="Microsoft.AspNetCore.Routing.Abstractions" />
 	</ItemGroup>
 
 </Project>

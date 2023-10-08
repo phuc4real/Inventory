@@ -1,4 +1,4 @@
-﻿using Inventory.Core.Response;
+﻿using Inventory.Core.Common;
 using Serilog;
 
 namespace Inventory.API.Middleware
@@ -30,7 +30,7 @@ namespace Inventory.API.Middleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-            await context.Response.WriteAsync(new ResponseMessage("Internal Server Error - 500", exception.ToString()).ToString());
+            await context.Response.WriteAsync(new ResultMessage("Internal Server Error - 500", exception.ToString()).ToString());
         }
     }
 

@@ -17,6 +17,9 @@ namespace Inventory.Service.Implement
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
 
+        private readonly string provider = "Inventory Indentity";
+        private readonly string tokenName = "Refresh Token";
+
         public IdentityService(
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
@@ -43,7 +46,7 @@ namespace Inventory.Service.Implement
 
             if (user == null)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("User", "User not exists!");
             }
             else
@@ -116,12 +119,12 @@ namespace Inventory.Service.Implement
 
             if (user == null)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("User", "User not exist!");
             }
             else
             {
-                await _userManager.RemoveAuthenticationTokenAsync(user, "Inventory Indentity", "Refresh Token");
+                await _userManager.RemoveAuthenticationTokenAsync(user, provider, tokenName);
 
                 user.RefreshTokenExpireTime = DateTime.UtcNow;
 
@@ -151,8 +154,8 @@ namespace Inventory.Service.Implement
                 {
                     var user = await _userManager.FindByIdAsync(userId!);
 
-                    var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user, "Inventory Indentity", "Refresh Token");
-                    var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user, "Inventory Indentity", "rs-" + user.Id, refreshToken);
+                    var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user, provider, tokenName);
+                    var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user, provider, "rs-" + user.Id, refreshToken);
                     var curDateTime = DateTime.UtcNow;
 
                     bool isValid = isRefreshTokenValid
@@ -258,9 +261,9 @@ namespace Inventory.Service.Implement
 
             var token = _tokenService.GenerateToken(user, userRoles.ToList());
 
-            var refreshToken = await _userManager.GenerateUserTokenAsync(user, "Inventory Indentity", "rs-" + user.Id);
+            var refreshToken = await _userManager.GenerateUserTokenAsync(user, provider, "rs-" + user.Id);
 
-            await _userManager.SetAuthenticationTokenAsync(user, "Inventory Indentity", "Refresh Token", refreshToken);
+            await _userManager.SetAuthenticationTokenAsync(user, provider, tokenName, refreshToken);
 
             TokenResponse res = new()
             {

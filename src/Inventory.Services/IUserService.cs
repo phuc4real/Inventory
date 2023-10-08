@@ -9,5 +9,6 @@ namespace Inventory.Service
         public Task<UserPaginationResponse> GetListAsync(PaginationRequest request);
         public Task<UserObjectResponse> GetByIdAsync(string id);
         public Task<UserObjectResponse> GetAsync(string token);
+        public Task<UserPermission> CheckRoleOfUser(string userId);
     }
 }

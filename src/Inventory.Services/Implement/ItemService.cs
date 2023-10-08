@@ -80,7 +80,7 @@ namespace Inventory.Service.Implement
                                                     .FirstOrDefaultAsync();
             if (item == null)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Item", "Not found!");
                 return response;
             }
@@ -102,7 +102,7 @@ namespace Inventory.Service.Implement
 
             if (item == null || item.IsInactive)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Item", "Item not exists!");
                 return response;
             }
@@ -133,7 +133,7 @@ namespace Inventory.Service.Implement
 
             if (item == null || item.IsInactive)
             {
-                response.StatusCode = ResponseCode.NotFound;
+                response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Item", "Item not exists!");
                 return response;
             }

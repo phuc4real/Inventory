@@ -13,9 +13,9 @@ using System.Threading.RateLimiting;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Inventory.API.Extensions;
-using Inventory.Service.Common;
 using Inventory.Database.DbContext;
 using Inventory.Core.Configurations;
+using Inventory.Core.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -121,7 +121,6 @@ builder.Services.AddRateLimiter(option =>
         );
     });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -169,6 +168,7 @@ var app = builder.Build();
 //        });
 //}
 app.UseSwagger();
+
 app.UseSwaggerUI(
     options =>
     {
@@ -192,21 +192,25 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    Log.Information("Started Migration");
     try
     {
         var services = scope.ServiceProvider;
         var context = services.GetRequiredService<AppDbContext>();
-
-        if (context.Database.GetPendingMigrations().Any())
+        Log.Information("Trying to connect Db & Get migration");
+        if (!context.Database.GetPendingMigrations().Any())
         {
+            Log.Information("No migration needed!");
+        }
+        else
+        {
+            Log.Information("Started migration!");
             context.Database.Migrate();
         }
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        Log.Error(ex, "Cannot connect to Database Server!");
+        Log.Error("Cannot connect to Database Server!");
     }
 }
-Log.Information("Inventory API started!");
+
 app.Run();

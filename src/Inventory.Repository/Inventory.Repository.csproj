@@ -7,10 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\Inventory.Model\Inventory.Model.csproj" />
 		<ProjectReference Include="..\Shared\Inventory.Database\Inventory.Database.csproj" />
 		<ProjectReference Include="..\Shared\Inventory.Core\Inventory.Core.csproj" />

@@ -8,10 +8,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" />
-		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" />
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
-		<PackageReference Include="Serilog" />
 	</ItemGroup>
 
 	<ItemGroup>

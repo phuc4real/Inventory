@@ -1,14 +1,12 @@
+using Inventory.Database.DbContext;
+using Inventory.Model.Entity;
 using Inventory.Repository;
-using Inventory.Repository.DbContext;
 using Inventory.Repository.Implement;
-using Inventory.Repository.Model;
 using Inventory.Service;
 using Inventory.Service.Implement;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using StackExchange.Redis;
 
@@ -26,7 +24,7 @@ namespace Inventory.API.Extensions
                         builder.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
                 });
 
-            services.AddIdentity<AppUserEntity, IdentityRole>(
+            services.AddIdentity<AppUser, IdentityRole>(
             options =>
             {
                 options.User.RequireUniqueEmail = true;
@@ -38,7 +36,7 @@ namespace Inventory.API.Extensions
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
-            .AddTokenProvider("Inventory", typeof(DataProtectorTokenProvider<AppUserEntity>))
+            .AddTokenProvider("Inventory Indentity", typeof(DataProtectorTokenProvider<AppUser>))
             .AddSignInManager();
 
             return services;
@@ -62,16 +60,17 @@ namespace Inventory.API.Extensions
 
         public static IServiceCollection AddRepository(this IServiceCollection services)
         {
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<ICategoryRepository, CategoryRepository>();
-            services.AddScoped<IItemRepository, ItemRepository>();
-            services.AddScoped<IOrderRepository, OrderRepository>();
-            services.AddScoped<IOrderEntryRepository, OrderEntryRepository>();
-            services.AddScoped<IExportRepository, ExportRepository>();
-            services.AddScoped<ITicketRepository, TicketRepository>();
-            services.AddScoped<ITicketRecordRepository, TicketRecordRepository>();
-            services.AddScoped<ExportEntryRepository, ExportEntryRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
+            //services.AddScoped<IUnitOfWork, UnitOfWork>();
+            //services.AddScoped<ICategoryRepository, CategoryRepository>();
+            //services.AddScoped<IItemRepository, ItemRepository>();
+            //services.AddScoped<IOrderRepository, OrderRepository>();
+            //services.AddScoped<IOrderEntryRepository, OrderEntryRepository>();
+            //services.AddScoped<IExportRepository, ExportRepository>();
+            //services.AddScoped<ITicketRepository, TicketRepository>();
+            //services.AddScoped<ITicketRecordRepository, TicketRecordRepository>();
+            //services.AddScoped<ExportEntryRepository, ExportEntryRepository>();
+            //services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IRepoWrapper, RepoWrapper>();
 
             return services;
         }

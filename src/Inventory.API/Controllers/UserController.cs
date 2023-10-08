@@ -32,16 +32,12 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
-
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpGet("info/{id}")]
         [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetInfoOfUserId(string id)
         {
             var result = await _userService.GetByIdAsync(id);
@@ -51,7 +47,7 @@ namespace Inventory.API.Controllers
 
         [HttpGet("info")]
         [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UserInfo()
         {
             var result = await _userService.GetAsync(await HttpContext.GetAccessToken());

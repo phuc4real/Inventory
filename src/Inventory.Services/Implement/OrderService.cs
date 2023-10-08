@@ -6,7 +6,6 @@ using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
-using Inventory.Service.DTO.Category;
 using Inventory.Service.DTO.Order;
 using Microsoft.EntityFrameworkCore;
 
@@ -60,7 +59,7 @@ namespace Inventory.Service.Implement
 
             var orders = listOrder.GroupBy(x => x.OrderId).Select(x => x.FirstOrDefault()).ToList();
 
-            response.Count = orders.Count();
+            response.Count = orders.Count;
 
             var result = await orders.AsQueryable().Pagination(request).ToListAsync();
 

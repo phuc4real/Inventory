@@ -32,16 +32,12 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(ExportRequest request)
         {
             if (ModelState.IsValid)
@@ -51,16 +47,12 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPut("{id:int}/update-status")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> UpdateStatus(ExportRequest request)
         {
             if (ModelState.IsValid)
@@ -70,13 +62,10 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("chart-data")]
+        [HttpGet("chart")]
         [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> ExportDataChart()
         {

@@ -33,16 +33,12 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpGet("{id:int}")]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Get(CategoryRequest request)
         {
             if (ModelState.IsValid)
@@ -52,10 +48,7 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPost]
@@ -71,17 +64,13 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(CategoryUpdateRequest request)
         {
             if (ModelState.IsValid)
@@ -91,10 +80,7 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
 
@@ -102,7 +88,6 @@ namespace Inventory.API.Controllers
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(CategoryRequest request)
         {
             if (ModelState.IsValid)
@@ -112,10 +97,7 @@ namespace Inventory.API.Controllers
 
                 return StatusCode((int)result.StatusCode, result);
             }
-            else
-            {
-                return BadRequest(ModelState.GetErrorMessages());
-            }
+            return BadRequest(ModelState.GetErrorMessages());
         }
     }
 }

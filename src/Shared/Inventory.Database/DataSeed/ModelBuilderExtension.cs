@@ -104,6 +104,17 @@ namespace Inventory.Database.DataSeed
                 .HasData(new Status { Id = 6, Name = StatusConstant.Done, Description = "Done" });
 
             #endregion
+
+            #region Seed TicketType
+
+            builder.Entity<TicketType>()
+                .HasData(new TicketType { Id = 1, Name = TicketTypeConstant.ChangeItem, Description = "Change the item" });
+            builder.Entity<TicketType>()
+                .HasData(new TicketType { Id = 2, Name = TicketTypeConstant.FixItem, Description = "Fix the item" });
+            builder.Entity<TicketType>()
+                .HasData(new TicketType { Id = 3, Name = TicketTypeConstant.RequestItem, Description = "Request new item" });
+
+            #endregion
         }
     }
 }
