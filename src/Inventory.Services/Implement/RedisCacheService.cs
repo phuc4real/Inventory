@@ -21,7 +21,7 @@ namespace Inventory.Service.Implement
 
         #region Private
 
-        private IDatabase redisDb => _conn.GetDatabase();
+        private IDatabase RedisDb => _conn.GetDatabase();
 
         #endregion
 
@@ -29,14 +29,14 @@ namespace Inventory.Service.Implement
 
         public async Task RemoveCacheAsync(string key)
         {
-            await redisDb.KeyDeleteAsync(key);
+            await RedisDb.KeyDeleteAsync(key);
         }
 
         public async Task RemoveCacheAsync(string[] keys)
         {
             foreach (var key in keys)
             {
-                await redisDb.KeyDeleteAsync(key);
+                await RedisDb.KeyDeleteAsync(key);
             }
         }
 
@@ -55,12 +55,12 @@ namespace Inventory.Service.Implement
         {
             var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
 
-            await redisDb.StringSetAsync(key, bytes, TimeSpan.FromMinutes(10));
+            await RedisDb.StringSetAsync(key, bytes, TimeSpan.FromMinutes(10));
         }
 
         public bool TryGetCacheAsync<T>(string key, out T value)
         {
-            var storedCache = redisDb.StringGetAsync(key).Result;
+            var storedCache = RedisDb.StringGetAsync(key).Result;
 
             value = default!;
 

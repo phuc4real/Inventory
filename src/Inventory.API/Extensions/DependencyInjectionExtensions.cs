@@ -85,7 +85,6 @@ namespace Inventory.API.Extensions
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IExportService, ExportService>();
             services.AddScoped<ITicketService, TicketService>();
-            services.AddScoped<IInUseService, InUseService>();
             services.AddScoped<IRedisCacheService, RedisCacheService>();
             services.AddScoped<IUserService, UserService>();
 
