@@ -1,12 +1,8 @@
-using Inventory.Core.Options;
-using Inventory.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Inventory.Core.Helper;
-using System.Text.Json.Serialization;
-using Inventory.Core.Response;
 using Microsoft.AspNetCore.Mvc;
 using Inventory.API.RateLimits;
 using Microsoft.OpenApi.Models;
@@ -16,15 +12,20 @@ using Inventory.API.Middleware;
 using System.Threading.RateLimiting;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
-using Inventory.Repository.DbContext;
+using Inventory.API.Extensions;
+using Inventory.Database.DbContext;
+using Inventory.Core.Configurations;
+using Inventory.Core.Common;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
 
-builder.Services.AddOptions<JWTOption>()
-                .Bind(builder.Configuration.GetSection(JWTOption.JWTBearer));
+builder.Services.AddOptions<JwtConfig>()
+                .Bind(config.GetSection(JwtConfig.Name));
 
-builder.Services.AddDatabase(builder.Configuration)
-                .AddRedisCache(builder.Configuration)
+
+builder.Services.AddDatabase(config)
+                .AddRedisCache(config)
                 .AddRepository()
                 .AddServices();
 
@@ -42,16 +43,16 @@ builder.Services.AddAuthentication(options =>
                         {
                             ValidateIssuer = true,
                             ValidateAudience = true,
-                            ValidAudience = builder.Configuration["JWTBearer:ValidAudience"],
-                            ValidIssuer = builder.Configuration["JWTBearer:ValidIssuer"],
+                            ValidAudience = config["JWTBearer:ValidAudience"],
+                            ValidIssuer = config["JWTBearer:ValidIssuer"],
                             IssuerSigningKey = new SymmetricSecurityKey(
-                                Encoding.UTF8.GetBytes(builder.Configuration["JWTBearer:SecretKey"]!))
+                                Encoding.UTF8.GetBytes(config["JWTBearer:SecretKey"]!))
                         };
                     });
 //.AddGoogle(googleOptions =>
 //    {
-//        googleOptions.ClientId = builder.Configuration["OAuth:Google:ClientID"]!;
-//        googleOptions.ClientSecret = builder.Configuration["OAuth:Google:Secret"]!;
+//        googleOptions.ClientId = config["OAuth:Google:ClientID"]!;
+//        googleOptions.ClientSecret = config["OAuth:Google:Secret"]!;
 //        googleOptions.SignInScheme = IdentityConstants.ExternalScheme;
 //    });
 
@@ -60,17 +61,17 @@ builder.Services.AddControllers(options =>
         options.Conventions
             .Add(new RouteTokenTransformerConvention(new SlugifyParameterTransformer()));
     })
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-                })
+                //.AddJsonOptions(options =>
+                //{
+                //    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                //})
                 .ConfigureApiBehaviorOptions(options =>
                 {
                     options.InvalidModelStateResponseFactory = (errorContext) =>
                     {
                         var errors = errorContext.ModelState
                             .Where(m => m.Value!.Errors.Any())
-                            .Select(m => new ResponseMessage(
+                            .Select(m => new ResultMessage(
                                 m.Key,
                                 m.Value!.Errors.FirstOrDefault()!.ErrorMessage))
                             .ToList();
@@ -91,7 +92,7 @@ builder.Services.AddRateLimiter(option =>
 
             context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
             context.HttpContext.Response
-                .WriteAsync(new ResponseMessage("Too many request", "Please try again later!!").ToString(), cancellationToken: _);
+                .WriteAsync(new ResultMessage("Too many request", "Please try again later!!").ToString(), cancellationToken: _);
 
             return new ValueTask();
         };
@@ -120,7 +121,6 @@ builder.Services.AddRateLimiter(option =>
         );
     });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
@@ -135,13 +135,13 @@ builder.Services.AddSwaggerGen(options =>
             Scheme = "Bearer"
         });
         options.OperationFilter<AuthorizationOperationFilter>();
-        options.SwaggerDoc("v1", new OpenApiInfo { Title = builder.Configuration["PAppName"], Version = "v1" });
+        options.SwaggerDoc("v1", new OpenApiInfo { Title = config["PAppName"], Version = "v1" });
 
     });
 
 builder.Host.UseSerilog((context, configuration) => configuration.ReadFrom.Configuration(context.Configuration));
 
-var allowedCors = builder.Configuration.GetSection("AllowedCORS").Get<string[]>() ?? Array.Empty<string>();
+var allowedCors = config.GetSection("AllowedCORS").Get<string[]>() ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {
@@ -168,6 +168,7 @@ var app = builder.Build();
 //        });
 //}
 app.UseSwagger();
+
 app.UseSwaggerUI(
     options =>
     {
@@ -191,20 +192,24 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    Log.Information("Started Migration");
     try
     {
         var services = scope.ServiceProvider;
         var context = services.GetRequiredService<AppDbContext>();
-
-        if (context.Database.GetPendingMigrations().Any())
+        Log.Information("Trying to connect Db & Get migration");
+        if (!context.Database.GetPendingMigrations().Any())
         {
+            Log.Information("No migration needed!");
+        }
+        else
+        {
+            Log.Information("Started migration!");
             context.Database.Migrate();
         }
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        Log.Error(ex, "Cannot connect to Database Server!");
+        Log.Error("Cannot connect to Database Server!");
     }
 }
 

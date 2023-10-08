@@ -1,13 +1,10 @@
 ﻿using Inventory.Core.Common;
-using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
-using Inventory.Services.IServices;
+using Inventory.Service;
+using Inventory.Service.Common;
+using Inventory.Service.DTO.Order;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NuGet.Common;
 
 namespace Inventory.API.Controllers
 {
@@ -17,146 +14,99 @@ namespace Inventory.API.Controllers
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
-        private readonly IRedisCacheService _cacheService;
-        private const string redisKey = "Inventory.Order";
 
-        public OrderController(IOrderService orderService, IRedisCacheService cacheService)
+        public OrderController(IOrderService orderService)
         {
             _orderService = orderService;
-            _cacheService = cacheService;
-        }
-
-        [HttpGet("list")]
-        [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> List()
-        {
-            if (_cacheService.TryGetCacheAsync(redisKey + ".ListOrder", out IEnumerable<Order> orders))
-            {
-                return Ok(orders);
-            }
-            else
-            {
-                var result = await _orderService.GetList();
-
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + ".ListOrder", result.Data);
-                    return Ok(result.Data);
-                }
-                return StatusCode((int)result.Status);
-            }
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PaginationResponse<Order>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(OrderPageResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(OrderPageResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
         {
-            var queryString = Request.QueryString.ToString();
-
-            if (_cacheService.TryGetCacheAsync(redisKey + queryString, out PaginationResponse<Order> orders))
+            if (ModelState.IsValid)
             {
-                return Ok(orders);
-            }
-            else
-            {
-                var result = await _orderService.GetPagination(request);
+                request.SetContext(HttpContext);
+                var result = await _orderService.GetPaginationAsync(request);
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + queryString, result);
-                    return Ok(result);
-                }
-                return StatusCode((int)result.Status);
+                return StatusCode((int)result.StatusCode, result);
             }
+
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status201Created)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Create(UpdateOrderInfo dto)
+        [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Create(OrderUpdateRequest request)
         {
-            if (!ModelState.IsValid) { return BadRequest(ModelState.GetErrorMessages()); }
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _orderService.CreateAsync(request);
 
-            var result = await _orderService.Create(await HttpContext.GetAccessToken(), dto);
+                return StatusCode((int)result.StatusCode, result);
+            }
 
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
+            return BadRequest(ModelState.GetErrorMessages());
 
-            return result.Status == ResponseCode.Success ?
-                    Created("order/" + result.Data!.Id, result.Message) : StatusCode((int)result.Status, result.Message);
         }
 
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(int id)
+        [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Get(OrderRequest request)
         {
-            if (_cacheService.TryGetCacheAsync(redisKey + "." + id, out Order order))
+            if (ModelState.IsValid)
             {
-                return Ok(order);
-            }
-            else
-            {
-                var result = await _orderService.GetById(id);
+                request.SetContext(HttpContext);
+                var result = await _orderService.GetByIdAsync(request);
 
-                if (result.Status == ResponseCode.Success)
-                {
-                    await _cacheService.SetCacheAsync(redisKey + "." + id, result.Data);
-                    return Ok(result.Data);
-                }
-                return StatusCode((int)result.Status, result.Message);
+                return StatusCode((int)result.StatusCode, result);
             }
+
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPut("{id:int}/update-status")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateStatus(int id)
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateStatus(OrderRequest request)
         {
-            var result = await _orderService.UpdateStatus(await HttpContext.GetAccessToken(), id);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _orderService.UpdateOrderStatusAsync(request);
 
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
+                return StatusCode((int)result.StatusCode, result);
+            }
 
-            return StatusCode((int)result.Status, result.Message);
-        }
-
-
-        [HttpPost("{id:int}/decide")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Decide(int id, UpdateDecision decision)
-        {
-            var result = await _orderService.Decide(await HttpContext.GetAccessToken(), id, decision);
-
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
-
-            return StatusCode((int)result.Status, result.Message);
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpDelete("{id:int}/cancel")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Cancel(int id)
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Cancel(OrderRequest request)
         {
-            var result = await _orderService.Cancel(await HttpContext.GetAccessToken(), id);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _orderService.CancelOrderAsync(request);
 
-            await _cacheService.RemoveCacheTreeAsync(redisKey);
+                return StatusCode((int)result.StatusCode, result);
+            }
 
-            return StatusCode((int)result.Status, result.Message);
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
 
-        [HttpGet("count-by-month")]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status200OK)]
+        [HttpGet("chart")]
+        [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetCount()
         {
-            var result = await _orderService.GetCountByMonth();
-
-            return StatusCode((int)result.Status, result.Data);
+            return StatusCode(200, await _orderService.GetOrderChartAsync());
         }
     }
 }
