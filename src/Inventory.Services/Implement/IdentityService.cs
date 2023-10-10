@@ -34,15 +34,14 @@ namespace Inventory.Service.Implement
 
         #region Method
 
-        public async Task<TokenObjectResponse> SignInAsync(LoginRequest request)
+        public async Task<IdentityObjectResponse> SignInAsync(LoginRequest request)
         {
-            TokenObjectResponse response = new();
+            IdentityObjectResponse response = new();
 
             //Check if user is input username or email and get user
             var user = IsEmail(request.Username) ?
                 await _userManager.FindByEmailAsync(request.Username) :
                 await _userManager.FindByNameAsync(request.Username);
-
 
             if (user == null)
             {
@@ -55,7 +54,7 @@ namespace Inventory.Service.Implement
 
                 if (result.Succeeded)
                 {
-                    var tokens = await GetJwtToken(user);
+                    var tokens = await GetIdentityResponseAsync(user);
 
                     var refreshTokenExpireTime = DateTime.UtcNow.AddMinutes(60);
 
@@ -111,11 +110,10 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<BaseResponse> SignOutAsync(string token)
+        public async Task<BaseResponse> SignOutAsync(BaseRequest request)
         {
             BaseResponse response = new();
-
-            var user = await _userManager.FindByIdAsync(_tokenService.GetUserId(token));
+            var user = await _userManager.FindByIdAsync(request.GetUserContext());
 
             if (user == null)
             {
@@ -137,51 +135,32 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<TokenObjectResponse> RefreshTokenAsync(string accessToken, string refreshToken)
+        public async Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request, string refreshToken)
         {
-            TokenObjectResponse response = new();
+            IdentityObjectResponse response = new();
 
-            try
+            var user = await _userManager.FindByIdAsync(request.GetUserContext());
+
+            var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user, provider, tokenName);
+            var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user, provider, "rs-" + user.Id, refreshToken);
+            var curDateTime = DateTime.UtcNow;
+
+            bool isValid = isRefreshTokenValid
+                           && curDateTime < user.RefreshTokenExpireTime
+                           && storedRefreshToken == refreshToken;
+
+            if (isValid)
             {
-                var userId = _tokenService.GetUserId(accessToken);
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("AccessToken", "Access Token Invalid!");
-                }
-                else
-                {
-                    var user = await _userManager.FindByIdAsync(userId!);
-
-                    var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user, provider, tokenName);
-                    var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user, provider, "rs-" + user.Id, refreshToken);
-                    var curDateTime = DateTime.UtcNow;
-
-                    bool isValid = isRefreshTokenValid
-                                   && curDateTime < user.RefreshTokenExpireTime
-                                   && storedRefreshToken == refreshToken;
-
-                    if (isValid)
-                    {
-                        response.Data = await GetJwtToken(user);
-                    }
-                    else
-                    {
-                        response.StatusCode = ResponseCode.BadRequest;
-                        response.Message = new("RefreshToken", "Refresh token Invalid!");
-                    }
-                }
-
-                return response;
+                response.Data = await GetIdentityResponseAsync(user);
             }
-            catch (Exception)
+            else
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("AccessToken", "Access token Invalid!");
-
-                return response;
+                response.Message = new("RefreshToken", "Refresh token Invalid!");
             }
+
+
+            return response;
         }
 
         //public AuthenticationProperties CreateAuthenticationProperties(string provider, string returnUrl)
@@ -255,7 +234,7 @@ namespace Inventory.Service.Implement
 
         #region Private
 
-        private async Task<TokenResponse> GetJwtToken(AppUser user)
+        private async Task<UserIdentityResponse> GetIdentityResponseAsync(AppUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
 
@@ -265,8 +244,9 @@ namespace Inventory.Service.Implement
 
             await _userManager.SetAuthenticationTokenAsync(user, provider, tokenName, refreshToken);
 
-            TokenResponse res = new()
+            UserIdentityResponse res = new()
             {
+                UserId = user.Id,
                 AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
                 RefreshToken = refreshToken,
                 ExpireTime = token.ValidTo

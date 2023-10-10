@@ -1,17 +1,18 @@
-﻿using Inventory.Service.Common;
+﻿using Inventory.Core.Common;
+using Inventory.Service.Common;
 using Inventory.Service.DTO.Identity;
 
 namespace Inventory.Service
 {
     public interface IIdentityService
     {
-        public Task<TokenObjectResponse> SignInAsync(LoginRequest request);
+        public Task<IdentityObjectResponse> SignInAsync(LoginRequest request);
 
         public Task<BaseResponse> SignUpAsync(RegisterRequest request);
 
-        public Task<BaseResponse> SignOutAsync(string token);
+        public Task<BaseResponse> SignOutAsync(BaseRequest request);
 
-        public Task<TokenObjectResponse> RefreshTokenAsync(string accessToken, string refreshToken);
+        public Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request, string refreshToken);
 
         //Task<ResultResponse<TokenModel>> ExternalLoginAsync();
 

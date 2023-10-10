@@ -40,7 +40,7 @@ namespace Inventory.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserIdentityResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(LoginRequest request)
         {
@@ -57,7 +57,9 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Logout()
         {
-            var result = await _authService.SignOutAsync(await HttpContext.GetAccessToken());
+            BaseRequest request = new();
+            request.SetContext(HttpContext);
+            var result = await _authService.SignOutAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
         }
@@ -65,11 +67,13 @@ namespace Inventory.API.Controllers
         [AllowAnonymous]
         [HttpPost("refresh")]
         [EnableRateLimiting("RefresshTokenLimit")]
-        [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserIdentityResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RefreshToken()
         {
-            var accessToken = await HttpContext.GetAccessToken();
+            BaseRequest request = new();
+            request.SetContext(HttpContext);
+
             var refreshToken = HttpContext.GetRefreshToken();
 
             if (refreshToken.IsNullOrEmpty())
@@ -77,7 +81,7 @@ namespace Inventory.API.Controllers
                 return BadRequest(new ResultMessage("RefreshToken", "Cannot get refresh token!"));
             }
 
-            var result = await _authService.RefreshTokenAsync(accessToken, refreshToken);
+            var result = await _authService.RefreshTokenAsync(request, refreshToken);
 
             return StatusCode((int)result.StatusCode, result);
         }

@@ -7,12 +7,13 @@ using System.Threading.Tasks;
 
 namespace Inventory.Service.DTO.Identity
 {
-    public class TokenResponse
+    public class UserIdentityResponse
     {
+        public string? UserId { get; set; }
         public string? AccessToken { get; set; }
         public string? RefreshToken { get; set; }
         public DateTime ExpireTime { get; set; }
     }
 
-    public class TokenObjectResponse : ObjectResponse<TokenResponse> { }
+    public class IdentityObjectResponse : ObjectResponse<UserIdentityResponse> { }
 }
