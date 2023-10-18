@@ -43,10 +43,10 @@ builder.Services.AddAuthentication(options =>
                         {
                             ValidateIssuer = true,
                             ValidateAudience = true,
-                            ValidAudience = config["JWTBearer:ValidAudience"],
-                            ValidIssuer = config["JWTBearer:ValidIssuer"],
+                            ValidAudience = config["Bearer:Audience"],
+                            ValidIssuer = config["Bearer:Issuer"],
                             IssuerSigningKey = new SymmetricSecurityKey(
-                                Encoding.UTF8.GetBytes(config["JWTBearer:SecretKey"]!))
+                                Encoding.UTF8.GetBytes(config["Bearer:SecretKey"]!))
                         };
                     });
 //.AddGoogle(googleOptions =>
