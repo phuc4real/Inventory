@@ -247,6 +247,7 @@ namespace Inventory.Service.Implement
             UserIdentityResponse res = new()
             {
                 UserId = user.Id,
+                UserName = user.UserName,
                 AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
                 RefreshToken = refreshToken,
                 ExpireTime = token.ValidTo

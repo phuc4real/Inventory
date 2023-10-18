@@ -39,14 +39,15 @@ namespace Inventory.API.Controllers
             }
         }
 
-        [HttpGet("{id:Guid}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(ItemRequest request)
+        public async Task<IActionResult> Get(int id)
         {
             if (ModelState.IsValid)
             {
+                ItemRequest request = new() { Id = id };
                 request.SetContext(HttpContext);
                 var result = await _itemService.GetByIdAsync(request);
 
@@ -78,15 +79,16 @@ namespace Inventory.API.Controllers
             }
         }
 
-        [HttpPut("{id:Guid}")]
+        [HttpPut("{id}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Update(ItemUpdateRequest request)
+        public async Task<IActionResult> Update(int id, ItemUpdateRequest request)
         {
             if (ModelState.IsValid)
             {
+                request.Id = id;
                 request.SetContext(HttpContext);
                 var result = await _itemService.UpdateAsync(request);
 
@@ -98,15 +100,16 @@ namespace Inventory.API.Controllers
             }
         }
 
-        [HttpDelete("{id:Guid}")]
+        [HttpDelete("{id}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(ItemRequest request)
+        public async Task<IActionResult> Delete(int id)
         {
             if (ModelState.IsValid)
             {
+                ItemRequest request = new() { Id = id };
                 request.SetContext(HttpContext);
                 var result = await _itemService.DeactiveAsync(request);
 

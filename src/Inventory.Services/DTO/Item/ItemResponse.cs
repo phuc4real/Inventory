@@ -25,7 +25,7 @@ namespace Inventory.Service.DTO.Item
         public DateTime UpdatedAt { get; set; }
         public string? UpdatedBy { get; set; }
         public bool IsInactive { get; set; }
-        public DateTime InactiveAt { get; set; }
+        public DateTime? InactiveAt { get; set; }
         public string? InactiveBy { get; set; }
     }
 

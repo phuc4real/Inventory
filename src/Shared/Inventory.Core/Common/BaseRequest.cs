@@ -14,7 +14,7 @@ namespace Inventory.Core.Common
 
         public void SetContext(HttpContext context)
         {
-            _query = context.Request.Query.ToString();
+            _query = context.Request.QueryString.ToString();
 
             if (context.Request.Headers.TryGetValue("X-User-Id", out var userId))
             {

@@ -11,7 +11,7 @@ namespace Inventory.Service.DTO.Export
     {
         public int Id { get; set; }
         public string? Description { get; set; }
-        public int StatusId { get; set; }
+        public string? Status { get; set; }
         public string? ExportFor { get; set; }
 
         public DateTime CreatedAt { get; set; }

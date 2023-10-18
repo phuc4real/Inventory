@@ -53,11 +53,27 @@ namespace Inventory.Service.Implement
 
             response = new ItemPaginationResponse();
 
-            var items = _repoWrapper.Item.FindByCondition(x => x.IsInactive == request.IsInactive);
+            var items = _repoWrapper.Item.FindByCondition(x => x.IsInactive == request.IsInactive)
+                                         .Include(x => x.Category);
 
             response.Count = await items.CountAsync();
 
-            var result = await items.Pagination(request).ToListAsync();
+            List<Item> result = new();
+            if (request.SearchKeyword != null)
+            {
+                var searchString = request.SearchKeyword.ToLower();
+                result = await items.Where(x => x.Name.ToLower().Contains(searchString)
+                                             || x.Category.Name.ToLower().Contains(searchString)
+                                             || x.Code.ToLower().Contains(searchString))
+                                    .Pagination(request)
+                                    .ToListAsync();
+            }
+            else
+            {
+                result = await items.Pagination(request)
+                                    .ToListAsync();
+            }
+
 
             response.Data = _mapper.Map<List<ItemResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
@@ -142,7 +158,7 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Message = new("Item", "Item deleted!");
-            await _cacheService.RemoveCacheAsync("item");
+            await _cacheService.RemoveCacheTreeAsync("item");
             return response;
         }
 

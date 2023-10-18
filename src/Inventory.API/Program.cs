@@ -104,7 +104,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 300,
+                    PermitLimit = 500,
                     Window = TimeSpan.FromMinutes(1)
                 });
             }),
@@ -114,7 +114,7 @@ builder.Services.AddRateLimiter(option =>
                 return RateLimitPartition.GetFixedWindowLimiter(userAgent, opt => new FixedWindowRateLimiterOptions
                 {
                     AutoReplenishment = true,
-                    PermitLimit = 20000,
+                    PermitLimit = 25000,
                     Window = TimeSpan.FromMinutes(60)
                 });
             })

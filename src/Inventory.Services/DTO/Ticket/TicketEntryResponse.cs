@@ -12,7 +12,7 @@ namespace Inventory.Service.DTO.Ticket
     {
         public int Id { get; set; }
         public int RecordId { get; set; }
-        public ItemResponse? Item { get; set; }
+        public ItemCompactResponse? Item { get; set; }
         public int Quantity { get; set; }
         public string? Note { get; set; }
     }

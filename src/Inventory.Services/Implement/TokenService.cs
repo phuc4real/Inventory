@@ -3,6 +3,7 @@ using Inventory.Model.Entity;
 using Inventory.Service.Common;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -39,6 +40,7 @@ namespace Inventory.Service.Implement
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.SecretKey));
 
+            Log.Information(_config.ExpireMinutes.ToString());
             var token = new JwtSecurityToken(
                  audience: _config.Audience,
                  issuer: _config.Issuer,

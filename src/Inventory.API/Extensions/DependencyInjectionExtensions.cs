@@ -4,11 +4,13 @@ using Inventory.Repository;
 using Inventory.Repository.Implement;
 using Inventory.Service;
 using Inventory.Service.Implement;
+using Inventory.Service.MappingProfile;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Serilog;
 using StackExchange.Redis;
+using System.Reflection;
 
 namespace Inventory.API.Extensions
 {
@@ -77,7 +79,7 @@ namespace Inventory.API.Extensions
 
         public static IServiceCollection AddServices(this IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(DependencyInjectionExtensions).Assembly);
+            services.AddAutoMapper(typeof(AutoMapperConfig));
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ICategoryService, CategoryService>();
