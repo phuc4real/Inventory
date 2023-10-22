@@ -36,7 +36,7 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Get(CategoryRequest request)
@@ -67,7 +67,7 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}")]
+        [HttpPut("{id}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
@@ -84,14 +84,15 @@ namespace Inventory.API.Controllers
         }
 
 
-        [HttpDelete("{id:int}")]
+        [HttpDelete("{id}")]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Delete(CategoryRequest request)
+        public async Task<IActionResult> Delete(int id)
         {
             if (ModelState.IsValid)
             {
+                var request = new CategoryRequest { Id = id };
                 request.SetContext(HttpContext);
                 var result = await _categoryService.DeactiveAsync(request);
 

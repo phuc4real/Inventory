@@ -116,7 +116,7 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Message = new("Category", "Category deleted!");
-            await _cacheService.RemoveCacheAsync("category");
+            await _cacheService.RemoveCacheTreeAsync("category");
             return response;
         }
 
@@ -135,7 +135,20 @@ namespace Inventory.Service.Implement
 
             response.Count = await categories.CountAsync();
 
-            var result = await categories.Pagination(request).ToListAsync();
+            List<Category> result = new();
+            if (request.SearchKeyword != null)
+            {
+                var searchString = request.SearchKeyword.ToLower();
+                result = await categories.Where(x => x.Name.ToLower().Contains(searchString))
+                                    .Pagination(request)
+                                    .ToListAsync();
+            }
+            else
+            {
+                result = await categories.Pagination(request)
+                                    .ToListAsync();
+            }
+
 
             response.Data = _mapper.Map<List<CategoryResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);

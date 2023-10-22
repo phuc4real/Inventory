@@ -74,7 +74,6 @@ namespace Inventory.Service.Implement
                                     .ToListAsync();
             }
 
-
             response.Data = _mapper.Map<List<ItemResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
 
@@ -93,7 +92,8 @@ namespace Inventory.Service.Implement
             response = new ItemObjectResponse();
 
             var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id.Value)
-                                                    .FirstOrDefaultAsync();
+                                              .Include(x => x.Category)
+                                              .FirstOrDefaultAsync();
             if (item == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;

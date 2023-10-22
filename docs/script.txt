@@ -1,0 +1,2 @@
+Add migration: 
+dotnet ef --startup-project .\Inventory.API\Inventory.API.csproj migrations add initInventoryDb --context AppDbContext --output-dir Migrations --project .\Shared\Inventory.Database\Inventory.Database.csprojs
