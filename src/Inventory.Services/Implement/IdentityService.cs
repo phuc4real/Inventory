@@ -1,4 +1,5 @@
-﻿using Inventory.Core.Common;
+﻿using Azure.Core;
+using Inventory.Core.Common;
 using Inventory.Core.Enums;
 using Inventory.Model.Entity;
 using Inventory.Service.Common;
@@ -135,11 +136,13 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request, string refreshToken)
+        public async Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request)
         {
             IdentityObjectResponse response = new();
 
             var user = await _userManager.FindByIdAsync(request.GetUserContext());
+
+            var (accesToken, refreshToken) = request.GetFullToken();
 
             var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user, provider, tokenName);
             var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user, provider, "rs-" + user.Id, refreshToken);

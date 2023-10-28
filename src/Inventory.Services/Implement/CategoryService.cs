@@ -133,8 +133,6 @@ namespace Inventory.Service.Implement
 
             var categories = _repoWrapper.Category.FindByCondition(x => x.IsInactive == request.IsInactive);
 
-            response.Count = await categories.CountAsync();
-
             List<Category> result = new();
             if (request.SearchKeyword != null)
             {
@@ -149,7 +147,7 @@ namespace Inventory.Service.Implement
                                     .ToListAsync();
             }
 
-
+            response.Count = result.Count();
             response.Data = _mapper.Map<List<CategoryResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;

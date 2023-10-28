@@ -8,6 +8,6 @@ namespace Inventory.Service
     public interface ITokenService
     {
         public SecurityToken GenerateToken(AppUser user, List<string> userRoles);
-        public string? GetUserId(string token);
+        public string? GetUserNameFromToken(string token);
     }
 }

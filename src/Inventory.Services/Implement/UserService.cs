@@ -53,11 +53,12 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<UserObjectResponse> GetAsync(string token)
+        public async Task<UserObjectResponse> GetAsync(BaseRequest request)
         {
             UserObjectResponse response = new();
 
-            var user = await _userManager.FindByIdAsync(_tokenService.GetUserId(token));
+            var userName = _tokenService.GetUserNameFromToken(request.GetToken());
+            var user = await _userManager.FindByNameAsync(userName);
 
             if (user == null)
             {

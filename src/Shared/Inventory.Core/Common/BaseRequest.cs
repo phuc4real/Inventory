@@ -10,7 +10,9 @@ namespace Inventory.Core.Common
     public class BaseRequest
     {
         private string? _userContext;
+        private string? _accessToken;
         private string? _query;
+        private string? _refreshToken;
 
         public void SetContext(HttpContext context)
         {
@@ -20,9 +22,15 @@ namespace Inventory.Core.Common
             {
                 _userContext = userId;
             }
-            else
+
+            if (context.Request.Headers.TryGetValue("Authorization", out var accessToken))
             {
-                throw new Exception("Cannot get x-user-id header");
+                _accessToken = accessToken.ToString().Replace("Bearer ", "");
+            }
+
+            if (context.Request.Headers.TryGetValue("X-Token-Refresh", out var refreshToken))
+            {
+                _refreshToken = refreshToken;
             }
         }
 
@@ -34,6 +42,16 @@ namespace Inventory.Core.Common
         public string? GetQueryString()
         {
             return _query;
+        }
+
+        public string? GetToken()
+        {
+            return _accessToken;
+        }
+
+        public (string?, string?) GetFullToken()
+        {
+            return (_accessToken, _refreshToken);
         }
     }
 }

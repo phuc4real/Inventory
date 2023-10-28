@@ -56,8 +56,6 @@ namespace Inventory.Service.Implement
             var items = _repoWrapper.Item.FindByCondition(x => x.IsInactive == request.IsInactive)
                                          .Include(x => x.Category);
 
-            response.Count = await items.CountAsync();
-
             List<Item> result = new();
             if (request.SearchKeyword != null)
             {
@@ -74,6 +72,7 @@ namespace Inventory.Service.Implement
                                     .ToListAsync();
             }
 
+            response.Count = result.Count();
             response.Data = _mapper.Map<List<ItemResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
 

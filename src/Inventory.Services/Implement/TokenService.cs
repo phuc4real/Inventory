@@ -33,10 +33,6 @@ namespace Inventory.Service.Implement
             };
 
             userRoles.ForEach(x => claims.Add(new Claim(ClaimTypes.Role, x)));
-            //foreach (var role in userRoles)
-            //{
-            //    claims.Add(new Claim(ClaimTypes.Role, role));
-            //}
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.SecretKey));
 
@@ -51,7 +47,7 @@ namespace Inventory.Service.Implement
             return token;
         }
 
-        public string? GetUserId(string token)
+        public string? GetUserNameFromToken(string token)
         {
             if (string.IsNullOrEmpty(token))
             {
@@ -60,7 +56,7 @@ namespace Inventory.Service.Implement
 
             var principal = GetPrincipalFromToken(token);
 
-            return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            return principal.FindFirstValue(ClaimTypes.Name)!;
         }
 
         #endregion

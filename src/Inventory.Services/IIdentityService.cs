@@ -12,7 +12,7 @@ namespace Inventory.Service
 
         public Task<BaseResponse> SignOutAsync(BaseRequest request);
 
-        public Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request, string refreshToken);
+        public Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request);
 
         //Task<ResultResponse<TokenModel>> ExternalLoginAsync();
 

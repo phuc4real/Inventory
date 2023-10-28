@@ -1,4 +1,6 @@
 ﻿using Inventory.Database.DbContext;
+using Inventory.Model.Entity;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +15,12 @@ namespace Inventory.Repository.Implement
 
         private readonly AppDbContext _context;
         private string? _userContext;
-        public RepoWrapper(AppDbContext context) => _context = context;
+        private UserManager<AppUser> _userManager;
+        public RepoWrapper(AppDbContext context, UserManager<AppUser> userManager)
+        {
+            _context = context;
+            _userManager = userManager;
+        }
 
         #endregion
 
@@ -165,6 +172,14 @@ namespace Inventory.Repository.Implement
                 _ticketType ??= new TicketTypeRepository(_context);
                 _ticketType.SetUserContext(_userContext);
                 return _ticketType;
+            }
+        }
+
+        public IQueryable<AppUser> User
+        {
+            get
+            {
+                return _userManager.Users;
             }
         }
 

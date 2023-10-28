@@ -71,14 +71,7 @@ namespace Inventory.API.Controllers
             BaseRequest request = new();
             request.SetContext(HttpContext);
 
-            var refreshToken = HttpContext.GetRefreshToken();
-
-            if (refreshToken.IsNullOrEmpty())
-            {
-                return BadRequest(new ResultMessage("RefreshToken", "Cannot get refresh token!"));
-            }
-
-            var result = await _authService.RefreshTokenAsync(request, refreshToken);
+            var result = await _authService.RefreshTokenAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
         }

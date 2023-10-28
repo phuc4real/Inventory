@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Model.Entity;
-using Inventory.Service.DTO.Export;
+using Inventory.Service.DTO.Order;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace Inventory.Service.MappingProfile
     {
         public OrderMapping()
         {
-
+            CreateMap<Order,OrderResponse>();
         }
 
     }

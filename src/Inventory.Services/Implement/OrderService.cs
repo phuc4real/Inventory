@@ -36,33 +36,64 @@ namespace Inventory.Service.Implement
 
             response = new OrderPageResponse();
 
-            var listOrder = await (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
-                                   join record in _repoWrapper.OrderRecord.FindAll()
-                                   on order.Id equals record.OrderId
-                                   join status in _repoWrapper.Status.FindAll()
-                                   on record.StatusId equals status.Id
-                                   select new OrderResponse
-                                   {
-                                       OrderId = order.Id,
-                                       RecordId = record.Id,
-                                       Description = record.Description,
-                                       Status = status.Name,
-                                       IsCompleted = order.CompleteDate != null,
-                                       CompletedDate = order.CompleteDate.GetValueOrDefault(),
-                                       CreatedAt = record.CreatedAt,
-                                       CreatedBy = record.CreatedBy,
-                                       UpdatedAt = record.UpdatedAt,
-                                       UpdatedBy = record.UpdatedBy
-                                   })
-                                   .OrderBy(x => x.UpdatedAt)
-                                   .ToListAsync();
+            var orderQuery = (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
+                              join record in _repoWrapper.OrderRecord.FindAll()
+                              on order.Id equals record.OrderId
+                              join status in _repoWrapper.Status.FindAll()
+                              on record.StatusId equals status.Id
 
-            var orders = listOrder.GroupBy(x => x.OrderId).Select(x => x.FirstOrDefault()).ToList();
+                              join entry in _repoWrapper.OrderEntry.FindAll()
+                              on record.Id equals entry.RecordId
+                              join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
+                              on entry.ItemId equals item.Id
 
-            response.Count = orders.Count;
+                              join u1 in _repoWrapper.User
+                              on record.CreatedBy equals u1.Id into left1
+                              from createdby in left1.DefaultIfEmpty()
+                              join u2 in _repoWrapper.User
+                              on record.UpdatedBy equals u2.Id into left2
+                              from updatedby in left2.DefaultIfEmpty()
+                              select new
+                              {
+                                  ItemName = item.Name,
+                                  OrderId = order.Id,
+                                  RecordId = record.Id,
+                                  Description = record.Description,
+                                  Status = status.Description,
+                                  IsCompleted = order.CompleteDate != null,
+                                  CompletedDate = order.CompleteDate.GetValueOrDefault(),
+                                  CreatedAt = record.CreatedAt,
+                                  CreatedBy = createdby.FirstName + " " + createdby.LastName,
+                                  UpdatedAt = record.UpdatedAt,
+                                  UpdatedBy = updatedby.FirstName + " " + updatedby.LastName
+                              }).Pagination(request);
 
-            var result = await orders.AsQueryable().Pagination(request).ToListAsync();
+            if (request.SearchKeyword != null)
+            {
+                var search = request.SearchKeyword.ToLower();
+                orderQuery = orderQuery.Where(x => x.OrderId.ToString().Contains(search)
+                                  || x.ItemName.ToLower().Contains(search));
+            }
 
+            var listOrder = await orderQuery.Select(x => new OrderResponse()
+            {
+                OrderId = x.OrderId,
+                RecordId = x.RecordId,
+                Description = x.Description,
+                Status = x.Status,
+                IsCompleted = x.IsCompleted,
+                CompletedDate = x.CompletedDate,
+                CreatedAt = x.CreatedAt,
+                CreatedBy = x.CreatedBy,
+                UpdatedAt = x.UpdatedAt,
+                UpdatedBy = x.UpdatedBy
+            }).ToListAsync();
+
+            var result = listOrder.GroupBy(x => x.OrderId)
+                                  .Select(x => x.OrderByDescending(x => x.UpdatedAt)
+                                                .FirstOrDefault());
+
+            response.Count = result.Count();
             response.Data = _mapper.Map<List<OrderResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;

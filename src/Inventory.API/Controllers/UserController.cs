@@ -50,7 +50,9 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UserInfo()
         {
-            var result = await _userService.GetAsync(await HttpContext.GetAccessToken());
+            var request = new BaseRequest();
+            request.SetContext(HttpContext);
+            var result = await _userService.GetAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
         }
