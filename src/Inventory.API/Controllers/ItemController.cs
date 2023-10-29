@@ -59,6 +59,26 @@ namespace Inventory.API.Controllers
             }
         }
 
+        [HttpGet("{id}/compact")]
+        [ProducesResponseType(typeof(ItemCompactResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ItemCompactResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetCompactItem(int id)
+        {
+            if (ModelState.IsValid)
+            {
+                ItemRequest request = new() { Id = id };
+                request.SetContext(HttpContext);
+                var result = await _itemService.GetByIdCompactAsync(request);
+
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+            {
+                return BadRequest(ModelState.GetErrorMessages());
+            }
+        }
+
         [HttpPost]
         [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status201Created)]

@@ -8,6 +8,7 @@ namespace Inventory.Service
     {
         Task<ItemPaginationResponse> GetPaginationAsync(PaginationRequest request);
         Task<ItemObjectResponse> GetByIdAsync(ItemRequest request);
+        Task<ItemCompactObjectResponse> GetByIdCompactAsync(ItemRequest request);
         Task<ItemObjectResponse> CreateAsync(ItemUpdateRequest request);
         Task<ItemObjectResponse> UpdateAsync(ItemUpdateRequest request);
         Task<BaseResponse> DeactiveAsync(ItemRequest request);

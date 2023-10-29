@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Const;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
@@ -37,14 +38,14 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Data = _mapper.Map<ItemResponse>(item);
-
-            await _cacheService.RemoveCacheTreeAsync("item");
+            response.Message = new ResultMessage("Created", "Item create successfully!");
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
             return response;
         }
 
         public async Task<ItemPaginationResponse> GetPaginationAsync(PaginationRequest request)
         {
-            var cacheKey = "item" + request.GetQueryString();
+            var cacheKey = CacheNameConstant.ItemPagination + request.GetQueryString();
             //try get from redis cache
             if (_cacheService.TryGetCacheAsync(cacheKey, out ItemPaginationResponse response))
             {
@@ -53,26 +54,25 @@ namespace Inventory.Service.Implement
 
             response = new ItemPaginationResponse();
 
-            var items = _repoWrapper.Item.FindByCondition(x => x.IsInactive == request.IsInactive)
-                                         .Include(x => x.Category);
+            var items = _repoWrapper.Item.FindByCondition(x => x.IsInactive == request.IsInactive);
 
-            List<Item> result = new();
             if (request.SearchKeyword != null)
             {
                 var searchString = request.SearchKeyword.ToLower();
-                result = await items.Where(x => x.Name.ToLower().Contains(searchString)
-                                             || x.Category.Name.ToLower().Contains(searchString)
-                                             || x.Code.ToLower().Contains(searchString))
-                                    .Pagination(request)
-                                    .ToListAsync();
-            }
-            else
-            {
-                result = await items.Pagination(request)
-                                    .ToListAsync();
+                items = items.Where(x => x.Name.ToLower().Contains(searchString)
+                                      || x.Category.Name.ToLower().Contains(searchString)
+                                      || x.Code.ToLower().Contains(searchString));
             }
 
-            response.Count = result.Count();
+
+            response.Count = await items.CountAsync();
+            var result = await items.OrderByDescending(x => x.UpdatedAt)
+                                    .Include(x => x.Category)
+                                    .Pagination(request)
+                                    .ToListAsync();
+
+
+
             response.Data = _mapper.Map<List<ItemResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
 
@@ -81,7 +81,7 @@ namespace Inventory.Service.Implement
 
         public async Task<ItemObjectResponse> GetByIdAsync(ItemRequest request)
         {
-            var cacheKey = "item?id=" + request.Id!.Value;
+            var cacheKey = CacheNameConstant.Item + request.Id!.Value;
             //try get from redis cache
             if (_cacheService.TryGetCacheAsync(cacheKey, out ItemObjectResponse response))
             {
@@ -101,6 +101,33 @@ namespace Inventory.Service.Implement
             }
 
             response.Data = _mapper.Map<ItemResponse>(item);
+
+            await _cacheService.SetCacheAsync(cacheKey, response);
+            return response;
+        }
+
+        public async Task<ItemCompactObjectResponse> GetByIdCompactAsync(ItemRequest request)
+        {
+            var cacheKey = CacheNameConstant.ItemCompact + request.Id!.Value;
+            //try get from redis cache
+            if (_cacheService.TryGetCacheAsync(cacheKey, out ItemCompactObjectResponse response))
+            {
+                return response;
+            };
+
+            response = new ItemCompactObjectResponse();
+
+            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id.Value)
+                                              .Include(x => x.Category)
+                                              .FirstOrDefaultAsync();
+            if (item == null)
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = new("Item", "Not found!");
+                return response;
+            }
+
+            response.Data = _mapper.Map<ItemCompactResponse>(item);
 
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
@@ -133,7 +160,8 @@ namespace Inventory.Service.Implement
 
             response.Data = _mapper.Map<ItemResponse>(item);
 
-            await _cacheService.RemoveCacheTreeAsync("item");
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
+            await _cacheService.RemoveCacheAsync(CacheNameConstant.Item + item.Id);
             return response;
         }
 
@@ -157,7 +185,8 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Message = new("Item", "Item deleted!");
-            await _cacheService.RemoveCacheTreeAsync("item");
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
+            await _cacheService.RemoveCacheAsync(CacheNameConstant.Item + item.Id);
             return response;
         }
 

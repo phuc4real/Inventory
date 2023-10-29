@@ -7,6 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Inventory.Service.Common;
 using Inventory.Core.Common;
 using Inventory.Core.Extensions;
+using System.Linq;
+using Inventory.Core.Const;
 
 namespace Inventory.Service.Implement
 {
@@ -26,7 +28,7 @@ namespace Inventory.Service.Implement
 
         public async Task<CategoryObjectResponse> GetByIdAsync(CategoryRequest request)
         {
-            var cacheKey = "category?id=" + request.GetQueryString();
+            var cacheKey = CacheNameConstant.Category + request.GetQueryString();
             //try get from redis cache
             if (_cacheService.TryGetCacheAsync(cacheKey, out CategoryObjectResponse response))
             {
@@ -65,7 +67,7 @@ namespace Inventory.Service.Implement
 
             response.Data = _mapper.Map<CategoryResponse>(cate);
 
-            await _cacheService.RemoveCacheTreeAsync("category");
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.CategoruPagination);
             return response;
         }
 
@@ -87,12 +89,14 @@ namespace Inventory.Service.Implement
             }
 
             category.Name = request.Name;
+            category.Description = request.Description;
             _repoWrapper.Category.Update(category);
             await _repoWrapper.SaveAsync();
 
             response.Data = _mapper.Map<CategoryResponse>(category);
 
-            await _cacheService.RemoveCacheTreeAsync("category");
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.Category + category.Id);
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.CategoruPagination);
             return response;
         }
 
@@ -116,13 +120,14 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Message = new("Category", "Category deleted!");
-            await _cacheService.RemoveCacheTreeAsync("category");
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.Category + category.Id);
+            await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.CategoruPagination);
             return response;
         }
 
         public async Task<CategoryPaginationResponse> GetPaginationAsync(PaginationRequest request)
         {
-            var cacheKey = "category" + request.GetQueryString();
+            var cacheKey = CacheNameConstant.CategoruPagination + request.GetQueryString();
             //try get from redis cache
             if (_cacheService.TryGetCacheAsync(cacheKey, out CategoryPaginationResponse response))
             {
@@ -133,21 +138,19 @@ namespace Inventory.Service.Implement
 
             var categories = _repoWrapper.Category.FindByCondition(x => x.IsInactive == request.IsInactive);
 
-            List<Category> result = new();
             if (request.SearchKeyword != null)
             {
                 var searchString = request.SearchKeyword.ToLower();
-                result = await categories.Where(x => x.Name.ToLower().Contains(searchString))
-                                    .Pagination(request)
-                                    .ToListAsync();
-            }
-            else
-            {
-                result = await categories.Pagination(request)
-                                    .ToListAsync();
-            }
+                categories = categories.Where(x => x.Name.ToLower().Contains(searchString)
+                                                || x.Description.ToLower().Contains(searchString));
 
-            response.Count = result.Count();
+            }
+            response.Count = await categories.CountAsync();
+
+            var result = await categories.OrderByDescending(x => x.UpdatedAt)
+                                         .Pagination(request)
+                                         .ToListAsync();
+
             response.Data = _mapper.Map<List<CategoryResponse>>(result);
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;

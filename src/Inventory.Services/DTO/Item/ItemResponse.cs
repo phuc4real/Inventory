@@ -17,6 +17,7 @@ namespace Inventory.Service.DTO.Item
         public string? ImageUrl { get; set; }
         public int Unit { get; set; }
         public int UseUnit { get; set; }
+        public int CategoryId { get; set; }
         public CategoryResponse? Category { get; set; }
 
 

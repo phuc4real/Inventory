@@ -27,14 +27,7 @@ namespace Inventory.Service.Implement
 
         public async Task<OrderPageResponse> GetPaginationAsync(PaginationRequest request)
         {
-            var cacheKey = "order" + request.GetQueryString();
-            //try get from redis cache
-            if (_cacheService.TryGetCacheAsync(cacheKey, out OrderPageResponse response))
-            {
-                return response;
-            };
-
-            response = new OrderPageResponse();
+            var response = new OrderPageResponse();
 
             var orderQuery = (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
                               join record in _repoWrapper.OrderRecord.FindAll()
@@ -95,7 +88,6 @@ namespace Inventory.Service.Implement
 
             response.Count = result.Count();
             response.Data = _mapper.Map<List<OrderResponse>>(result);
-            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 
@@ -146,20 +138,12 @@ namespace Inventory.Service.Implement
                 UpdatedBy = record.UpdatedBy
             };
 
-            await _cacheService.RemoveCacheTreeAsync("order");
             return response;
         }
 
         public async Task<OrderObjectResponse> GetByIdAsync(OrderRequest request)
         {
-            var cacheKey = "order" + request.GetQueryString();
-            //try get from redis cache
-            if (_cacheService.TryGetCacheAsync(cacheKey, out OrderObjectResponse response))
-            {
-                return response;
-            };
-
-            response = new OrderObjectResponse();
+            var response = new OrderObjectResponse();
 
             var result = await (from record in _repoWrapper.OrderRecord.FindByCondition(x => !x.IsInactive && x.Id == request.RecordId)
                                 join order in _repoWrapper.Order.FindByCondition(x => !x.IsInactive)
@@ -189,7 +173,6 @@ namespace Inventory.Service.Implement
 
             response.Data = result;
 
-            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 
@@ -245,7 +228,6 @@ namespace Inventory.Service.Implement
 
             response.Message = new("Order", "Update status successfully");
 
-            await _cacheService.RemoveCacheTreeAsync("order");
             return response;
         }
 
@@ -282,7 +264,6 @@ namespace Inventory.Service.Implement
 
                 response.Message = new("Order", "Order has been canceled");
 
-                await _cacheService.RemoveCacheTreeAsync("order");
                 return response;
             }
             response.Message = new("Order", "Cannot cancel order");
@@ -292,14 +273,7 @@ namespace Inventory.Service.Implement
 
         public async Task<ChartDataResponse> GetOrderChartAsync()
         {
-            var cacheKey = "order.chartdata";
-            //try get from redis cache
-            if (_cacheService.TryGetCacheAsync(cacheKey, out ChartDataResponse response))
-            {
-                return response;
-            };
-
-            response = new ChartDataResponse();
+            var response = new ChartDataResponse();
 
             var last12Month = DateTime.UtcNow.AddMonths(-11);
             last12Month = last12Month.AddDays(1 - last12Month.Day);
@@ -315,7 +289,6 @@ namespace Inventory.Service.Implement
                 Value = x.Count()
             }).ToList();
 
-            await _cacheService.SetCacheAsync(cacheKey, response);
             return response;
         }
 

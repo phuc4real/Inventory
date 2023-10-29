@@ -38,7 +38,7 @@ namespace Inventory.API.Extensions
             })
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders()
-            .AddTokenProvider("Inventory Indentity", typeof(DataProtectorTokenProvider<AppUser>))
+            .AddTokenProvider("Inventory Identity", typeof(DataProtectorTokenProvider<AppUser>))
             .AddSignInManager();
 
             return services;

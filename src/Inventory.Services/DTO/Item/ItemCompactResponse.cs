@@ -1,4 +1,5 @@
-﻿using Inventory.Service.DTO.Category;
+﻿using Inventory.Service.Common;
+using Inventory.Service.DTO.Category;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,4 +15,6 @@ namespace Inventory.Service.DTO.Item
         public string? Name { get; set; }
         public string? ImageUrl { get; set; }
     }
+    public class ItemCompactObjectResponse : ObjectResponse<ItemCompactResponse> { }
+
 }

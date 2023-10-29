@@ -92,6 +92,8 @@ namespace Inventory.Repository.Implement
             var entityType = entity.GetType();
             entityType.GetProperty("CreatedAt")?.SetValue(entity, DateTime.UtcNow);
             entityType.GetProperty("CreatedBy")?.SetValue(entity, userId);
+            entityType.GetProperty("UpdatedAt")?.SetValue(entity, DateTime.UtcNow);
+            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userId);
         }
 
         private void BeforeUpdate(T entity, string? userId)
@@ -104,6 +106,8 @@ namespace Inventory.Repository.Implement
         private void DeactiveEntity(T entity, string? userId)
         {
             var entityType = entity.GetType();
+            entityType.GetProperty("UpdatedAt")?.SetValue(entity, DateTime.UtcNow);
+            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userId);
             entityType.GetProperty("IsInactive").SetValue(entity, true);
             entityType.GetProperty("InactiveAt").SetValue(entity, DateTime.UtcNow);
             entityType.GetProperty("InactiveBy").SetValue(entity, userId);
