@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
-using Inventory.Core.Const;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
@@ -56,9 +56,9 @@ namespace Inventory.Service.Implement
                                   IsCompleted = order.CompleteDate != null,
                                   CompletedDate = order.CompleteDate.GetValueOrDefault(),
                                   CreatedAt = record.CreatedAt,
-                                  CreatedBy = createdby.FirstName + " " + createdby.LastName,
+                                  CreatedBy = createdby.UserName,
                                   UpdatedAt = record.UpdatedAt,
-                                  UpdatedBy = updatedby.FirstName + " " + updatedby.LastName
+                                  UpdatedBy = updatedby.UserName
                               }).Pagination(request);
 
             if (request.SearchKeyword != null)
@@ -93,6 +93,7 @@ namespace Inventory.Service.Implement
 
         public async Task<OrderObjectResponse> CreateAsync(OrderUpdateRequest request)
         {
+            _repoWrapper.SetUserContext(request.GetUserContext());
             OrderObjectResponse response = new();
 
             //Add Order 
@@ -102,6 +103,7 @@ namespace Inventory.Service.Implement
             };
 
             await _repoWrapper.Order.AddAsync(order);
+            await _repoWrapper.SaveAsync();
 
             //Add Order record
             var status = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Pending)
@@ -114,6 +116,7 @@ namespace Inventory.Service.Implement
             };
 
             await _repoWrapper.OrderRecord.AddAsync(record);
+            await _repoWrapper.SaveAsync();
 
             //Add Order Entry
             var entries = _mapper.Map<List<OrderEntry>>(request.OrderEntries);

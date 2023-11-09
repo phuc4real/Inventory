@@ -6,7 +6,7 @@ using Inventory.Model.Entity;
 
 namespace Inventory.Database.DbContext
 {
-    public class AppDbContext : IdentityDbContext<IdentityUser>
+    public class AppDbContext : IdentityDbContext<AppUser>
     {
         #region Ctor
 

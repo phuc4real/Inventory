@@ -1,5 +1,4 @@
-﻿using Inventory.Core.Common;
-using Inventory.Core.Const;
+﻿using Inventory.Core.Constants;
 using Inventory.Model.Entity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +48,9 @@ namespace Inventory.Database.DataSeed
                 NormalizedUserName = "SA",
                 Email = "sa@local.com",
                 NormalizedEmail = "SA@LOCAL.COM",
-                SecurityStamp = Guid.NewGuid().ToString()
+                SecurityStamp = Guid.NewGuid().ToString(),
+                FirstName = "Super",
+                LastName = "Admin"
             };
             sa.PasswordHash = hasher.HashPassword(sa, "123456@@");
 
@@ -65,12 +66,15 @@ namespace Inventory.Database.DataSeed
             //Add default Admin
             AppUser admin = new()
             {
+
                 Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
                 UserName = "admin",
                 NormalizedUserName = "ADMIN",
                 Email = "admin@local.com",
                 NormalizedEmail = "ADMIN@LOCAL.COM",
-                SecurityStamp = Guid.NewGuid().ToString()
+                SecurityStamp = Guid.NewGuid().ToString(),
+                FirstName = "Normal",
+                LastName = "Admin"
             };
 
             admin.PasswordHash = hasher.HashPassword(admin, "123456@@");

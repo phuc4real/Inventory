@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using Azure.Core;
 using Inventory.Core.Common;
-using Inventory.Core.Const;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;

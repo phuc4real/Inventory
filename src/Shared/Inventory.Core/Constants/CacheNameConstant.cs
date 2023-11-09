@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Core.Const
+namespace Inventory.Core.Constants
 {
     public class CacheNameConstant
     {

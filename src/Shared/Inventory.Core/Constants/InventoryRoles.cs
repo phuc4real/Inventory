@@ -1,4 +1,4 @@
-﻿namespace Inventory.Core.Common
+﻿namespace Inventory.Core.Constants
 {
     public class InventoryRoles
     {

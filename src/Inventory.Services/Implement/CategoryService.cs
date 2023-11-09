@@ -8,7 +8,7 @@ using Inventory.Service.Common;
 using Inventory.Core.Common;
 using Inventory.Core.Extensions;
 using System.Linq;
-using Inventory.Core.Const;
+using Inventory.Core.Constants;
 
 namespace Inventory.Service.Implement
 {

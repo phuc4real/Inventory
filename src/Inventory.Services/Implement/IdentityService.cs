@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Model.Entity;
 using Inventory.Service.Common;
@@ -159,7 +160,7 @@ namespace Inventory.Service.Implement
             else
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Refresh token Invalid!");
+                response.Message = new("Refresh token Invalid!", "Cannot refresh token, please try login again!");
             }
 
             return response;
