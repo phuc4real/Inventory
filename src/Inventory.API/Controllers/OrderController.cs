@@ -11,7 +11,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.Admin)]
+    [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -54,7 +54,7 @@ namespace Inventory.API.Controllers
 
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Get(OrderRequest request)
@@ -70,7 +70,7 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}/update-status")]
+        [HttpPut("{id}/update-status")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateStatus(OrderRequest request)
@@ -86,13 +86,14 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpDelete("{id:int}/cancel")]
+        [HttpDelete("{orderId}/cancel")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Cancel(OrderRequest request)
+        public async Task<IActionResult> Cancel(int orderId)
         {
             if (ModelState.IsValid)
             {
+                var request = new OrderRequest { OrderId = orderId };
                 request.SetContext(HttpContext);
                 var result = await _orderService.CancelOrderAsync(request);
 

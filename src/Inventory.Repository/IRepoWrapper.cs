@@ -12,7 +12,7 @@ namespace Inventory.Repository
     {
         Task SaveAsync();
 
-        void SetUserContext(string userId);
+        void SetUserContext(string userContext);
 
         ICategoryRepository Category { get; }
         ICommentRepository Comment { get; }

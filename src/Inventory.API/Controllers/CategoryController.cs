@@ -22,7 +22,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(CategoryPaginationResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
@@ -53,7 +52,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(CategoryUpdateRequest request)
@@ -69,7 +68,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Update(CategoryUpdateRequest request)
@@ -86,7 +85,7 @@ namespace Inventory.API.Controllers
 
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Delete(int id)

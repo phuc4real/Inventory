@@ -115,7 +115,7 @@ namespace Inventory.Service.Implement
         public async Task<BaseResponse> SignOutAsync(BaseRequest request)
         {
             BaseResponse response = new();
-            var user = await _userManager.FindByIdAsync(request.GetUserContext());
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
 
             if (user == null)
             {

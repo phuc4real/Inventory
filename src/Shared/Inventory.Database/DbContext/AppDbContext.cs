@@ -38,7 +38,7 @@ namespace Inventory.Database.DbContext
         {
             base.OnModelCreating(builder);
 
-            builder.SeedingData();
+            builder.SeedingDataOnCreating();
 
             builder.Entity<Category>().HasKey(x => x.Id);
             builder.Entity<Comment>().HasKey(x => x.Id);

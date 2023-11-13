@@ -25,8 +25,8 @@ namespace Inventory.API.Extensions
                 {
                     UserName = "phucle",
                     NormalizedUserName = "PHUCLE",
-                    Email = "phuc@local.com",
-                    NormalizedEmail = "PHUC@LOCAL.COM",
+                    Email = "phucforeveralone@gmail.com",
+                    NormalizedEmail = "PHUCFOREVERALONE@GMAIL.COM",
                     FirstName = "Phuc",
                     LastName = "Le",
                 };

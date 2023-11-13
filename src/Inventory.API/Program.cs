@@ -10,6 +10,9 @@ var service = builder.Services;
 service.AddOptions<JwtConfig>()
        .Bind(configuration.GetSection(JwtConfig.Name));
 
+service.AddOptions<EmailConfig>()
+       .Bind(configuration.GetSection(EmailConfig.Name));
+
 service.AddDatabaseService(configuration);
 
 service.AddRedisCacheService(configuration);

@@ -37,8 +37,7 @@ namespace Inventory.Service.Implement
 
             response = new CategoryObjectResponse();
 
-            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == request.Id)
-                                                    .FirstOrDefaultAsync();
+            var category = await _repoWrapper.Category.FirstOrDefaultAsync(x => x.Id == request.Id);
             if (category == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
@@ -77,8 +76,7 @@ namespace Inventory.Service.Implement
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == request.Id)
-                                                    .FirstOrDefaultAsync();
+            var category = await _repoWrapper.Category.FirstOrDefaultAsync(x => x.Id == request.Id);
 
             if (category == null || category.IsInactive)
             {
@@ -106,8 +104,7 @@ namespace Inventory.Service.Implement
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var category = await _repoWrapper.Category.FindByCondition(x => x.Id == request.Id)
-                                                      .FirstOrDefaultAsync();
+            var category = await _repoWrapper.Category.FirstOrDefaultAsync(x => x.Id == request.Id);
 
             if (category == null || category.IsInactive)
             {

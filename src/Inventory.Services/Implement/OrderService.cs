@@ -15,8 +15,8 @@ namespace Inventory.Service.Implement
     {
         #region Ctor & Field
 
-        public OrderService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
-            : base(repoWrapper, mapper, cacheService)
+        public OrderService(IRepoWrapper repoWrapper, IMapper mapper, IEmailService emailService)
+            : base(repoWrapper, mapper, emailService)
         {
         }
 
@@ -127,6 +127,7 @@ namespace Inventory.Service.Implement
 
             await _repoWrapper.SaveAsync();
 
+            //_emailService.Send()
             response.Data = new OrderResponse()
             {
                 OrderId = order.Id,
@@ -236,18 +237,22 @@ namespace Inventory.Service.Implement
 
         public async Task<BaseResponse> CancelOrderAsync(OrderRequest request)
         {
+            _repoWrapper.SetUserContext(request.GetUserContext());
             BaseResponse response = new();
 
-            var record = await _repoWrapper.OrderRecord.FindByCondition(x => x.Id == request.RecordId)
-                                                       .FirstOrDefaultAsync();
-
-            if (record == null)
+            var order = await _repoWrapper.Order.FindByCondition(x => !x.IsInactive && x.Id == request.OrderId)
+                                                .FirstOrDefaultAsync();
+            if (order == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Order", "Order not found!");
 
                 return response;
-            }
+            };
+
+            var record = await _repoWrapper.OrderRecord.FindByCondition(x => x.OrderId == order.Id)
+                                                        .OrderByDescending(x => x.UpdatedAt)
+                                                        .FirstOrDefaultAsync();
 
             var listStatus = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Done
                                                                          || x.Name == StatusConstant.Cancel)
@@ -263,6 +268,7 @@ namespace Inventory.Service.Implement
             {
                 record.StatusId = cancel.Id;
                 _repoWrapper.OrderRecord.Update(record);
+                _repoWrapper.Order.Update(order);
                 await _repoWrapper.SaveAsync();
 
                 response.Message = new("Order", "Order has been canceled");

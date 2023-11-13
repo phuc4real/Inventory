@@ -14,14 +14,35 @@ namespace Inventory.Service.Implement
 
         protected readonly IMapper _mapper;
         protected readonly IRepoWrapper _repoWrapper;
-        protected readonly IRedisCacheService _cacheService;
+        protected readonly IRedisCacheService? _cacheService;
+        protected readonly IEmailService? _emailService;
 
+        public BaseService(IRepoWrapper repoWrapper, IMapper mapper)
+        {
+            _repoWrapper = repoWrapper;
+            _mapper = mapper;
+        }
 
         public BaseService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
         {
             _repoWrapper = repoWrapper;
             _mapper = mapper;
             _cacheService = cacheService;
+        }
+
+        public BaseService(IRepoWrapper repoWrapper, IMapper mapper, IEmailService emailService)
+        {
+            _repoWrapper = repoWrapper;
+            _mapper = mapper;
+            _emailService = emailService;
+        }
+
+        public BaseService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService, IEmailService emailService)
+        {
+            _repoWrapper = repoWrapper;
+            _mapper = mapper;
+            _cacheService = cacheService;
+            _emailService = emailService;
         }
 
         #endregion

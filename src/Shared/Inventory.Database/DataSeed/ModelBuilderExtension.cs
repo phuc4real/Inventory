@@ -7,7 +7,7 @@ namespace Inventory.Database.DataSeed
 {
     public static class ModelBuilderExtension
     {
-        public static void SeedingData(this ModelBuilder builder)
+        public static void SeedingDataOnCreating(this ModelBuilder builder)
         {
             #region Seed Role
 
@@ -46,8 +46,8 @@ namespace Inventory.Database.DataSeed
                 Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                 UserName = "sa",
                 NormalizedUserName = "SA",
-                Email = "sa@local.com",
-                NormalizedEmail = "SA@LOCAL.COM",
+                Email = "phucforeveralone@gmail.com",
+                NormalizedEmail = "PHUCFOREVERALONE@GMAIL.COM",
                 SecurityStamp = Guid.NewGuid().ToString(),
                 FirstName = "Super",
                 LastName = "Admin"
@@ -66,12 +66,11 @@ namespace Inventory.Database.DataSeed
             //Add default Admin
             AppUser admin = new()
             {
-
                 Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
                 UserName = "admin",
                 NormalizedUserName = "ADMIN",
-                Email = "admin@local.com",
-                NormalizedEmail = "ADMIN@LOCAL.COM",
+                Email = "phucforeveralone@gmail.com",
+                NormalizedEmail = "PHUCFOREVERALONE@GMAIL.COM",
                 SecurityStamp = Guid.NewGuid().ToString(),
                 FirstName = "Normal",
                 LastName = "Admin"
@@ -85,7 +84,6 @@ namespace Inventory.Database.DataSeed
             builder.Entity<IdentityUserRole<string>>()
                 .HasData(new IdentityUserRole<string>
                 {
-
                     RoleId = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
                     UserId = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8"
                 });

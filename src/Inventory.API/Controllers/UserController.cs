@@ -35,12 +35,12 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("info/{id}")]
+        [HttpGet("info/{userName}")]
         [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetInfoOfUserId(string id)
+        public async Task<IActionResult> GetInfoByUserName(string userName)
         {
-            var result = await _userService.GetByIdAsync(id);
+            var result = await _userService.GetByUserNameAsync(userName);
 
             return StatusCode((int)result.StatusCode, result);
         }

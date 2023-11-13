@@ -9,6 +9,7 @@ namespace Inventory.Service.DTO.Order
 {
     public class OrderRequest : BaseRequest
     {
+        public int OrderId { get; set; }
         public int RecordId { get; set; }
     }
 }

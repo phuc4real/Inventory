@@ -35,11 +35,11 @@ namespace Inventory.Service.Implement
 
         #region Method
 
-        public async Task<UserObjectResponse> GetByIdAsync(string id)
+        public async Task<UserObjectResponse> GetByUserNameAsync(string userName)
         {
             UserObjectResponse response = new();
 
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByNameAsync(userName);
 
             if (user == null)
             {
@@ -58,8 +58,7 @@ namespace Inventory.Service.Implement
         {
             UserObjectResponse response = new();
 
-            var userName = _tokenService.GetUserNameFromToken(request.GetToken());
-            var user = await _userManager.FindByNameAsync(userName);
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
 
             if (user == null)
             {

@@ -26,11 +26,28 @@ namespace Inventory.Service.Implement
 
         public async Task<ItemObjectResponse> CreateAsync(ItemUpdateRequest request)
         {
+            _repoWrapper.SetUserContext(request.GetUserContext());
             ItemObjectResponse response = new();
 
-            _repoWrapper.SetUserContext(request.GetUserContext());
-
             request.Id = null;
+
+            var cate = await _repoWrapper.Category.FirstOrDefaultAsync(x => !x.IsInactive && x.Id == request.CategoryId);
+
+            if (cate == null)
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = new("Category", "Category not found!");
+                return response;
+            }
+
+            var dupCodeItem = await _repoWrapper.Item.FirstOrDefaultAsync(x => !x.IsInactive && x.Code == request.Code);
+
+            if (dupCodeItem != null)
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = new("Item", "Duplicated item code!");
+                return response;
+            }
 
             Item item = _mapper.Map<Item>(request);
 
@@ -139,8 +156,7 @@ namespace Inventory.Service.Implement
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id)
-                                                    .FirstOrDefaultAsync();
+            var item = await _repoWrapper.Item.FirstOrDefaultAsync(x => !x.IsInactive && x.Id == request.Id);
 
             if (item == null || item.IsInactive)
             {
@@ -171,8 +187,7 @@ namespace Inventory.Service.Implement
 
             _repoWrapper.SetUserContext(request.GetUserContext());
 
-            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id)
-                                                      .FirstOrDefaultAsync();
+            var item = await _repoWrapper.Item.FirstOrDefaultAsync(x => !x.IsInactive && x.Id == request.Id);
 
             if (item == null || item.IsInactive)
             {
@@ -184,7 +199,7 @@ namespace Inventory.Service.Implement
             _repoWrapper.Item.Remove(item);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Item", "Item deleted!");
+            response.Message = new("Item", "Item deactive succesfully!");
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
             await _cacheService.RemoveCacheAsync(CacheNameConstant.Item + item.Id);
             return response;

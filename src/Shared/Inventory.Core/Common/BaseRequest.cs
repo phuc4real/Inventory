@@ -18,9 +18,9 @@ namespace Inventory.Core.Common
         {
             _query = context.Request.QueryString.ToString();
 
-            if (context.Request.Headers.TryGetValue("X-User-Id", out var userId))
+            if (context.Request.Headers.TryGetValue("X-User-Name", out var userName))
             {
-                _userContext = userId;
+                _userContext = userName;
             }
 
             if (context.Request.Headers.TryGetValue("Authorization", out var accessToken))
@@ -44,9 +44,14 @@ namespace Inventory.Core.Common
             return _query;
         }
 
-        public string? GetToken()
+        public string? GetAccesToken()
         {
             return _accessToken;
+        }
+
+        public string? GetRefreshToken()
+        {
+            return _refreshToken;
         }
 
         public (string?, string?) GetFullToken()

@@ -21,9 +21,9 @@ namespace Inventory.Repository.Implement
 
         #region Default method
 
-        public void SetUserContext(string userId)
+        public void SetUserContext(string userName)
         {
-            _userContext = userId;
+            _userContext = userName;
         }
 
         public IQueryable<T> FindAll()
@@ -41,6 +41,18 @@ namespace Inventory.Repository.Implement
             }
 
             return query;
+        }
+
+        public async Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>>? filter = null)
+        {
+            IQueryable<T> query = _dbSet;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task AddAsync(T entity)
@@ -87,30 +99,30 @@ namespace Inventory.Repository.Implement
 
         #region Private
 
-        private void BeforeAdd(T entity, string? userId)
+        private void BeforeAdd(T entity, string? userContext)
         {
             var entityType = entity.GetType();
             entityType.GetProperty("CreatedAt")?.SetValue(entity, DateTime.UtcNow);
-            entityType.GetProperty("CreatedBy")?.SetValue(entity, userId);
+            entityType.GetProperty("CreatedBy")?.SetValue(entity, userContext);
             entityType.GetProperty("UpdatedAt")?.SetValue(entity, DateTime.UtcNow);
-            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userId);
+            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userContext);
         }
 
-        private void BeforeUpdate(T entity, string? userId)
+        private void BeforeUpdate(T entity, string? userContext)
         {
             var entityType = entity.GetType();
             entityType.GetProperty("UpdatedAt")?.SetValue(entity, DateTime.UtcNow);
-            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userId);
+            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userContext);
         }
 
-        private void DeactiveEntity(T entity, string? userId)
+        private void DeactiveEntity(T entity, string? userContext)
         {
             var entityType = entity.GetType();
             entityType.GetProperty("UpdatedAt")?.SetValue(entity, DateTime.UtcNow);
-            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userId);
-            entityType.GetProperty("IsInactive").SetValue(entity, true);
-            entityType.GetProperty("InactiveAt").SetValue(entity, DateTime.UtcNow);
-            entityType.GetProperty("InactiveBy").SetValue(entity, userId);
+            entityType.GetProperty("UpdatedBy")?.SetValue(entity, userContext);
+            entityType.GetProperty("IsInactive")?.SetValue(entity, true);
+            entityType.GetProperty("InactiveAt")?.SetValue(entity, DateTime.UtcNow);
+            entityType.GetProperty("InactiveBy")?.SetValue(entity, userContext);
         }
 
         #endregion

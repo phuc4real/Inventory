@@ -25,9 +25,9 @@ namespace Inventory.Repository.Implement
             await _context.SaveChangesAsync();
         }
 
-        public void SetUserContext(string userId)
+        public void SetUserContext(string userContext)
         {
-            _userContext = userId;
+            _userContext = userContext;
         }
 
         #endregion

@@ -22,7 +22,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(ItemPaginationResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
@@ -81,7 +80,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
@@ -101,7 +100,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ItemObjectResponse), StatusCodes.Status404NotFound)]
@@ -122,7 +121,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
