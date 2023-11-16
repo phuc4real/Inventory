@@ -46,8 +46,8 @@ namespace Inventory.Database.DataSeed
                 Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                 UserName = "sa",
                 NormalizedUserName = "SA",
-                Email = "phucforeveralone@gmail.com",
-                NormalizedEmail = "PHUCFOREVERALONE@GMAIL.COM",
+                Email = "phucforeveralone+sa@gmail.com",
+                NormalizedEmail = "PHUCFOREVERALONE+SA@GMAIL.COM",
                 SecurityStamp = Guid.NewGuid().ToString(),
                 FirstName = "Super",
                 LastName = "Admin"
@@ -69,8 +69,8 @@ namespace Inventory.Database.DataSeed
                 Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
                 UserName = "admin",
                 NormalizedUserName = "ADMIN",
-                Email = "phucforeveralone@gmail.com",
-                NormalizedEmail = "PHUCFOREVERALONE@GMAIL.COM",
+                Email = "phucforeveralone+ad@gmail.com",
+                NormalizedEmail = "PHUCFOREVERALONE+AD@GMAIL.COM",
                 SecurityStamp = Guid.NewGuid().ToString(),
                 FirstName = "Normal",
                 LastName = "Admin"

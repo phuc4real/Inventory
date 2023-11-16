@@ -29,6 +29,7 @@ namespace Inventory.API.Extensions
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<IRedisCacheService, RedisCacheService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<DbSeeder>();
 
             return services;

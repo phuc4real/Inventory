@@ -41,11 +41,11 @@ namespace Inventory.Service.Implement
                               on entry.ItemId equals item.Id
 
                               join u1 in _repoWrapper.User
-                              on record.CreatedBy equals u1.Id into left1
-                              from createdby in left1.DefaultIfEmpty()
+                              on record.CreatedBy equals u1.UserName into left1
+                              from createdBy in left1.DefaultIfEmpty()
                               join u2 in _repoWrapper.User
-                              on record.UpdatedBy equals u2.Id into left2
-                              from updatedby in left2.DefaultIfEmpty()
+                              on record.UpdatedBy equals u2.UserName into left2
+                              from updatedBy in left2.DefaultIfEmpty()
                               select new
                               {
                                   ItemName = item.Name,
@@ -56,9 +56,9 @@ namespace Inventory.Service.Implement
                                   IsCompleted = order.CompleteDate != null,
                                   CompletedDate = order.CompleteDate.GetValueOrDefault(),
                                   CreatedAt = record.CreatedAt,
-                                  CreatedBy = createdby.UserName,
+                                  CreatedBy = createdBy.FirstName + " " + createdBy.LastName,
                                   UpdatedAt = record.UpdatedAt,
-                                  UpdatedBy = updatedby.UserName
+                                  UpdatedBy = updatedBy.FirstName + " " + updatedBy.LastName
                               }).Pagination(request);
 
             if (request.SearchKeyword != null)
