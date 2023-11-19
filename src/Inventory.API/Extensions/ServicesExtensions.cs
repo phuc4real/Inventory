@@ -20,6 +20,7 @@ namespace Inventory.API.Extensions
         public static IServiceCollection AddAppService(this IServiceCollection services)
         {
             services.AddAutoMapper(typeof(AutoMapperConfig));
+            services.AddScoped<ICommonService, CommonService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<ICategoryService, CategoryService>();

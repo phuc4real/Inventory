@@ -14,11 +14,16 @@ namespace Inventory.Service.Implement
 {
     public class CategoryService : BaseService, ICategoryService
     {
-
         #region Ctor & Field
 
-        public CategoryService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
-            : base(repoWrapper, mapper, cacheService)
+        public CategoryService(
+            IRepoWrapper repoWrapper,
+            IMapper mapper,
+            ICommonService commonService,
+            IRedisCacheService cacheService,
+            IEmailService emailService
+            )
+        : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
         }
 

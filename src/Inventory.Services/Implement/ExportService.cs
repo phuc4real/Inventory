@@ -1,15 +1,11 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using Inventory.Core.Common;
 using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
-using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
-using Inventory.Service.DTO.Category;
 using Inventory.Service.DTO.Export;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
@@ -17,8 +13,14 @@ namespace Inventory.Service.Implement
     public class ExportService : BaseService, IExportService
     {
         #region Ctor & Field
-        public ExportService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
-            : base(repoWrapper, mapper, cacheService)
+        public ExportService(
+            IRepoWrapper repoWrapper,
+            IMapper mapper,
+            ICommonService commonService,
+            IRedisCacheService cacheService,
+            IEmailService emailService
+            )
+        : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
         }
 

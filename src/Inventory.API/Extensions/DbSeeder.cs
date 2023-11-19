@@ -18,7 +18,7 @@ namespace Inventory.API.Extensions
             var userStore = new UserStore<AppUser>(dbContext);
             var hasher = new PasswordHasher<AppUser>();
 
-            if (!dbContext.Users.Any(x=>x.Email == "phuc@local.com"))
+            if (!dbContext.Users.Any(x => x.Email == "phucforeveralone@gmail.com"))
             {
 
                 AppUser user = new()

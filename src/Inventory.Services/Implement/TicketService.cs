@@ -19,10 +19,15 @@ namespace Inventory.Service.Implement
 
         private readonly IUserService _userServices;
 
-        public TicketService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService, IUserService userServices)
-            : base(repoWrapper, mapper, cacheService)
+        public TicketService(
+            IRepoWrapper repoWrapper,
+            IMapper mapper,
+            ICommonService commonService,
+            IRedisCacheService cacheService,
+            IEmailService emailService
+            )
+        : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
-            _userServices = userServices;
         }
 
         #endregion

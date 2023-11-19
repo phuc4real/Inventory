@@ -141,7 +141,7 @@ namespace Inventory.Service.Implement
         {
             IdentityObjectResponse response = new();
 
-            var user = await _userManager.FindByIdAsync(request.GetUserContext());
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
 
             var (accesToken, refreshToken) = request.GetFullToken();
 

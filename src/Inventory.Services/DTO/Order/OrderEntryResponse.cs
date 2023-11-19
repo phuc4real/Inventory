@@ -17,7 +17,24 @@ namespace Inventory.Service.DTO.Order
         public long MinPrice { get; set; }
         public long MaxPrice { get; set; }
         public string? Note { get; set; }
+        public long MinTotal
+        { 
+            get
+            {
+                return Quantity * MinPrice;
+            } 
+        }
+        public long MaxTotal
+        {
+            get
+            {
+                return Quantity * MaxPrice;
+            }
+        }
     }
 
-    public class OrderEntryListResponse : PaginationResponse<OrderEntryResponse> { }
+    public class OrderEntryListResponse : PaginationResponse<OrderEntryResponse> 
+    { 
+        public string? Description { get; set; } 
+    }
 }

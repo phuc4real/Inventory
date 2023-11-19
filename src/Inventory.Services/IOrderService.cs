@@ -8,7 +8,8 @@ namespace Inventory.Service
     {
         Task<OrderPageResponse> GetPaginationAsync(PaginationRequest request);
         Task<OrderObjectResponse> GetByIdAsync(OrderRequest request);
-        Task<OrderObjectResponse> CreateAsync(OrderUpdateRequest request);
+        Task<OrderEntryListResponse> GetOrderEntries(OrderRequest request);
+        Task<OrderObjectResponse> CreateOrUpdateAsync(OrderUpdateRequest request);
         Task<BaseResponse> UpdateOrderStatusAsync(OrderRequest request);
         Task<BaseResponse> CancelOrderAsync(OrderRequest request);
         Task<ChartDataResponse> GetOrderChartAsync();

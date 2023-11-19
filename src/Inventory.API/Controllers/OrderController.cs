@@ -45,7 +45,7 @@ namespace Inventory.API.Controllers
             if (ModelState.IsValid)
             {
                 request.SetContext(HttpContext);
-                var result = await _orderService.CreateAsync(request);
+                var result = await _orderService.CreateOrUpdateAsync(request);
 
                 return StatusCode((int)result.StatusCode, result);
             }
@@ -54,13 +54,14 @@ namespace Inventory.API.Controllers
 
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{recordId}")]
         [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Get(OrderRequest request)
+        public async Task<IActionResult> Get(int recordId)
         {
             if (ModelState.IsValid)
             {
+                var request = new OrderRequest { RecordId = recordId };
                 request.SetContext(HttpContext);
                 var result = await _orderService.GetByIdAsync(request);
 
@@ -70,13 +71,32 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id}/update-status")]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateStatus(OrderRequest request)
+
+        [HttpGet("{recordId}/entry")]
+        [ProducesResponseType(typeof(OrderEntryListResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(OrderEntryListResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOrderEntry(int recordId)
         {
             if (ModelState.IsValid)
             {
+                var request = new OrderRequest { RecordId = recordId };
+                request.SetContext(HttpContext);
+                var result = await _orderService.GetOrderEntries(request);
+
+                return StatusCode((int)result.StatusCode, result);
+            }
+
+            return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpPut("{orderId}/update-status")]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateStatus(int orderId)
+        {
+            if (ModelState.IsValid)
+            {
+                var request = new OrderRequest { OrderId = orderId };
                 request.SetContext(HttpContext);
                 var result = await _orderService.UpdateOrderStatusAsync(request);
 

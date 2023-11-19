@@ -15,8 +15,14 @@ namespace Inventory.Service.Implement
     {
         #region Ctor & Field
 
-        public ItemService(IRepoWrapper repoWrapper, IMapper mapper, IRedisCacheService cacheService)
-            : base(repoWrapper, mapper, cacheService)
+        public ItemService(
+            IRepoWrapper repoWrapper,
+            IMapper mapper,
+            ICommonService commonService,
+            IRedisCacheService cacheService,
+            IEmailService emailService
+            )
+        : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
         }
 
@@ -118,6 +124,8 @@ namespace Inventory.Service.Implement
             }
 
             response.Data = _mapper.Map<ItemResponse>(item);
+
+            (response.Data.CreatedBy, response.Data.UpdatedBy) = await _commonService.GetAuditUserData(item.CreatedBy, item.UpdatedBy);
 
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;

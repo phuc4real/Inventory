@@ -4,11 +4,9 @@ using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
-using Inventory.Repository;
 using Inventory.Service.DTO.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
 
 namespace Inventory.Service.Implement
 {
