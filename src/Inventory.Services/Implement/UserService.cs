@@ -99,9 +99,9 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<UserPermission> CheckRoleOfUser(string userId)
+        public async Task<UserPermission> CheckRoleOfUser(string userName)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByNameAsync(userName);
             var roles = await _userManager.GetRolesAsync(user);
 
             var result = new UserPermission

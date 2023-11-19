@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Inventory.Model.Entity;
+using Inventory.Service.DTO.Ticket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,9 @@ namespace Inventory.Service.MappingProfile
     {
         public TicketMapping()
         {
-
+            CreateMap<Ticket, TicketResponse>();
+            CreateMap<TicketResponse, TicketResponse>();
+            CreateMap<TicketType, TicketTypeResponse>();
         }
     }
 }

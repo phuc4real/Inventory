@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Azure;
 using Inventory.Core.Common;
 using Inventory.Core.Constants;
@@ -9,6 +10,8 @@ using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
+using Inventory.Service.DTO.Ticket;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
@@ -38,50 +41,51 @@ namespace Inventory.Service.Implement
             var response = new OrderPageResponse();
 
             var search = request.SearchKeyword != null ? request.SearchKeyword?.ToLower() : "";
-            var orderQuery = (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
-                              join record in _repoWrapper.OrderRecord.FindAll()
-                              on order.Id equals record.OrderId
-                              join s1 in _repoWrapper.Status.FindAll()
-                              on record.StatusId equals s1.Id into left3
-                              from status in left3.DefaultIfEmpty()
+            var orderQuery = await (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
+                                    join record in _repoWrapper.OrderRecord.FindAll()
+                                    on order.Id equals record.OrderId
+                                    join s1 in _repoWrapper.Status.FindAll()
+                                    on record.StatusId equals s1.Id into left3
+                                    from status in left3.DefaultIfEmpty()
 
 
-                              join entry in _repoWrapper.OrderEntry.FindAll()
-                              on record.Id equals entry.RecordId
-                              join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
-                              on entry.ItemId equals item.Id
+                                    join entry in _repoWrapper.OrderEntry.FindAll()
+                                    on record.Id equals entry.RecordId
+                                    join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
+                                    on entry.ItemId equals item.Id
 
-                              join u1 in _repoWrapper.User
-                              on record.CreatedBy equals u1.UserName into left1
-                              from createdBy in left1.DefaultIfEmpty()
-                              join u2 in _repoWrapper.User
-                              on record.UpdatedBy equals u2.UserName into left2
-                              from updatedBy in left2.DefaultIfEmpty()
-                              where item.Name.Contains(search) || order.Id.ToString().Contains(search)
-                              select new OrderResponse
-                              {
-                                  OrderId = order.Id,
-                                  RecordId = record.Id,
-                                  Description = record.Description,
-                                  Status = status.Description,
-                                  IsCompleted = order.CompleteDate != null,
-                                  CompletedDate = order.CompleteDate.GetValueOrDefault(),
-                                  CreatedAt = record.CreatedAt,
-                                  CreatedBy = createdBy.FirstName + " " + createdBy.LastName,
-                                  UpdatedAt = record.UpdatedAt,
-                                  UpdatedBy = updatedBy.FirstName + " " + updatedBy.LastName
-                              });
+                                    join u1 in _repoWrapper.User
+                                    on record.CreatedBy equals u1.UserName into left1
+                                    from createdBy in left1.DefaultIfEmpty()
+                                    join u2 in _repoWrapper.User
+                                    on record.UpdatedBy equals u2.UserName into left2
+                                    from updatedBy in left2.DefaultIfEmpty()
+                                    where item.Name.Contains(search) || order.Id.ToString().Contains(search)
+                                    select new OrderResponse
+                                    {
+                                        OrderId = order.Id,
+                                        RecordId = record.Id,
+                                        Description = record.Description,
+                                        Status = status.Description,
+                                        IsCompleted = order.CompleteDate != null,
+                                        CompletedDate = order.CompleteDate.GetValueOrDefault(),
+                                        CreatedAt = record.CreatedAt,
+                                        CreatedBy = createdBy.FirstName + " " + createdBy.LastName,
+                                        UpdatedAt = record.UpdatedAt,
+                                        UpdatedBy = updatedBy.FirstName + " " + updatedBy.LastName
+                                    })
+                              .Distinct()
+                              .ToListAsync();
 
-            var listOrder = await orderQuery.Distinct()
-                                            .ToListAsync();
+            var listOrder = orderQuery.GroupBy(x => x.OrderId)
+                                      .Select(x => x.OrderByDescending(x => x.UpdatedAt)
+                                                    .FirstOrDefault());
+            response.Count = listOrder.Count();
+            response.Data = listOrder.AsQueryable()
+                                     .Pagination(request)
+                                     .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)
+                                     .ToList();
 
-            var result = listOrder.GroupBy(x => x.OrderId)
-                                  .Select(x => x.OrderByDescending(x => x.UpdatedAt)
-                                                .FirstOrDefault())
-                                  .AsQueryable()
-                                  .Pagination(request);
-            response.Count = result.Count();
-            response.Data = _mapper.Map<List<OrderResponse>>(result);
             return response;
         }
 
@@ -89,6 +93,8 @@ namespace Inventory.Service.Implement
         {
             _repoWrapper.SetUserContext(request.GetUserContext());
             OrderObjectResponse response = new();
+
+            var status = await _repoWrapper.Status.FindAll().ToListAsync();
 
             if (request.RecordId == 0)
             {
@@ -102,13 +108,13 @@ namespace Inventory.Service.Implement
                 await _repoWrapper.SaveAsync();
 
                 //Add Order record
-                var status = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Pending)
-                                                        .FirstOrDefaultAsync();
+                var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
+
                 var record = new OrderRecord()
                 {
                     OrderId = order.Id,
                     Description = request.Description,
-                    StatusId = status!.Id,
+                    StatusId = statusPending.Id,
                 };
 
                 await _repoWrapper.OrderRecord.AddAsync(record);
@@ -129,7 +135,7 @@ namespace Inventory.Service.Implement
                     OrderId = order.Id,
                     RecordId = record.Id,
                     Description = record.Description,
-                    Status = status.Name,
+                    Status = statusPending.Name,
                     IsCompleted = order.CompleteDate != null,
                     CompletedDate = order.CompleteDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
@@ -153,8 +159,6 @@ namespace Inventory.Service.Implement
 
                 var order = orderAndRecord.Order;
                 var oldRecord = orderAndRecord.Record;
-
-                var status = await _repoWrapper.Status.FindAll().ToListAsync();
 
                 var statusCannotEdit = status.Where(x => x.Name != StatusConstant.Pending
                                                          && x.Name != StatusConstant.Processing)
@@ -419,7 +423,6 @@ namespace Inventory.Service.Implement
             {
                 response.Data = entries.Select(x => x.Entry).ToList();
                 response.Description = entries.Select(x => x.Description).FirstOrDefault();
-
             }
             else
             {

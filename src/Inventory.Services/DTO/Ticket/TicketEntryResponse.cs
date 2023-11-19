@@ -17,5 +17,8 @@ namespace Inventory.Service.DTO.Ticket
         public string? Note { get; set; }
     }
 
-    public class TicketEntryList : PaginationResponse<TicketEntryResponse> { }
+    public class TicketEntryList : PaginationResponse<TicketEntryResponse>
+    {
+        public string? Description { get; set; }
+    }
 }

@@ -1,4 +1,5 @@
-﻿using Inventory.Service.DTO.Order;
+﻿using Inventory.Core.Common;
+using Inventory.Service.DTO.Order;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Inventory.Service.DTO.Ticket
 {
-    public class TicketUpdateResquest
+    public class TicketUpdateResquest : BaseRequest
     {
         public int RecordId { get; set; }
         public int TicketTypeId { get; set; }

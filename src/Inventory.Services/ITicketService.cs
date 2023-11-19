@@ -1,5 +1,6 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
 
 namespace Inventory.Service
@@ -8,9 +9,11 @@ namespace Inventory.Service
     {
         Task<TicketPageResponse> GetPaginationAsync(PaginationRequest request);
         Task<TicketObjectResponse> GetByIdAsync(TicketRequest request);
-        Task<TicketObjectResponse> CreateAsync(TicketUpdateResquest request);
+        Task<TicketEntryList> GetTicketEntries(TicketRequest request);
+        Task<TicketTypeList> GetTicketType();
+        Task<TicketObjectResponse> CreateOrUpdateAsync(TicketUpdateResquest request);
         Task<BaseResponse> CancelAsync(TicketRequest request);
         Task<BaseResponse> UpdateStatusAsync(TicketRequest request);
-        Task<ChartDataResponse> GetTicketChart();
+        Task<TicketSummaryObjectResponse> GetTicketSummary();
     }
 }

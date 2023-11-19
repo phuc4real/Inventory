@@ -14,6 +14,7 @@ namespace Inventory.Service.MappingProfile
         public OrderMapping()
         {
             CreateMap<Order,OrderResponse>();
+            CreateMap<OrderResponse, OrderResponse>();
             CreateMap<OrderEntryUpdateRequest, OrderEntry>();
         }
 

@@ -126,7 +126,7 @@ namespace Inventory.API.Controllers
 
         [HttpGet("chart")]
         [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetCount()
+        public async Task<IActionResult> GetChart()
         {
             return StatusCode(200, await _orderService.GetOrderChartAsync());
         }

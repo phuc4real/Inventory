@@ -9,6 +9,7 @@ namespace Inventory.Service.DTO.Ticket
 {
     public class TicketRequest : BaseRequest
     {
+        public int TicketId { get; set; }
         public int RecordId { get; set; }
     }
 }
