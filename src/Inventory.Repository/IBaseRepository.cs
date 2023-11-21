@@ -10,7 +10,7 @@ namespace Inventory.Repository
         public Task AddAsync(T entity);
         public Task AddRangeAsync(List<T> entities);
         public void Update(T entity);
-        public void UpdateRage(List<T> entities);
+        public void UpdateRange(List<T> entities);
         public void Remove(T entity);
         public void RemoveRange(List<T> entities);
         public Task<bool> AnyAsync(Expression<Func<T, bool>> filter);

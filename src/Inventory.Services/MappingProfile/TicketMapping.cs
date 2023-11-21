@@ -13,6 +13,8 @@ namespace Inventory.Service.MappingProfile
     {
         public TicketMapping()
         {
+            CreateMap<TicketEntryUpdateRequest, TicketEntry>();
+
             CreateMap<Ticket, TicketResponse>();
             CreateMap<TicketResponse, TicketResponse>();
             CreateMap<TicketType, TicketTypeResponse>();

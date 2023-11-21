@@ -89,7 +89,7 @@ namespace Inventory.Repository.Implement
             BeforeUpdate(entity, _userContext);
             _dbSet.Update(entity);
         }
-        public void UpdateRage(List<T> entities)
+        public void UpdateRange(List<T> entities)
         {
             entities.ForEach(entity => BeforeUpdate(entity, _userContext));
             _dbSet.UpdateRange(entities);

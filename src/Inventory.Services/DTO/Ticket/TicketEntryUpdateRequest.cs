@@ -8,7 +8,6 @@ namespace Inventory.Service.DTO.Ticket
 {
     public class TicketEntryUpdateRequest
     {
-        public int Id { get; set; }
         public int RecordId { get; set; }
         public int ItemId { get; set; }
         public int Quantity { get; set; }

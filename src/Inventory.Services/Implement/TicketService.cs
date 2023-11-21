@@ -1,18 +1,15 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Azure.Core;
 using Inventory.Core.Common;
-using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Item;
-using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
 using Microsoft.EntityFrameworkCore;
-using StackExchange.Redis;
 
 namespace Inventory.Service.Implement
 {
@@ -80,8 +77,8 @@ namespace Inventory.Service.Implement
                                          TicketId = ticket.Id,
                                          RecordId = record.Id,
                                          Description = record.Description,
-                                         Status = status.Name,
-                                         TicketType = type.Name,
+                                         Status = status.Description,
+                                         TicketType = type.Description,
                                          Title = record.Title,
                                          IsClosed = ticket.CloseDate != null,
                                          ClosedDate = ticket.CloseDate.GetValueOrDefault(),
@@ -142,8 +139,9 @@ namespace Inventory.Service.Implement
                                     TicketId = ticket.Id,
                                     RecordId = record.Id,
                                     Description = record.Description,
-                                    Status = status.Name,
-                                    TicketType = type.Name,
+                                    Status = status.Description,
+                                    TicketType = type.Description,
+                                    TicketTypeId = type.Id,
                                     Title = record.Title,
                                     IsClosed = ticket.CloseDate != null,
                                     ClosedDate = ticket.CloseDate.GetValueOrDefault(),
@@ -160,7 +158,11 @@ namespace Inventory.Service.Implement
                 return response;
             }
 
+            result.Comment = await _commonService.GetComment(result.RecordId, true);
+
             response.Data = result;
+
+            response.History = await GetHistoryByTicketId(result.TicketId);
 
             return response;
         }
@@ -172,7 +174,7 @@ namespace Inventory.Service.Implement
             TicketObjectResponse response = new();
 
             var type = await _repoWrapper.TicketType.FindAll().ToListAsync();
-            var status = await _repoWrapper.Status.FindAll().ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
             if (request.RecordId == 0)
             {
@@ -186,14 +188,13 @@ namespace Inventory.Service.Implement
                 await _repoWrapper.SaveAsync();
 
                 //Add Ticket record
-                var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
                 var record = new TicketRecord()
                 {
                     TicketId = ticket.Id,
                     Description = request.Description,
                     Title = request.Title,
                     TicketTypeId = request.TicketTypeId,
-                    StatusId = statusPending.Id,
+                    StatusId = status.ReviewId,
                 };
 
                 await _repoWrapper.TicketRecord.AddAsync(record);
@@ -213,8 +214,8 @@ namespace Inventory.Service.Implement
                     TicketId = ticket.Id,
                     RecordId = record.Id,
                     Description = record.Description,
-                    Status = status.FirstOrDefault(x => x.Id == record.StatusId)?.Name,
-                    TicketType = type.FirstOrDefault(x => x.Id == record.TicketTypeId)?.Name,
+                    Status = status.Data.FirstOrDefault(x => x.Id == record.StatusId)?.Description,
+                    TicketType = type.FirstOrDefault(x => x.Id == record.TicketTypeId)?.Description,
                     Title = record.Title,
                     IsClosed = ticket.CloseDate != null,
                     ClosedDate = ticket.CloseDate.GetValueOrDefault(),
@@ -240,11 +241,12 @@ namespace Inventory.Service.Implement
                 var ticket = ticketAndRecord.Ticket;
                 var oldRecord = ticketAndRecord.Record;
 
-                var statusCannotEdit = status.Where(x => x.Name != StatusConstant.Pending
-                                                        && x.Name != StatusConstant.Processing)
-                                            .Select(x => x.Id);
-                var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
-                var statusClosed = status.FirstOrDefault(x => x.Name == StatusConstant.Close);
+                if (status.CannotEdit.Contains(oldRecord.StatusId))
+                {
+                    response.StatusCode = ResponseCode.BadRequest;
+                    response.Message = new("Error", "Cannot edit ticket!");
+                    return response;
+                }
 
                 //Add Ticket record
                 var record = new TicketRecord()
@@ -253,10 +255,10 @@ namespace Inventory.Service.Implement
                     Description = request.Description,
                     Title = request.Title,
                     TicketTypeId = request.TicketTypeId,
-                    StatusId = statusPending.Id,
+                    StatusId = status.ReviewId,
                 };
 
-                oldRecord.StatusId = statusClosed.Id;
+                oldRecord.StatusId = status.CloseId;
 
                 _repoWrapper.TicketRecord.Update(oldRecord);
                 await _repoWrapper.TicketRecord.AddAsync(record);
@@ -276,8 +278,8 @@ namespace Inventory.Service.Implement
                     TicketId = ticket.Id,
                     RecordId = record.Id,
                     Description = record.Description,
-                    Status = status.FirstOrDefault(x => x.Id == record.StatusId)?.Name,
-                    TicketType = type.FirstOrDefault(x => x.Id == record.TicketTypeId)?.Name,
+                    Status = status.Data.FirstOrDefault(x => x.Id == record.StatusId)?.Description,
+                    TicketType = type.FirstOrDefault(x => x.Id == record.TicketTypeId)?.Description,
                     Title = record.Title,
                     IsClosed = ticket.CloseDate != null,
                     ClosedDate = ticket.CloseDate.GetValueOrDefault(),
@@ -309,16 +311,11 @@ namespace Inventory.Service.Implement
                                                         .OrderByDescending(x => x.UpdatedAt)
                                                         .FirstOrDefaultAsync();
 
-            var listStatus = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Done
-                                                                         || x.Name == StatusConstant.Cancel)
-                                                      .ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
-            var statusCancel = listStatus.FirstOrDefault(x => x.Name == StatusConstant.Cancel);
-            var statusDone = listStatus.FirstOrDefault(x => x.Name == StatusConstant.Done);
-
-            if (record.StatusId != statusDone.Id && record.StatusId != statusCancel.Id)
+            if (status.CanEdit.Contains(record.StatusId))
             {
-                record.StatusId = statusCancel.Id;
+                record.StatusId = status.CancelId;
                 _repoWrapper.TicketRecord.Update(record);
 
                 ticket.CloseDate = DateTime.UtcNow;
@@ -363,19 +360,15 @@ namespace Inventory.Service.Implement
                 return response;
             }
 
-            var status = await _repoWrapper.Status.FindAll().ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
-            var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
-            var statusProcessing = status.FirstOrDefault(x => x.Name == StatusConstant.Processing);
-            var statusDone = status.FirstOrDefault(x => x.Name == StatusConstant.Done);
-
-            if (record.StatusId == statusPending.Id)
+            if (record.StatusId == status.PendingId)
             {
-                record.StatusId = statusProcessing.Id;
+                record.StatusId = status.ProcessingId;
             }
-            else if (record.StatusId == statusProcessing.Id)
+            else if (record.StatusId == status.ProcessingId)
             {
-                record.StatusId = statusDone.Id;
+                record.StatusId = status.DoneId;
 
                 ticket.CloseDate = DateTime.UtcNow;
                 _repoWrapper.Ticket.Update(ticket);
@@ -405,22 +398,17 @@ namespace Inventory.Service.Implement
                                  on record.Id equals entry.RecordId
                                  join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
                                  on entry.ItemId equals item.Id
-                                 select new
+                                 select new TicketEntryResponse
                                  {
-                                     Description = record.Description,
-                                     Entry = new TicketEntryResponse
-                                     {
-                                         Id = entry.Id,
-                                         RecordId = record.Id,
-                                         Item = _mapper.Map<ItemCompactResponse>(item),
-                                         Quantity = entry.Quantity,
-                                         Note = entry.Note,
-                                     }
+                                     Id = entry.Id,
+                                     RecordId = record.Id,
+                                     Item = _mapper.Map<ItemCompactResponse>(item),
+                                     Quantity = entry.Quantity,
+                                     Note = entry.Note,
                                  }).ToListAsync();
             if (entries.Any())
             {
-                response.Data = entries.Select(x => x.Entry).ToList();
-                response.Description = entries.Select(x => x.Description).FirstOrDefault();
+                response.Data = entries;
             }
             else
             {
@@ -443,34 +431,112 @@ namespace Inventory.Service.Implement
         public async Task<TicketSummaryObjectResponse> GetTicketSummary()
         {
             var response = new TicketSummaryObjectResponse();
-            var status = await _repoWrapper.Status.FindAll().ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
-            var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
-            var statusProcessing = status.FirstOrDefault(x => x.Name == StatusConstant.Processing);
-            var statusRejected = status.FirstOrDefault(x => x.Name == StatusConstant.Rejected);
-            var statusCompleted = status.FirstOrDefault(x => x.Name == StatusConstant.Close);
-
-            var result = await (
-                from t in _repoWrapper.Ticket.FindByCondition(x => !x.IsInactive)
-                join r in _repoWrapper.TicketRecord.FindByCondition(x => !x.IsInactive)
-                on t.Id equals r.TicketId
-                select new TicketSummaryResponse
-                {
-                    PendingTicket = r.StatusId == statusPending.Id ? 1 : 0,
-                    ProcessingTicket = r.StatusId == statusProcessing.Id ? 1 : 0,
-                    RejectTicket = r.StatusId == statusRejected.Id ? 1 : 0,
-                    CompletedTicket = r.StatusId == statusCompleted.Id ? 1 : 0,
-                }).ToListAsync();
+            var result = await (from t in _repoWrapper.Ticket.FindByCondition(x => !x.IsInactive)
+                                join r in _repoWrapper.TicketRecord.FindByCondition(x => !x.IsInactive)
+                                on t.Id equals r.TicketId
+                                join s in _repoWrapper.Status.FindByCondition(x => status.SummaryId.Contains(x.Id))
+                                on r.StatusId equals s.Id
+                                group r by r.StatusId into gr
+                                select new
+                                {
+                                    StatusId = gr.Key,
+                                    Count = gr.Count()
+                                }
+                                ).ToListAsync();
 
             response.Data = new TicketSummaryResponse
             {
-                PendingTicket = result.Sum(x => x.PendingTicket),
-                ProcessingTicket = result.Sum(x => x.ProcessingTicket),
-                RejectTicket = result.Sum(x => x.RejectTicket),
-                CompletedTicket = result.Sum(x => x.CompletedTicket)
+                Review = result.FirstOrDefault(x => x.StatusId == status.ReviewId)?.Count ?? 0,
+                Pending = result.FirstOrDefault(x => x.StatusId == status.PendingId)?.Count ?? 0,
+                Processing = result.FirstOrDefault(x => x.StatusId == status.ProcessingId)?.Count ?? 0,
+                Done = result.FirstOrDefault(x => x.StatusId == status.DoneId)?.Count ?? 0,
             };
 
             return response;
+        }
+
+        public async Task<BaseResponse> ApprovalTicketAsync(int recordId, CreateCommentRequest request)
+        {
+            _repoWrapper.SetUserContext(request.GetUserContext());
+            var response = new BaseResponse();
+
+            var status = await _commonService.GetStatusCollections();
+            var ticketAndRecord = await (from t in _repoWrapper.Ticket.FindByCondition(x => !x.IsInactive)
+                                         join r in _repoWrapper.TicketRecord.FindByCondition(x => !x.IsInactive && x.Id == request.RecordId)
+                                         on t.Id equals r.TicketId
+                                         select new
+                                         {
+                                             Ticket = t,
+                                             Record = r,
+                                         }).FirstOrDefaultAsync();
+
+            if (ticketAndRecord == null)
+            {
+                response.Message = new("Error", "Ticket not found!");
+                response.StatusCode = ResponseCode.BadRequest;
+
+                return response;
+            }
+
+            var ticket = ticketAndRecord.Ticket;
+            var record = ticketAndRecord.Record;
+
+            if (record.StatusId != status.ReviewId)
+            {
+                response.Message = new("Error", "Cannot approval ticket!");
+                response.StatusCode = ResponseCode.BadRequest;
+
+                return response;
+            }
+
+            var comment = await _commonService.AddNewComment(request);
+
+            if (request.IsReject)
+            {
+                record.StatusId = status.RejectId;
+            }
+            else
+            {
+                record.StatusId = status.PendingId;
+            }
+
+            _repoWrapper.TicketRecord.Update(record);
+            _repoWrapper.Ticket.Update(ticket);
+            await _repoWrapper.SaveAsync();
+
+            response.Message = new("Ticket", "Thank for approve the ticket!");
+
+            return response;
+        }
+
+        #endregion
+
+        #region Private 
+
+        public async Task<List<RecordHistoryResponse>> GetHistoryByTicketId(int ticketId)
+        {
+            var history = await (from record in _repoWrapper.TicketRecord.FindByCondition(x => x.TicketId == ticketId)
+                                 join created in _repoWrapper.User
+                                 on record.CreatedBy equals created.UserName
+                                 select new RecordHistoryResponse
+                                 {
+                                     Number = 0,
+                                     RecordId = record.Id,
+                                     CreatedAt = record.CreatedAt,
+                                     CreatedBy = created.FirstName + " " + created.LastName,
+                                 })
+                                 .ToListAsync();
+
+            if (history.Count > 0)
+            {
+                int i = 1;
+                history.ForEach(x => x.Number = i++);
+                return history;
+            }
+            else
+                return new List<RecordHistoryResponse> { };
         }
 
         #endregion

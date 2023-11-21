@@ -3,7 +3,9 @@ using Inventory.Core.Constants;
 using Inventory.Core.Extensions;
 using Inventory.Service;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Order;
+using Inventory.Service.Implement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -87,6 +89,21 @@ namespace Inventory.API.Controllers
             }
 
             return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpPost("{recordId}/approval")]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Approval(int recordId, CreateCommentRequest request)
+        {
+            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                var result = await _orderService.ApprovalOrderAsync(recordId, request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+                return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPut("{orderId}/update-status")]

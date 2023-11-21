@@ -14,5 +14,6 @@ namespace Inventory.Core.Constants
         public const string Rejected = "rejected";
         public const string Cancel = "cancel";
         public const string Close = "close";
+        public const string Review = "review";
     }
 }

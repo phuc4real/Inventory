@@ -1,5 +1,6 @@
 ﻿using Inventory.Core.Common;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
 
@@ -15,5 +16,6 @@ namespace Inventory.Service
         Task<BaseResponse> CancelAsync(TicketRequest request);
         Task<BaseResponse> UpdateStatusAsync(TicketRequest request);
         Task<TicketSummaryObjectResponse> GetTicketSummary();
+        Task<BaseResponse> ApprovalTicketAsync(int recordId, CreateCommentRequest request);
     }
 }

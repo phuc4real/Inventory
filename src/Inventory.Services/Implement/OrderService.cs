@@ -8,6 +8,7 @@ using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
@@ -32,7 +33,6 @@ namespace Inventory.Service.Implement
         }
 
         #endregion
-
 
         #region Method
 
@@ -94,7 +94,7 @@ namespace Inventory.Service.Implement
             _repoWrapper.SetUserContext(request.GetUserContext());
             OrderObjectResponse response = new();
 
-            var status = await _repoWrapper.Status.FindAll().ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
             if (request.RecordId == 0)
             {
@@ -108,13 +108,11 @@ namespace Inventory.Service.Implement
                 await _repoWrapper.SaveAsync();
 
                 //Add Order record
-                var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
-
                 var record = new OrderRecord()
                 {
                     OrderId = order.Id,
                     Description = request.Description,
-                    StatusId = statusPending.Id,
+                    StatusId = status.ReviewId,
                 };
 
                 await _repoWrapper.OrderRecord.AddAsync(record);
@@ -135,7 +133,7 @@ namespace Inventory.Service.Implement
                     OrderId = order.Id,
                     RecordId = record.Id,
                     Description = record.Description,
-                    Status = statusPending.Name,
+                    Status = status.Data.FirstOrDefault(x => x.Id == record.StatusId).Description,
                     IsCompleted = order.CompleteDate != null,
                     CompletedDate = order.CompleteDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
@@ -160,13 +158,7 @@ namespace Inventory.Service.Implement
                 var order = orderAndRecord.Order;
                 var oldRecord = orderAndRecord.Record;
 
-                var statusCannotEdit = status.Where(x => x.Name != StatusConstant.Pending
-                                                         && x.Name != StatusConstant.Processing)
-                                             .Select(x => x.Id);
-                var statusPending = status.FirstOrDefault(x => x.Name == StatusConstant.Pending);
-                var statusClosed = status.FirstOrDefault(x => x.Name == StatusConstant.Close);
-
-                if (statusCannotEdit.Contains(oldRecord.StatusId))
+                if (status.CannotEdit.Contains(oldRecord.StatusId))
                 {
                     response.StatusCode = ResponseCode.BadRequest;
                     response.Message = new("Error", "Cannot edit order!");
@@ -177,10 +169,10 @@ namespace Inventory.Service.Implement
                 {
                     OrderId = order.Id,
                     Description = request.Description,
-                    StatusId = statusPending.Id,
+                    StatusId = status.ReviewId,
                 };
 
-                oldRecord.StatusId = statusClosed.Id;
+                oldRecord.StatusId = status.CloseId;
 
                 _repoWrapper.OrderRecord.Update(oldRecord);
                 await _repoWrapper.OrderRecord.AddAsync(record);
@@ -201,7 +193,7 @@ namespace Inventory.Service.Implement
                     OrderId = order.Id,
                     RecordId = record.Id,
                     Description = record.Description,
-                    Status = status.FirstOrDefault(x => x.Id == record.StatusId)?.Name,
+                    Status = status.Data.FirstOrDefault(x => x.Id == record.StatusId)?.Description,
                     IsCompleted = order.CompleteDate != null,
                     CompletedDate = order.CompleteDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
@@ -289,24 +281,15 @@ namespace Inventory.Service.Implement
                 return response;
             }
 
-            var listStatus = await _repoWrapper.Status.FindAll().ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
-            var pending = listStatus.Where(x => x.Name == StatusConstant.Pending)
-                                    .FirstOrDefault();
-
-            var processing = listStatus.Where(x => x.Name == StatusConstant.Processing)
-                                       .FirstOrDefault();
-
-            var done = listStatus.Where(x => x.Name == StatusConstant.Done)
-                                 .FirstOrDefault();
-
-            if (record.StatusId == pending.Id)
+            if (record.StatusId == status.PendingId)
             {
-                record.StatusId = processing.Id;
+                record.StatusId = status.ProcessingId;
             }
-            else if (record.StatusId == processing.Id)
+            else if (record.StatusId == status.ProcessingId)
             {
-                record.StatusId = done.Id;
+                record.StatusId = status.DoneId;
 
                 //Set order complete date
                 order.CompleteDate = DateTime.UtcNow;
@@ -347,19 +330,11 @@ namespace Inventory.Service.Implement
                                                         .OrderByDescending(x => x.UpdatedAt)
                                                         .FirstOrDefaultAsync();
 
-            var listStatus = await _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Done
-                                                                         || x.Name == StatusConstant.Cancel)
-                                                      .ToListAsync();
+            var status = await _commonService.GetStatusCollections();
 
-            var cancel = listStatus.Where(x => x.Name == StatusConstant.Cancel)
-                                   .FirstOrDefault();
-
-            var done = listStatus.Where(x => x.Name == StatusConstant.Done)
-                                 .FirstOrDefault();
-
-            if (record.StatusId != done.Id && record.StatusId != cancel.Id)
+            if (status.CanEdit.Contains(record.StatusId))
             {
-                record.StatusId = cancel.Id;
+                record.StatusId = status.CancelId;
                 _repoWrapper.OrderRecord.Update(record);
                 _repoWrapper.Order.Update(order);
                 await _repoWrapper.SaveAsync();
@@ -394,7 +369,6 @@ namespace Inventory.Service.Implement
 
             return response;
         }
-
 
         public async Task<OrderEntryListResponse> GetOrderEntries(OrderRequest request)
         {
@@ -431,6 +405,59 @@ namespace Inventory.Service.Implement
             return response;
         }
 
+
+        public async Task<BaseResponse> ApprovalOrderAsync(int recordId, CreateCommentRequest request)
+        {
+            _repoWrapper.SetUserContext(request.GetUserContext());
+            var response = new BaseResponse();
+
+            var status = await _commonService.GetStatusCollections();
+            var orderAndRecord = await (from o in _repoWrapper.Order.FindByCondition(x => !x.IsInactive)
+                                        join r in _repoWrapper.OrderRecord.FindByCondition(x => !x.IsInactive && x.Id == request.RecordId)
+                                        on o.Id equals r.OrderId
+                                        select new
+                                        {
+                                            Order = o,
+                                            Record = r,
+                                        }).FirstOrDefaultAsync();
+
+            if (orderAndRecord == null)
+            {
+                response.Message = new("Error", "Order not found!");
+                response.StatusCode = ResponseCode.BadRequest;
+
+                return response;
+            }
+
+            var order = orderAndRecord.Order;
+            var record = orderAndRecord.Record;
+
+            if (record.StatusId != status.ReviewId)
+            {
+                response.Message = new("Error", "Cannot approval order!");
+                response.StatusCode = ResponseCode.BadRequest;
+
+                return response;
+            }
+
+            var comment = await _commonService.AddNewComment(request);
+
+            if (request.IsReject)
+            {
+                record.StatusId = status.RejectId;
+            }
+            else
+            {
+                record.StatusId = status.PendingId;
+            }
+            _repoWrapper.OrderRecord.Update(record);
+            _repoWrapper.Order.Update(order);
+            await _repoWrapper.SaveAsync();
+
+            response.Message = new("Ticket", "Thank for approve the order!");
+
+            return response;
+        }
 
         #endregion
 

@@ -93,17 +93,20 @@ namespace Inventory.Database.DataSeed
             #region Seed Status
 
             builder.Entity<Status>()
-                .HasData(new Status { Id = 1, Name = StatusConstant.Pending, Description = "Pending" });
+                .HasData(new Status { Id = 1, Name = StatusConstant.Review, Description = "In Review" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 2, Name = StatusConstant.Processing, Description = "Procesing" });
+                .HasData(new Status { Id = 2, Name = StatusConstant.Pending, Description = "Pending" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 3, Name = StatusConstant.Cancel, Description = "Cancel" });
+                .HasData(new Status { Id = 3, Name = StatusConstant.Processing, Description = "Procesing" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 4, Name = StatusConstant.Rejected, Description = "Rejected" });
+                .HasData(new Status { Id = 4, Name = StatusConstant.Cancel, Description = "Cancel by User" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 5, Name = StatusConstant.Close, Description = "Close" });
+                .HasData(new Status { Id = 5, Name = StatusConstant.Rejected, Description = "Rejected by Admin" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 6, Name = StatusConstant.Done, Description = "Done" });
+                .HasData(new Status { Id = 6, Name = StatusConstant.Close, Description = "Closed" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 7, Name = StatusConstant.Done, Description = "Done" });
+
 
             #endregion
 

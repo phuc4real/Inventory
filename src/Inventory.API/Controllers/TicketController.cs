@@ -4,6 +4,7 @@ using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Service;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
 using Inventory.Service.Implement;
@@ -65,10 +66,9 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(TicketObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(TicketUpdateResquest request)
         {
-
-            request.SetContext(HttpContext);
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
+                request.SetContext(HttpContext);
                 var result = await _ticketService.CreateOrUpdateAsync(request);
                 return StatusCode((int)result.StatusCode, result);
             }
@@ -103,9 +103,24 @@ namespace Inventory.API.Controllers
                 TicketId = ticketId
             };
             request.SetContext(HttpContext);
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 var result = await _ticketService.CancelAsync(request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+                return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpPost("{recordId}/approval")]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Approval(int recordId, CreateCommentRequest request)
+        {
+            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                var result = await _ticketService.ApprovalTicketAsync(recordId, request);
                 return StatusCode((int)result.StatusCode, result);
             }
             else
@@ -122,7 +137,7 @@ namespace Inventory.API.Controllers
                 TicketId = ticketId
             };
             request.SetContext(HttpContext);
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
                 var result = await _ticketService.UpdateStatusAsync(request);
                 return StatusCode((int)result.StatusCode, result);
@@ -136,6 +151,16 @@ namespace Inventory.API.Controllers
         public async Task<IActionResult> GetSummary()
         {
             return StatusCode(200, await _ticketService.GetTicketSummary());
+
         }
+
+        [HttpGet("type")]
+        [ProducesResponseType(typeof(TicketTypeList), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTicketType()
+        {
+            return StatusCode(200, await _ticketService.GetTicketType());
+        }
+
+
     }
 }

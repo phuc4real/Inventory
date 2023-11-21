@@ -9,10 +9,10 @@ namespace Inventory.Service.DTO.Ticket
 {
     public class TicketSummaryResponse
     {
-        public int PendingTicket { get; set; }
-        public int ProcessingTicket { get; set; }
-        public int RejectTicket { get; set; }
-        public int CompletedTicket { get; set; }
+        public int Review { get; set; }
+        public int Pending { get; set; }
+        public int Processing { get; set; }
+        public int Done { get; set; }
     }
 
     public class TicketSummaryObjectResponse : ObjectResponse<TicketSummaryResponse> { }
