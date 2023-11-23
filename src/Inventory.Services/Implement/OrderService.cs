@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Azure;
 using Inventory.Core.Common;
-using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
@@ -11,8 +9,6 @@ using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
-using Inventory.Service.DTO.Ticket;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
@@ -289,6 +285,24 @@ namespace Inventory.Service.Implement
             }
             else if (record.StatusId == status.ProcessingId)
             {
+                //Add item unit
+                var data = await (from entry in _repoWrapper.OrderEntry.FindByCondition(x => x.RecordId == record.Id)
+                                  join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
+                                  on entry.ItemId equals item.Id
+                                  select new
+                                  {
+                                      entry,
+                                      item,
+                                  }).ToListAsync();
+
+                foreach (var e in data)
+                {
+                    e.item.Unit += e.entry.Quantity;
+                };
+
+                var items = data.Select(x => x.item).ToList();
+                _repoWrapper.Item.UpdateRange(items);
+
                 record.StatusId = status.DoneId;
 
                 //Set order complete date

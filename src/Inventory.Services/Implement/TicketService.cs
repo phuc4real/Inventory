@@ -242,7 +242,7 @@ namespace Inventory.Service.Implement
 
                 if (ticketAndRecord == null)
                 {
-                    response.Message = new("Error","Ticket not found!");
+                    response.Message = new("Error", "Ticket not found!");
                     response.StatusCode = ResponseCode.BadRequest;
                     return response;
                 }
@@ -378,6 +378,13 @@ namespace Inventory.Service.Implement
                     RecordId = record.Id,
                     TicketId = ticket.Id,
                 });
+
+                if (newExport != null && newExport.StatusCode == ResponseCode.BadRequest)
+                {
+                    response.StatusCode = ResponseCode.BadRequest;
+                    response.Message = newExport.Message;
+                    return response;
+                }
 
                 record.StatusId = status.ProcessingId;
             }
