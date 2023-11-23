@@ -8,8 +8,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" />
+		<PackageReference Include="MailKit" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" />
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+		<PackageReference Include="MimeKit" />
 		<PackageReference Include="Serilog" />
 	</ItemGroup>
 
