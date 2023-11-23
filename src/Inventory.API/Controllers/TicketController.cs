@@ -1,10 +1,14 @@
-﻿using Inventory.Core.Common;
-using Inventory.Core.Enums;
+﻿using Azure.Core;
+using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Extensions;
-using Inventory.Core.Request;
-using Inventory.Core.Response;
-using Inventory.Core.ViewModel;
-using Inventory.Services.IServices;
+using Inventory.Model.Entity;
+using Inventory.Service;
+using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
+using Inventory.Service.DTO.Order;
+using Inventory.Service.DTO.Ticket;
+using Inventory.Service.Implement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,112 +27,144 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(typeof(PaginationResponse<Ticket>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(TicketPageResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TicketPageResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetPagination([FromQuery] PaginationRequest request)
         {
-            var result = await _ticketService.GetPagination(await HttpContext.GetAccessToken(), request);
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _ticketService.GetPaginationAsync(request);
 
-            return result.Status == ResponseCode.Success ?
-                    Ok(result) : NoContent();
+                return StatusCode((int)result.StatusCode, result);
+            }
+
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("list")]
-        [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(List<Ticket>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> ListTicket()
+        [HttpGet("{recordId}")]
+        [ProducesResponseType(typeof(TicketObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TicketObjectResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Get(int recordId)
         {
-            var result = await _ticketService.GetList();
+            var request = new TicketRequest()
+            {
+                RecordId = recordId
+            };
+            request.SetContext(HttpContext);
 
-            return result.Status == ResponseCode.Success ?
-                    Ok(result.Data) : NoContent();
-        }
+            if (ModelState.IsValid)
+            {
+                var result = await _ticketService.GetByIdAsync(request);
+                return StatusCode((int)result.StatusCode, result);
+            }
 
-        [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(TicketWithHistory), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Get(int id)
-        {
-            var result = await _ticketService.GetById(await HttpContext.GetAccessToken(), id);
-
-            return result.Status == ResponseCode.Success ?
-                    Ok(result.Data) : StatusCode((int)result.Status, result.Message);
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(List<ResponseMessage>), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Create(UpdateTicketInfo dto)
+        [ProducesResponseType(typeof(TicketObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TicketObjectResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Create(TicketUpdateResquest request)
         {
-            if (!ModelState.IsValid)
+            if (ModelState.IsValid)
             {
+                request.SetContext(HttpContext);
+                var result = await _ticketService.CreateOrUpdateAsync(request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
                 return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpGet("{recordId}/entry")]
+        [ProducesResponseType(typeof(TicketEntryList), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(TicketEntryList), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOrderEntry(int recordId)
+        {
+            if (ModelState.IsValid)
+            {
+                var request = new TicketRequest { RecordId = recordId };
+                request.SetContext(HttpContext);
+                var result = await _ticketService.GetTicketEntries(request);
+
+                return StatusCode((int)result.StatusCode, result);
             }
 
-            var result = await _ticketService.Create(await HttpContext.GetAccessToken(), dto);
-
-            return result.Status == ResponseCode.Success ?
-                    Created("ticket/" + result.Data!.Id, result.Message) :
-                    StatusCode((int)result.Status, result.Message);
+            return BadRequest(ModelState.GetErrorMessages());
         }
 
-
-        [HttpDelete("{id:int}/cancel")]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Cancel(int id)
+        [HttpDelete("{ticketId}/cancel")]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Cancel(int ticketId)
         {
-            var result = await _ticketService.Cancel(await HttpContext.GetAccessToken(), id);
-
-            return StatusCode((int)result.Status, result.Message);
+            var request = new TicketRequest()
+            {
+                TicketId = ticketId
+            };
+            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                var result = await _ticketService.CancelAsync(request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+                return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}/update-status")]
-        [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status422UnprocessableEntity)]
-        public async Task<IActionResult> UpdateStatus(int id)
+        [HttpPost("{recordId}/approval")]
+        [Authorize(Roles = InventoryRoles.SuperAdmin)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Approval(int recordId, CreateCommentRequest request)
         {
-            var result = await _ticketService.UpdateStatus(await HttpContext.GetAccessToken(), id);
-
-            return StatusCode((int)result.Status, result.Message);
+            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                var result = await _ticketService.ApprovalTicketAsync(recordId, request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+                return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}/decide")]
-        [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Decide(int id, UpdateDecision decision)
+        [HttpPut("{ticketId}/update-status")]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateStatus(int ticketId)
         {
-            var result = await _ticketService.Decide(await HttpContext.GetAccessToken(), id, decision);
-
-            return StatusCode((int)result.Status, result.Message);
+            var request = new TicketRequest()
+            {
+                TicketId = ticketId
+            };
+            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                var result = await _ticketService.UpdateStatusAsync(request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+                return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}/leader-decide")]
-        [Authorize(Roles = InventoryRoles.TeamLeader)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ResponseMessage), StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> LeaderDecide(int id, UpdateDecision decision)
+        [HttpGet("summary")]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
+        [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetSummary()
         {
-            var result = await _ticketService.LeaderDecide(await HttpContext.GetAccessToken(), id, decision);
+            return StatusCode(200, await _ticketService.GetTicketSummary());
 
-            return StatusCode((int)result.Status, result.Message);
         }
 
-        [HttpGet("count")]
-        [Authorize(Roles = InventoryRoles.Admin)]
-        [ProducesResponseType(typeof(List<Ticket>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetTicketCount()
+        [HttpGet("type")]
+        [ProducesResponseType(typeof(TicketTypeList), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetTicketType()
         {
-            var result = await _ticketService.GetTicketCount();
-
-            return StatusCode((int)result.Status, result.Data);
+            return StatusCode(200, await _ticketService.GetTicketType());
         }
+
+
     }
 }
