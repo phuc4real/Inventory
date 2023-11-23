@@ -8,7 +8,6 @@ using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Export;
 using Inventory.Service.DTO.Item;
-using Inventory.Service.DTO.Ticket;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
@@ -161,10 +160,55 @@ namespace Inventory.Service.Implement
 
             if (export.StatusId == status.PendingId)
             {
+                //TODO: check have enough unit of item
+                var entries = await (from entry in _repoWrapper.ExportEntry.FindByCondition(x => x.ExportId == export.Id)
+                                     join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
+                                     on entry.ItemId equals item.Id
+                                     select new
+                                     {
+                                         entry,
+                                         item,
+                                         IsEnoughUnit = (item.Unit - entry.Quantity) > 0
+                                     }).ToListAsync();
+
+                var errors = "";
+                foreach (var e in entries)
+                {
+                    if (!e.IsEnoughUnit)
+                    {
+                        errors += $"Item {e.item.Code} not have enough unit. ";
+                    }
+                }
+
+                if (errors != "")
+                {
+                    response.StatusCode = ResponseCode.BadRequest;
+                    response.Message = new("Error", errors);
+                    return response;
+                }
+
                 export.StatusId = status.ProcessingId;
             }
             else if (export.StatusId == status.ProcessingId)
             {
+                var data = await (from entry in _repoWrapper.ExportEntry.FindByCondition(x => x.ExportId == export.Id)
+                                  join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
+                                  on entry.ItemId equals item.Id
+                                  select new
+                                  {
+                                      entry,
+                                      item,
+                                  }).ToListAsync();
+
+                foreach (var e in data)
+                {
+                    e.item.Unit -= e.entry.Quantity;
+                    e.item.UseUnit += e.entry.Quantity;
+                }
+
+                var items = data.Select(x => x.item).ToList();
+                _repoWrapper.Item.UpdateRange(items);
+
                 export.StatusId = status.DoneId;
             }
 
