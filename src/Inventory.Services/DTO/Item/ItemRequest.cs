@@ -12,7 +12,6 @@ namespace Inventory.Service.DTO.Item
     {
         public int? Id { get; set; }
     }
-
     public class ItemUpdateRequest : ItemRequest
     {
         public string? Code { get; set; }

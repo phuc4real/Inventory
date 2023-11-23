@@ -10,15 +10,12 @@
 		<PackageReference Include="AutoMapper" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity" />
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+		<PackageReference Include="Serilog" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Inventory.Repository\Inventory.Repository.csproj" />
 		<ProjectReference Include="..\Shared\Inventory.Core\Inventory.Core.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="DTO\UseUnit\" />
 	</ItemGroup>
 
 </Project>

@@ -10,6 +10,10 @@ namespace Inventory.Service.MappingProfile
         {
             CreateMap<Export, ExportResponse>();
             CreateMap<ExportEntry, ExportEntryResponse>();
+
+            CreateMap<TicketEntry, ExportEntry>()
+                .ForMember(x => x.Id, y => y.Ignore());
+
         }
     }
 }

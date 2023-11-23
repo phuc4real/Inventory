@@ -10,5 +10,6 @@
         public int Unit { get; set; }
         public int UseUnit { get; set; }
         public int CategoryId { get; set; }
+        public virtual Category? Category { get; set; }
     }
 }

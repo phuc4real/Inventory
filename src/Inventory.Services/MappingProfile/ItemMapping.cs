@@ -14,6 +14,7 @@ namespace Inventory.Service.MappingProfile
         public ItemMapping()
         {
             CreateMap<Item, ItemResponse>();
+            CreateMap<Item, ItemCompactResponse>();
             CreateMap<ItemUpdateRequest, Item>();
         }
     }

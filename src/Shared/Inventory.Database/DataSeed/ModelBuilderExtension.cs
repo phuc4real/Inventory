@@ -1,5 +1,4 @@
-﻿using Inventory.Core.Common;
-using Inventory.Core.Const;
+﻿using Inventory.Core.Constants;
 using Inventory.Model.Entity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +7,7 @@ namespace Inventory.Database.DataSeed
 {
     public static class ModelBuilderExtension
     {
-        public static void SeedingData(this ModelBuilder builder)
+        public static void SeedingDataOnCreating(this ModelBuilder builder)
         {
             #region Seed Role
 
@@ -47,9 +46,11 @@ namespace Inventory.Database.DataSeed
                 Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
                 UserName = "sa",
                 NormalizedUserName = "SA",
-                Email = "sa@local.com",
-                NormalizedEmail = "SA@LOCAL.COM",
-                SecurityStamp = Guid.NewGuid().ToString()
+                Email = "phucforeveralone+sa@gmail.com",
+                NormalizedEmail = "PHUCFOREVERALONE+SA@GMAIL.COM",
+                SecurityStamp = Guid.NewGuid().ToString(),
+                FirstName = "Super",
+                LastName = "Admin"
             };
             sa.PasswordHash = hasher.HashPassword(sa, "123456@@");
 
@@ -68,9 +69,11 @@ namespace Inventory.Database.DataSeed
                 Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
                 UserName = "admin",
                 NormalizedUserName = "ADMIN",
-                Email = "admin@local.com",
-                NormalizedEmail = "ADMIN@LOCAL.COM",
-                SecurityStamp = Guid.NewGuid().ToString()
+                Email = "phucforeveralone+ad@gmail.com",
+                NormalizedEmail = "PHUCFOREVERALONE+AD@GMAIL.COM",
+                SecurityStamp = Guid.NewGuid().ToString(),
+                FirstName = "Normal",
+                LastName = "Admin"
             };
 
             admin.PasswordHash = hasher.HashPassword(admin, "123456@@");
@@ -81,7 +84,6 @@ namespace Inventory.Database.DataSeed
             builder.Entity<IdentityUserRole<string>>()
                 .HasData(new IdentityUserRole<string>
                 {
-
                     RoleId = "4e5e4a2b-9b92-40fa-87f2-1fefc574336b",
                     UserId = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8"
                 });
@@ -91,17 +93,20 @@ namespace Inventory.Database.DataSeed
             #region Seed Status
 
             builder.Entity<Status>()
-                .HasData(new Status { Id = 1, Name = StatusConstant.Pending, Description = "Pending" });
+                .HasData(new Status { Id = 1, Name = StatusConstant.Review, Description = "In Review" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 2, Name = StatusConstant.Processing, Description = "Procesing" });
+                .HasData(new Status { Id = 2, Name = StatusConstant.Pending, Description = "Pending" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 3, Name = StatusConstant.Cancel, Description = "Cancel" });
+                .HasData(new Status { Id = 3, Name = StatusConstant.Processing, Description = "Processing" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 4, Name = StatusConstant.Rejected, Description = "Rejected" });
+                .HasData(new Status { Id = 4, Name = StatusConstant.Cancel, Description = "Cancel by User" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 5, Name = StatusConstant.Close, Description = "Close" });
+                .HasData(new Status { Id = 5, Name = StatusConstant.Rejected, Description = "Rejected by Admin" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 6, Name = StatusConstant.Done, Description = "Done" });
+                .HasData(new Status { Id = 6, Name = StatusConstant.Close, Description = "Closed" });
+            builder.Entity<Status>()
+                .HasData(new Status { Id = 7, Name = StatusConstant.Done, Description = "Done" });
+
 
             #endregion
 

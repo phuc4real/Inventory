@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Inventory.Model.Entity;
+using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +12,7 @@ namespace Inventory.Repository
     {
         Task SaveAsync();
 
-        void SetUserContext(string userId);
+        void SetUserContext(string userContext);
 
         ICategoryRepository Category { get; }
         ICommentRepository Comment { get; }
@@ -25,5 +27,6 @@ namespace Inventory.Repository
         ITicketEntryRepository TicketEntry { get; }
         ITicketRecordRepository TicketRecord { get; }
         ITicketTypeRepository TicketType { get; }
+        IQueryable<AppUser> User { get; }
     }
 }

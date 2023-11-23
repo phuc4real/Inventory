@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Inventory.Service;
 using Inventory.Service.DTO.Category;
 using Inventory.Service.Common;
+using Inventory.Core.Constants;
 
 namespace Inventory.API.Controllers
 {
@@ -21,7 +22,6 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = InventoryRoles.Admin)]
         [ProducesResponseType(typeof(CategoryPaginationResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Pagination([FromQuery] PaginationRequest request)
@@ -36,7 +36,7 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Get(CategoryRequest request)
@@ -52,7 +52,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(CategoryUpdateRequest request)
@@ -67,8 +67,8 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}")]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [HttpPut("{id}")]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(CategoryObjectResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Update(CategoryUpdateRequest request)
@@ -84,14 +84,15 @@ namespace Inventory.API.Controllers
         }
 
 
-        [HttpDelete("{id:int}")]
-        [Authorize(Roles = InventoryRoles.Admin)]
+        [HttpDelete("{id}")]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Delete(CategoryRequest request)
+        public async Task<IActionResult> Delete(int id)
         {
             if (ModelState.IsValid)
             {
+                var request = new CategoryRequest { Id = id };
                 request.SetContext(HttpContext);
                 var result = await _categoryService.DeactiveAsync(request);
 

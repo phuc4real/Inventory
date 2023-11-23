@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace Inventory.Core.Extensions
 {
-    public static class IQueryableExtension
+    public static class LinqExtension
     {
         public static IQueryable<T> OrderByField<T>(this IQueryable<T> q, string sortField, bool ascending)
         {

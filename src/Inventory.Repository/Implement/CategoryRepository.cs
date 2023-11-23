@@ -1,8 +1,5 @@
-﻿using Inventory.Core.Extensions;
-using Inventory.Core.Helper;
-using Inventory.Database.DbContext;
+﻿using Inventory.Database.DbContext;
 using Inventory.Model.Entity;
-using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Repository.Implement
 {

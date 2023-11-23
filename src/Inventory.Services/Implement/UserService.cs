@@ -1,13 +1,12 @@
 ﻿using AutoMapper;
 using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
-using Inventory.Repository;
 using Inventory.Service.DTO.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
 
 namespace Inventory.Service.Implement
 {
@@ -34,11 +33,11 @@ namespace Inventory.Service.Implement
 
         #region Method
 
-        public async Task<UserObjectResponse> GetByIdAsync(string id)
+        public async Task<UserObjectResponse> GetByUserNameAsync(string userName)
         {
             UserObjectResponse response = new();
 
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByNameAsync(userName);
 
             if (user == null)
             {
@@ -53,11 +52,11 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<UserObjectResponse> GetAsync(string token)
+        public async Task<UserObjectResponse> GetAsync(BaseRequest request)
         {
             UserObjectResponse response = new();
 
-            var user = await _userManager.FindByIdAsync(_tokenService.GetUserId(token));
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
 
             if (user == null)
             {
@@ -100,9 +99,9 @@ namespace Inventory.Service.Implement
             return response;
         }
 
-        public async Task<UserPermission> CheckRoleOfUser(string userId)
+        public async Task<UserPermission> CheckRoleOfUser(string userName)
         {
-            var user = await _userManager.FindByIdAsync(userId);
+            var user = await _userManager.FindByNameAsync(userName);
             var roles = await _userManager.GetRolesAsync(user);
 
             var result = new UserPermission
@@ -112,6 +111,40 @@ namespace Inventory.Service.Implement
             };
 
             return result;
+        }
+
+        public async Task<Operation> GetOperationAsync(BaseRequest request)
+        {
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
+            var roles = await _userManager.GetRolesAsync(user);
+            var operation = GetOperationOfUser(roles);
+
+            return operation;
+        }
+
+        #endregion
+
+        #region Private
+
+        private Operation GetOperationOfUser(IList<string> roles)
+        {
+            var isSuperAdmin = roles.Contains(InventoryRoles.SuperAdmin);
+            var isAdmin = roles.Contains(InventoryRoles.Admin);
+            var isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
+
+            var operation = new Operation()
+            {
+                Item = new() { CanView = true, CanEdit = isAdminOrSuperAdmin, },
+                Dashboard = new() { CanView = isAdminOrSuperAdmin },
+                Category = new() { CanView = true, CanEdit = isAdminOrSuperAdmin, },
+                Order = new() { CanView = isAdminOrSuperAdmin, CanEdit = isAdminOrSuperAdmin, CanApproval = isSuperAdmin },
+                Export = new() { CanView = isAdminOrSuperAdmin, CanEdit = isAdminOrSuperAdmin, },
+                Ticket = new() { CanView = true, CanEdit = true, CanChangeStatus = isAdminOrSuperAdmin, CanApproval = isSuperAdmin },
+                ItemHolder = new() { CanView = true, CanEdit = isAdminOrSuperAdmin },
+            };
+
+
+            return operation;
         }
 
         #endregion

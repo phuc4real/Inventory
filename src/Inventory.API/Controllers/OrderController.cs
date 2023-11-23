@@ -1,8 +1,11 @@
 ﻿using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Extensions;
 using Inventory.Service;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Order;
+using Inventory.Service.Implement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +13,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.Admin)]
+    [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
     public class OrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
@@ -44,7 +47,7 @@ namespace Inventory.API.Controllers
             if (ModelState.IsValid)
             {
                 request.SetContext(HttpContext);
-                var result = await _orderService.CreateAsync(request);
+                var result = await _orderService.CreateOrUpdateAsync(request);
 
                 return StatusCode((int)result.StatusCode, result);
             }
@@ -53,13 +56,14 @@ namespace Inventory.API.Controllers
 
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{recordId}")]
         [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(OrderObjectResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Get(OrderRequest request)
+        public async Task<IActionResult> Get(int recordId)
         {
             if (ModelState.IsValid)
             {
+                var request = new OrderRequest { RecordId = recordId };
                 request.SetContext(HttpContext);
                 var result = await _orderService.GetByIdAsync(request);
 
@@ -69,13 +73,47 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}/update-status")]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateStatus(OrderRequest request)
+        [HttpGet("{recordId}/entry")]
+        [ProducesResponseType(typeof(OrderEntryListResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(OrderEntryListResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOrderEntry(int recordId)
         {
             if (ModelState.IsValid)
             {
+                var request = new OrderRequest { RecordId = recordId };
+                request.SetContext(HttpContext);
+                var result = await _orderService.GetOrderEntries(request);
+
+                return StatusCode((int)result.StatusCode, result);
+            }
+
+            return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpPost("{recordId}/approval")]
+        [Authorize(Roles = InventoryRoles.SuperAdmin)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Approval(int recordId, CreateCommentRequest request)
+        {
+            request.SetContext(HttpContext);
+            if (ModelState.IsValid)
+            {
+                var result = await _orderService.ApprovalOrderAsync(recordId, request);
+                return StatusCode((int)result.StatusCode, result);
+            }
+            else
+                return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpPut("{orderId}/update-status")]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdateStatus(int orderId)
+        {
+            if (ModelState.IsValid)
+            {
+                var request = new OrderRequest { OrderId = orderId };
                 request.SetContext(HttpContext);
                 var result = await _orderService.UpdateOrderStatusAsync(request);
 
@@ -85,13 +123,14 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpDelete("{id:int}/cancel")]
+        [HttpDelete("{orderId}/cancel")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Cancel(OrderRequest request)
+        public async Task<IActionResult> Cancel(int orderId)
         {
             if (ModelState.IsValid)
             {
+                var request = new OrderRequest { OrderId = orderId };
                 request.SetContext(HttpContext);
                 var result = await _orderService.CancelOrderAsync(request);
 
@@ -101,10 +140,9 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-
         [HttpGet("chart")]
         [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetCount()
+        public async Task<IActionResult> GetChart()
         {
             return StatusCode(200, await _orderService.GetOrderChartAsync());
         }

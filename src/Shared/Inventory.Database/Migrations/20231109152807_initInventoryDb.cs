@@ -32,7 +32,6 @@ namespace Inventory.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Discriminator = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RefreshTokenExpireTime = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -69,7 +68,7 @@ namespace Inventory.Database.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -125,38 +124,12 @@ namespace Inventory.Database.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Exports", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Items",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Unit = table.Column<int>(type: "int", nullable: false),
-                    UseUnit = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Items", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -191,7 +164,7 @@ namespace Inventory.Database.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -211,7 +184,7 @@ namespace Inventory.Database.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -265,7 +238,7 @@ namespace Inventory.Database.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -285,7 +258,7 @@ namespace Inventory.Database.Migrations
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsInactive = table.Column<bool>(type: "bit", nullable: false),
-                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -413,6 +386,38 @@ namespace Inventory.Database.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Items",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Unit = table.Column<int>(type: "int", nullable: false),
+                    UseUnit = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsInactive = table.Column<bool>(type: "bit", nullable: false),
+                    InactiveAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    InactiveBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Items", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Items_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
@@ -425,11 +430,11 @@ namespace Inventory.Database.Migrations
 
             migrationBuilder.InsertData(
                 table: "AspNetUsers",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Discriminator", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RefreshTokenExpireTime", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "FirstName", "LastName", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "RefreshTokenExpireTime", "SecurityStamp", "TwoFactorEnabled", "UserName" },
                 values: new object[,]
                 {
-                    { "d2f7a36c-d4a6-43db-8fe9-74598da4c352", 0, "ebe233d7-81dd-48db-acdd-b34e2df0adcd", "AppUser", "sa@local.com", false, null, null, false, null, "SA@LOCAL.COM", "SA", "AQAAAAIAAYagAAAAEPdWpLrb8oIRu8/o4BEKuhxf78M7COAOIRfWwTARIeXcU2V8gKM1yB4UN0ApdGUabw==", null, false, null, "f3c0e182-502e-416b-af3e-4a4a14676323", false, "sa" },
-                    { "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8", 0, "5ccd793c-c007-4a96-935e-95e8f5ba138f", "AppUser", "admin@local.com", false, null, null, false, null, "ADMIN@LOCAL.COM", "ADMIN", "AQAAAAIAAYagAAAAENwID9i7SORal1gkQH9KuUeBGCBHMOXaK90wInRcINF9MuOJiQnQq3pY5r84ldqoHA==", null, false, null, "b89b347e-7a9f-4d40-82b7-5d4324e0408f", false, "admin" }
+                    { "d2f7a36c-d4a6-43db-8fe9-74598da4c352", 0, "d3afbe88-5469-413e-9dd1-738bb9dc8ee4", "sa@local.com", false, "Super", "Admin", false, null, "SA@LOCAL.COM", "SA", "AQAAAAIAAYagAAAAEMeePQdW7RvAVl31NLwmY/THyeiTASGrHrCqioJTHBNbmY6DI0uYGzy3nvEqX9BCFw==", null, false, null, "df3501b4-487f-4339-9924-14a182047907", false, "sa" },
+                    { "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8", 0, "742d45f9-ead1-46a4-a448-6d4c11c72c2c", "admin@local.com", false, "Normal", "Admin", false, null, "ADMIN@LOCAL.COM", "ADMIN", "AQAAAAIAAYagAAAAEOIvsDwdncA6HGpcgPySZbIOtjiZdwGeCDTOiIdl5rE4vrrZS8GtibUrR7W28YAQ2g==", null, false, null, "bb7d189d-a56a-4003-bc9d-11655d6f5902", false, "admin" }
                 });
 
             migrationBuilder.InsertData(
@@ -502,6 +507,11 @@ namespace Inventory.Database.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Items_CategoryId",
+                table: "Items",
+                column: "CategoryId");
         }
 
         /// <inheritdoc />
@@ -521,9 +531,6 @@ namespace Inventory.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
-
-            migrationBuilder.DropTable(
-                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Comments");
@@ -566,6 +573,9 @@ namespace Inventory.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
         }
     }
 }

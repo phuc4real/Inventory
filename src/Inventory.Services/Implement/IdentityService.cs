@@ -1,4 +1,6 @@
-﻿using Inventory.Core.Common;
+﻿using Azure.Core;
+using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Model.Entity;
 using Inventory.Service.Common;
@@ -17,7 +19,7 @@ namespace Inventory.Service.Implement
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
 
-        private readonly string provider = "Inventory Indentity";
+        private readonly string provider = "Inventory Identity";
         private readonly string tokenName = "Refresh Token";
 
         public IdentityService(
@@ -46,7 +48,7 @@ namespace Inventory.Service.Implement
             if (user == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("User", "User not exists!");
+                response.Message = new("UErrorser", "User not exists!");
             }
             else
             {
@@ -56,7 +58,7 @@ namespace Inventory.Service.Implement
                 {
                     var tokens = await GetIdentityResponseAsync(user);
 
-                    var refreshTokenExpireTime = DateTime.UtcNow.AddMinutes(60);
+                    var refreshTokenExpireTime = DateTime.UtcNow.AddDays(15);
 
                     user.RefreshTokenExpireTime = refreshTokenExpireTime;
 
@@ -67,7 +69,7 @@ namespace Inventory.Service.Implement
                 else
                 {
                     response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("User", "Wrong password!");
+                    response.Message = new("Error", "Wrong password!");
                 }
             }
             return response;
@@ -83,7 +85,7 @@ namespace Inventory.Service.Implement
             if (emailExist || userNameExist)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("User", "User already exists!");
+                response.Message = new("Error", "User already exists!");
             }
             else
             {
@@ -98,12 +100,12 @@ namespace Inventory.Service.Implement
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, InventoryRoles.NormalUser);
-                    response.Message = new("User", "User created successfully!");
+                    response.Message = new("Success", "User created successfully!");
                 }
                 else
                 {
                     response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("User", "User info invalid!");
+                    response.Message = new("Error", "User info invalid!");
                 }
             }
 
@@ -113,12 +115,12 @@ namespace Inventory.Service.Implement
         public async Task<BaseResponse> SignOutAsync(BaseRequest request)
         {
             BaseResponse response = new();
-            var user = await _userManager.FindByIdAsync(request.GetUserContext());
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
 
             if (user == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("User", "User not exist!");
+                response.Message = new("Error", "User not exist!");
             }
             else
             {
@@ -129,25 +131,27 @@ namespace Inventory.Service.Implement
                 await _userManager.UpdateAsync(user);
                 await _userManager.UpdateSecurityStampAsync(user);
 
-                response.Message = new("User", "User logout!");
+                response.Message = new("Success", "User logout!");
             }
 
             return response;
         }
 
-        public async Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request, string refreshToken)
+        public async Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request)
         {
             IdentityObjectResponse response = new();
 
-            var user = await _userManager.FindByIdAsync(request.GetUserContext());
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
+
+            var (accesToken, refreshToken) = request.GetFullToken();
 
             var storedRefreshToken = await _userManager.GetAuthenticationTokenAsync(user, provider, tokenName);
             var isRefreshTokenValid = await _userManager.VerifyUserTokenAsync(user, provider, "rs-" + user.Id, refreshToken);
             var curDateTime = DateTime.UtcNow;
 
             bool isValid = isRefreshTokenValid
-                           && curDateTime < user.RefreshTokenExpireTime
-                           && storedRefreshToken == refreshToken;
+                         && curDateTime < user.RefreshTokenExpireTime
+                         && storedRefreshToken == refreshToken;
 
             if (isValid)
             {
@@ -156,9 +160,8 @@ namespace Inventory.Service.Implement
             else
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("RefreshToken", "Refresh token Invalid!");
+                response.Message = new("Refresh token Invalid!", "Cannot refresh token, please try login again!");
             }
-
 
             return response;
         }
@@ -247,6 +250,7 @@ namespace Inventory.Service.Implement
             UserIdentityResponse res = new()
             {
                 UserId = user.Id,
+                UserName = user.UserName,
                 AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
                 RefreshToken = refreshToken,
                 ExpireTime = token.ValidTo

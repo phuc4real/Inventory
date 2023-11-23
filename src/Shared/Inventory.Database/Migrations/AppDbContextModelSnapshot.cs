@@ -22,6 +22,118 @@ namespace Inventory.Database.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Inventory.Model.Entity.AppUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("RefreshTokenExpireTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d3afbe88-5469-413e-9dd1-738bb9dc8ee4",
+                            Email = "sa@local.com",
+                            EmailConfirmed = false,
+                            FirstName = "Super",
+                            LastName = "Admin",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SA@LOCAL.COM",
+                            NormalizedUserName = "SA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMeePQdW7RvAVl31NLwmY/THyeiTASGrHrCqioJTHBNbmY6DI0uYGzy3nvEqX9BCFw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "df3501b4-487f-4339-9924-14a182047907",
+                            TwoFactorEnabled = false,
+                            UserName = "sa"
+                        },
+                        new
+                        {
+                            Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "742d45f9-ead1-46a4-a448-6d4c11c72c2c",
+                            Email = "admin@local.com",
+                            EmailConfirmed = false,
+                            FirstName = "Normal",
+                            LastName = "Admin",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@LOCAL.COM",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOIvsDwdncA6HGpcgPySZbIOtjiZdwGeCDTOiIdl5rE4vrrZS8GtibUrR7W28YAQ2g==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "bb7d189d-a56a-4003-bc9d-11655d6f5902",
+                            TwoFactorEnabled = false,
+                            UserName = "admin"
+                        });
+                });
+
             modelBuilder.Entity("Inventory.Model.Entity.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -39,7 +151,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -113,7 +225,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("ExportFor")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -187,7 +299,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -213,6 +325,8 @@ namespace Inventory.Database.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.ToTable("Items");
                 });
 
@@ -233,7 +347,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -301,7 +415,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -401,7 +515,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -463,7 +577,7 @@ namespace Inventory.Database.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("InactiveAt")
+                    b.Property<DateTime?>("InactiveAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("InactiveBy")
@@ -606,79 +720,6 @@ namespace Inventory.Database.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasDiscriminator<string>("Discriminator").HasValue("IdentityUser");
-
-                    b.UseTphMappingStrategy();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -772,54 +813,15 @@ namespace Inventory.Database.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Inventory.Model.Entity.AppUser", b =>
+            modelBuilder.Entity("Inventory.Model.Entity.Item", b =>
                 {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
+                    b.HasOne("Inventory.Model.Entity.Category", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("RefreshTokenExpireTime")
-                        .HasColumnType("datetime2");
-
-                    b.HasDiscriminator().HasValue("AppUser");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = "d2f7a36c-d4a6-43db-8fe9-74598da4c352",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ebe233d7-81dd-48db-acdd-b34e2df0adcd",
-                            Email = "sa@local.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SA@LOCAL.COM",
-                            NormalizedUserName = "SA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPdWpLrb8oIRu8/o4BEKuhxf78M7COAOIRfWwTARIeXcU2V8gKM1yB4UN0ApdGUabw==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f3c0e182-502e-416b-af3e-4a4a14676323",
-                            TwoFactorEnabled = false,
-                            UserName = "sa"
-                        },
-                        new
-                        {
-                            Id = "F5EE313D-9B16-45C0-BA54-8D4E9628EFD8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "5ccd793c-c007-4a96-935e-95e8f5ba138f",
-                            Email = "admin@local.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ADMIN@LOCAL.COM",
-                            NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENwID9i7SORal1gkQH9KuUeBGCBHMOXaK90wInRcINF9MuOJiQnQq3pY5r84ldqoHA==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "b89b347e-7a9f-4d40-82b7-5d4324e0408f",
-                            TwoFactorEnabled = false,
-                            UserName = "admin"
-                        });
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -833,7 +835,7 @@ namespace Inventory.Database.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("Inventory.Model.Entity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -842,7 +844,7 @@ namespace Inventory.Database.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("Inventory.Model.Entity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -857,7 +859,7 @@ namespace Inventory.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("Inventory.Model.Entity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -866,7 +868,7 @@ namespace Inventory.Database.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("Inventory.Model.Entity.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

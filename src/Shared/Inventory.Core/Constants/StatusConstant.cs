@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Core.Const
+namespace Inventory.Core.Constants
 {
     public class StatusConstant
     {
@@ -14,5 +14,6 @@ namespace Inventory.Core.Const
         public const string Rejected = "rejected";
         public const string Cancel = "cancel";
         public const string Close = "close";
+        public const string Review = "review";
     }
 }

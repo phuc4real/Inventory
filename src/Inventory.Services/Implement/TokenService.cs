@@ -3,6 +3,7 @@ using Inventory.Model.Entity;
 using Inventory.Service.Common;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -32,13 +33,10 @@ namespace Inventory.Service.Implement
             };
 
             userRoles.ForEach(x => claims.Add(new Claim(ClaimTypes.Role, x)));
-            //foreach (var role in userRoles)
-            //{
-            //    claims.Add(new Claim(ClaimTypes.Role, role));
-            //}
 
             var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.SecretKey));
 
+            Log.Information(_config.ExpireMinutes.ToString());
             var token = new JwtSecurityToken(
                  audience: _config.Audience,
                  issuer: _config.Issuer,
@@ -49,7 +47,7 @@ namespace Inventory.Service.Implement
             return token;
         }
 
-        public string? GetUserId(string token)
+        public string? GetUserNameFromToken(string token)
         {
             if (string.IsNullOrEmpty(token))
             {
@@ -58,7 +56,7 @@ namespace Inventory.Service.Implement
 
             var principal = GetPrincipalFromToken(token);
 
-            return principal.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            return principal.FindFirstValue(ClaimTypes.Name)!;
         }
 
         #endregion

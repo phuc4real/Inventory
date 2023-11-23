@@ -13,7 +13,6 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class IdentityController : ControllerBase
     {
         private readonly IIdentityService _authService;
@@ -23,7 +22,6 @@ namespace Inventory.API.Controllers
             _authService = authService;
         }
 
-        [AllowAnonymous]
         [HttpPost("register")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
@@ -38,7 +36,6 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [AllowAnonymous]
         [HttpPost("login")]
         [ProducesResponseType(typeof(UserIdentityResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
@@ -53,6 +50,7 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
+        [Authorize]
         [HttpDelete("logout")]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Logout()
@@ -64,7 +62,6 @@ namespace Inventory.API.Controllers
             return StatusCode((int)result.StatusCode, result);
         }
 
-        [AllowAnonymous]
         [HttpPost("refresh")]
         [EnableRateLimiting("RefresshTokenLimit")]
         [ProducesResponseType(typeof(UserIdentityResponse), StatusCodes.Status200OK)]
@@ -74,14 +71,7 @@ namespace Inventory.API.Controllers
             BaseRequest request = new();
             request.SetContext(HttpContext);
 
-            var refreshToken = HttpContext.GetRefreshToken();
-
-            if (refreshToken.IsNullOrEmpty())
-            {
-                return BadRequest(new ResultMessage("RefreshToken", "Cannot get refresh token!"));
-            }
-
-            var result = await _authService.RefreshTokenAsync(request, refreshToken);
+            var result = await _authService.RefreshTokenAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
         }

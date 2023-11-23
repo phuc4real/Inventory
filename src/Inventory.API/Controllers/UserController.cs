@@ -35,12 +35,12 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("info/{id}")]
+        [HttpGet("info/{userName}")]
         [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetInfoOfUserId(string id)
+        public async Task<IActionResult> GetInfoByUserName(string userName)
         {
-            var result = await _userService.GetByIdAsync(id);
+            var result = await _userService.GetByUserNameAsync(userName);
 
             return StatusCode((int)result.StatusCode, result);
         }
@@ -50,9 +50,24 @@ namespace Inventory.API.Controllers
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UserInfo()
         {
-            var result = await _userService.GetAsync(await HttpContext.GetAccessToken());
+            var request = new BaseRequest();
+            request.SetContext(HttpContext);
+            var result = await _userService.GetAsync(request);
 
             return StatusCode((int)result.StatusCode, result);
+        }
+
+        [HttpGet("operation")]
+        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOperation()
+        {
+            var request = new BaseRequest();
+            request.SetContext(HttpContext);
+            var result = await _userService.GetOperationAsync(request);
+
+            return Ok(result);
+            //return StatusCode((int)result.StatusCode, result);
         }
     }
 }
