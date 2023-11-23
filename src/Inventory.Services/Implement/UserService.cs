@@ -113,6 +113,40 @@ namespace Inventory.Service.Implement
             return result;
         }
 
+        public async Task<Operation> GetOperationAsync(BaseRequest request)
+        {
+            var user = await _userManager.FindByNameAsync(request.GetUserContext());
+            var roles = await _userManager.GetRolesAsync(user);
+            var operation = GetOperationOfUser(roles);
+
+            return operation;
+        }
+
+        #endregion
+
+        #region Private
+
+        private Operation GetOperationOfUser(IList<string> roles)
+        {
+            var isSuperAdmin = roles.Contains(InventoryRoles.SuperAdmin);
+            var isAdmin = roles.Contains(InventoryRoles.Admin);
+            var isAdminOrSuperAdmin = isAdmin || isSuperAdmin;
+
+            var operation = new Operation()
+            {
+                Item = new() { CanView = true, CanEdit = isAdminOrSuperAdmin, },
+                Dashboard = new() { CanView = isAdminOrSuperAdmin },
+                Category = new() { CanView = true, CanEdit = isAdminOrSuperAdmin, },
+                Order = new() { CanView = isAdminOrSuperAdmin, CanEdit = isAdminOrSuperAdmin, CanApproval = isSuperAdmin },
+                Export = new() { CanView = isAdminOrSuperAdmin, CanEdit = isAdminOrSuperAdmin, },
+                Ticket = new() { CanView = true, CanEdit = true, CanChangeStatus = isAdminOrSuperAdmin, CanApproval = isSuperAdmin },
+                ItemHolder = new() { CanView = true, CanEdit = isAdminOrSuperAdmin },
+            };
+
+
+            return operation;
+        }
+
         #endregion
     }
 }

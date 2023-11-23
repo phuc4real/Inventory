@@ -97,7 +97,7 @@ namespace Inventory.Database.DataSeed
             builder.Entity<Status>()
                 .HasData(new Status { Id = 2, Name = StatusConstant.Pending, Description = "Pending" });
             builder.Entity<Status>()
-                .HasData(new Status { Id = 3, Name = StatusConstant.Processing, Description = "Procesing" });
+                .HasData(new Status { Id = 3, Name = StatusConstant.Processing, Description = "Processing" });
             builder.Entity<Status>()
                 .HasData(new Status { Id = 4, Name = StatusConstant.Cancel, Description = "Cancel by User" });
             builder.Entity<Status>()

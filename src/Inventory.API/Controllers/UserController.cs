@@ -56,5 +56,18 @@ namespace Inventory.API.Controllers
 
             return StatusCode((int)result.StatusCode, result);
         }
+
+        [HttpGet("operation")]
+        [ProducesResponseType(typeof(UserObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOperation()
+        {
+            var request = new BaseRequest();
+            request.SetContext(HttpContext);
+            var result = await _userService.GetOperationAsync(request);
+
+            return Ok(result);
+            //return StatusCode((int)result.StatusCode, result);
+        }
     }
 }

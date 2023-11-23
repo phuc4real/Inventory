@@ -12,5 +12,6 @@ namespace Inventory.Service
         Task<ItemObjectResponse> CreateAsync(ItemUpdateRequest request);
         Task<ItemObjectResponse> UpdateAsync(ItemUpdateRequest request);
         Task<BaseResponse> DeactiveAsync(ItemRequest request);
+        Task<ItemHolderListResponse> GetItemHolderAsync(PaginationRequest request);
     }
 }

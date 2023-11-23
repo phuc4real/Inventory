@@ -15,15 +15,19 @@ namespace Inventory.Service.Implement
     {
         #region Ctor & Field
 
+        private readonly IUserService _userService;
+
         public ItemService(
             IRepoWrapper repoWrapper,
             IMapper mapper,
             ICommonService commonService,
+            IUserService userService,
             IRedisCacheService cacheService,
             IEmailService emailService
             )
         : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
+            _userService = userService;
         }
 
         #endregion
@@ -210,6 +214,60 @@ namespace Inventory.Service.Implement
             response.Message = new("Item", "Item deactive succesfully!");
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
             await _cacheService.RemoveCacheAsync(CacheNameConstant.Item + item.Id);
+            return response;
+        }
+
+        public async Task<ItemHolderListResponse> GetItemHolderAsync(PaginationRequest request)
+        {
+            var response = new ItemHolderListResponse();
+            var userName = request.GetUserContext();
+            var permission = await _userService.CheckRoleOfUser(userName);
+            var isAdminOrSuperAdmin = permission.IsAdmin || permission.IsSuperAdmin;
+
+            var query = (from export in _repoWrapper.Export.FindByCondition(x => isAdminOrSuperAdmin
+                                                                              ? x.IsInactive == request.IsInactive
+                                                                              : x.CreatedBy == userName
+                                                                              && x.IsInactive == request.IsInactive)
+                         join status in _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Done)
+                         on export.StatusId equals status.Id
+
+                         join entry in _repoWrapper.ExportEntry.FindAll()
+                         on export.Id equals entry.ExportId
+                         join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
+                         on entry.ItemId equals item.Id
+
+                         join user in _repoWrapper.User
+                         on export.ExportFor equals user.UserName
+
+                         select new ItemHolderResponse
+                         {
+                             ItemId = item.Id,
+                             ItemCode = item.Code,
+                             ItemName = item.Name,
+                             ItemImageUrl = item.ImageUrl,
+                             CategoryId = item.CategoryId,
+                             CategoryName = item.Category.Name,
+                             ExportId = export.Id,
+                             UserName = user.UserName,
+                             Email = user.Email,
+                             FullName = user.FirstName + " " + user.LastName
+                         }); ;
+
+            if (request.SearchKeyword != null)
+            {
+                var searchString = request.SearchKeyword.ToLower();
+                query = query.Where(x => x.ItemCode.ToLower().Contains(searchString)
+                                      || x.ItemName.ToLower().Contains(searchString)
+                                      || x.CategoryName.ToLower().Contains(searchString)
+                                      || x.UserName.ToLower().Contains(searchString)
+                                      || x.Email.ToLower().Contains(searchString)
+                                      || x.FullName.ToLower().Contains(searchString));
+            }
+
+            response.Count = await query.CountAsync();
+            response.Data = await query.OrderByDescending(x => x.ItemId)
+                                    .Pagination(request)
+                                    .ToListAsync();
             return response;
         }
 

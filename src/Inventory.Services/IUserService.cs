@@ -10,5 +10,7 @@ namespace Inventory.Service
         public Task<UserObjectResponse> GetByUserNameAsync(string userName);
         public Task<UserObjectResponse> GetAsync(BaseRequest request);
         public Task<UserPermission> CheckRoleOfUser(string userId);
+
+        public Task<Operation> GetOperationAsync(BaseRequest request);
     }
 }

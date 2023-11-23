@@ -8,7 +8,8 @@ namespace Inventory.Service
     {
         Task<ExportPaginationResponse> GetPaginationAsync(PaginationRequest request);
         Task<ExportObjectResponse> GetByIdAsync(ExportRequest request);
-        //Task<ExportObjectResponse> CreateFromTicketAsync(string adminId, string forUserId, TicketInfoEntity dto);
+        Task<ExportEntryListResponse> GetEntriesAsync(ExportRequest request);
+        Task<ExportObjectResponse> CreateFromTicketAsync(ExportCreateRequest request);
         Task<BaseResponse> UpdateExportStatusAsync(ExportRequest request);
         Task<ChartDataResponse> GetChartDataAsync();
     }

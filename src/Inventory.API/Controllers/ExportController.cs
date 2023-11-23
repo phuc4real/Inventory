@@ -11,7 +11,7 @@ namespace Inventory.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = InventoryRoles.Admin)]
+    [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
     public class ExportController : ControllerBase
     {
         private readonly IExportService _exportService;
@@ -36,11 +36,12 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id}")]
         [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Get(ExportRequest request)
+        public async Task<IActionResult> Get(int id)
         {
+            var request = new ExportRequest { Id = id };
             if (ModelState.IsValid)
             {
                 request.SetContext(HttpContext);
@@ -51,11 +52,29 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-        [HttpPut("{id:int}/update-status")]
+        [HttpGet("{id}/entry")]
+        [ProducesResponseType(typeof(ExportObjectResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetEntries(int id)
+        {
+            var request = new ExportRequest { Id = id };
+            if (ModelState.IsValid)
+            {
+                request.SetContext(HttpContext);
+                var result = await _exportService.GetEntriesAsync(request);
+
+                return StatusCode((int)result.StatusCode, result);
+            }
+            return BadRequest(ModelState.GetErrorMessages());
+        }
+
+        [HttpPut("{id}/update-status")]
+        [Authorize(Roles = InventoryRoles.SuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(List<ResultMessage>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> UpdateStatus(ExportRequest request)
+        public async Task<IActionResult> UpdateStatus(int id)
         {
+            var request = new ExportRequest { Id = id };
             if (ModelState.IsValid)
             {
                 request.SetContext(HttpContext);

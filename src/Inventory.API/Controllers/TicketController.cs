@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Service;
@@ -113,6 +114,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("{recordId}/approval")]
+        [Authorize(Roles = InventoryRoles.SuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Approval(int recordId, CreateCommentRequest request)
@@ -128,6 +130,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPut("{ticketId}/update-status")]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateStatus(int ticketId)
@@ -147,6 +150,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpGet("summary")]
+        [Authorize(Roles = InventoryRoles.AdminOrSuperAdmin)]
         [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSummary()
         {

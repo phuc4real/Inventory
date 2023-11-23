@@ -73,7 +73,6 @@ namespace Inventory.API.Controllers
             return BadRequest(ModelState.GetErrorMessages());
         }
 
-
         [HttpGet("{recordId}/entry")]
         [ProducesResponseType(typeof(OrderEntryListResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(OrderEntryListResponse), StatusCodes.Status400BadRequest)]
@@ -92,6 +91,7 @@ namespace Inventory.API.Controllers
         }
 
         [HttpPost("{recordId}/approval")]
+        [Authorize(Roles = InventoryRoles.SuperAdmin)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Approval(int recordId, CreateCommentRequest request)
@@ -139,7 +139,6 @@ namespace Inventory.API.Controllers
 
             return BadRequest(ModelState.GetErrorMessages());
         }
-
 
         [HttpGet("chart")]
         [ProducesResponseType(typeof(ChartDataResponse), StatusCodes.Status200OK)]

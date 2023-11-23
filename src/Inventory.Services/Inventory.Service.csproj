@@ -18,8 +18,4 @@
 		<ProjectReference Include="..\Shared\Inventory.Core\Inventory.Core.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="DTO\UseUnit\" />
-	</ItemGroup>
-
 </Project>

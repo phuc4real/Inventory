@@ -7,6 +7,7 @@ using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
+using Inventory.Service.DTO.Export;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Ticket;
 using Microsoft.EntityFrameworkCore;
@@ -19,16 +20,19 @@ namespace Inventory.Service.Implement
         #region Ctor & Field
 
         private readonly IUserService _userServices;
+        private readonly IExportService _exportService;
 
         public TicketService(IRepoWrapper repoWrapper,
                              IMapper mapper,
                              ICommonService commonService,
                              IRedisCacheService cacheService,
                              IEmailService emailService,
+                             IExportService exportService,
                              IUserService userServices)
         : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
             _userServices = userServices;
+            _exportService = exportService;
         }
 
         #endregion
@@ -122,7 +126,7 @@ namespace Inventory.Service.Implement
                                 join type in _repoWrapper.TicketType.FindAll()
                                 on record.TicketTypeId equals type.Id
 
-                                join entry in _repoWrapper.OrderEntry.FindAll()
+                                join entry in _repoWrapper.TicketEntry.FindAll()
                                 on record.Id equals entry.RecordId
                                 join item in _repoWrapper.Item.FindByCondition(x => !x.IsInactive)
                                 on entry.ItemId equals item.Id
@@ -176,9 +180,9 @@ namespace Inventory.Service.Implement
             var type = await _repoWrapper.TicketType.FindAll().ToListAsync();
             var status = await _commonService.GetStatusCollections();
 
+            //Case create new Ticket
             if (request.RecordId == 0)
             {
-                //Add Ticket 
                 var ticket = new Ticket()
                 {
                     CloseDate = null
@@ -187,7 +191,6 @@ namespace Inventory.Service.Implement
                 await _repoWrapper.Ticket.AddAsync(ticket);
                 await _repoWrapper.SaveAsync();
 
-                //Add Ticket record
                 var record = new TicketRecord()
                 {
                     TicketId = ticket.Id,
@@ -200,13 +203,11 @@ namespace Inventory.Service.Implement
                 await _repoWrapper.TicketRecord.AddAsync(record);
                 await _repoWrapper.SaveAsync();
 
-                //Add Ticket Entry
                 var entries = _mapper.Map<List<TicketEntry>>(request.TicketEntries);
 
                 entries.ForEach(x => x.RecordId = record.Id);
 
                 await _repoWrapper.TicketEntry.AddRangeAsync(entries);
-
                 await _repoWrapper.SaveAsync();
 
                 response.Data = new TicketResponse()
@@ -227,6 +228,7 @@ namespace Inventory.Service.Implement
 
                 return response;
             }
+            //Case update ticket
             else
             {
                 var ticketAndRecord = await (from t in _repoWrapper.Ticket.FindByCondition(x => !x.IsInactive && x.CreatedBy == userName)
@@ -237,6 +239,13 @@ namespace Inventory.Service.Implement
                                                  Ticket = t,
                                                  Record = r,
                                              }).FirstOrDefaultAsync();
+
+                if (ticketAndRecord == null)
+                {
+                    response.Message = new("Error","Ticket not found!");
+                    response.StatusCode = ResponseCode.BadRequest;
+                    return response;
+                }
 
                 var ticket = ticketAndRecord.Ticket;
                 var oldRecord = ticketAndRecord.Record;
@@ -364,6 +373,12 @@ namespace Inventory.Service.Implement
 
             if (record.StatusId == status.PendingId)
             {
+                var newExport = await _exportService.CreateFromTicketAsync(new ExportCreateRequest
+                {
+                    RecordId = record.Id,
+                    TicketId = ticket.Id,
+                });
+
                 record.StatusId = status.ProcessingId;
             }
             else if (record.StatusId == status.ProcessingId)
@@ -412,7 +427,7 @@ namespace Inventory.Service.Implement
             }
             else
             {
-                response.Message = new("Order", "Order has been canceled");
+                response.Message = new("Error", "Ticket not found!");
             }
             return response;
         }
@@ -499,7 +514,11 @@ namespace Inventory.Service.Implement
             }
             else
             {
+                //Update ticket status
                 record.StatusId = status.PendingId;
+
+                //Create new export
+
             }
 
             _repoWrapper.TicketRecord.Update(record);
