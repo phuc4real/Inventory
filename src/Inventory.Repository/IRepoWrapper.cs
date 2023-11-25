@@ -1,5 +1,6 @@
 ﻿using Inventory.Model.Entity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,5 +29,7 @@ namespace Inventory.Repository
         ITicketRecordRepository TicketRecord { get; }
         ITicketTypeRepository TicketType { get; }
         IQueryable<AppUser> User { get; }
+        IQueryable<IdentityRole> Role { get; }
+        IQueryable<IdentityUserRole<string>> UserRole { get; }
     }
 }

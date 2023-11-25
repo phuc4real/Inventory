@@ -3,10 +3,14 @@ using Inventory.Core.Common;
 using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
+using Inventory.Database.DbContext;
 using Inventory.Model.Entity;
+using Inventory.Repository;
 using Inventory.Service.DTO.User;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using System.Linq;
 
 namespace Inventory.Service.Implement
 {
@@ -15,18 +19,18 @@ namespace Inventory.Service.Implement
 
         #region Ctor & Field
 
-        private readonly UserManager<AppUser> _userManager;
+        private UserManager<AppUser> _userManager;
+        private IRepoWrapper _repoWrapper;
         private readonly IMapper _mapper;
-        private readonly ITokenService _tokenService;
 
         public UserService(
+            IRepoWrapper repoWrapper,
             UserManager<AppUser> userManager,
-            IMapper mapper,
-            ITokenService tokenService)
+            IMapper mapper)
         {
+            _repoWrapper = repoWrapper;
             _userManager = userManager;
             _mapper = mapper;
-            _tokenService = tokenService;
         }
 
         #endregion
@@ -122,6 +126,31 @@ namespace Inventory.Service.Implement
             return operation;
         }
 
+        public async Task<UserPaginationResponse> GetSuperAdminListAsync()
+        {
+            var response = new UserPaginationResponse();
+
+            try
+            {
+                var data = await (from role in _repoWrapper.Role.Where(x => x.Name == InventoryRoles.SuperAdmin)
+                                  join userRole in _repoWrapper.UserRole
+                                  on role.Id equals userRole.RoleId
+                                  join user in _repoWrapper.User
+                                  on userRole.UserId equals user.Id
+                                  select user
+                         ).ToListAsync();
+
+                response.Data = _mapper.Map<List<UserResponse>>(data);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+
+
+            return response;
+        }
+
         #endregion
 
         #region Private
@@ -146,6 +175,7 @@ namespace Inventory.Service.Implement
 
             return operation;
         }
+
 
         #endregion
     }

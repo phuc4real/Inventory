@@ -6,6 +6,7 @@ using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
+using Inventory.Service.DTO.Category;
 using Inventory.Service.DTO.Item;
 using Microsoft.EntityFrameworkCore;
 
@@ -117,27 +118,35 @@ namespace Inventory.Service.Implement
 
             response = new ItemObjectResponse();
 
-            var item = await _repoWrapper.Item.FindByCondition(x => x.Id == request.Id.Value)
-                                              .Include(x => x.Category)
-                                              .FirstOrDefaultAsync();
-            if (item == null)
+            var result = await (from item in _repoWrapper.Item.FindByCondition(x => x.Id == request.Id.Value)
+                                join cate in _repoWrapper.Category.FindAll()
+                                on item.CategoryId equals cate.Id
+
+                                join u1 in _repoWrapper.User
+                                on item.CreatedBy equals u1.UserName
+                                join u2 in _repoWrapper.User
+                                on item.UpdatedBy equals u2.UserName
+
+                                select new
+                                {
+                                    item,
+                                    CreatedBy = u1.FirstName + " " + u1.LastName,
+                                    updatedBy = u2.FirstName + " " + u2.LastName,
+                                    cate
+                                }).FirstOrDefaultAsync();
+
+            result.item.CreatedBy = result.CreatedBy;
+            result.item.UpdatedBy = result.updatedBy;
+            result.item.Category = result.cate;
+
+            if (result == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
                 response.Message = new("Item", "Not found!");
                 return response;
             }
 
-            response.Data = _mapper.Map<ItemResponse>(item);
-
-            var users = await _commonService.GetUserFullName(new List<string>
-            {
-                item.CreatedBy,
-                item.UpdatedBy
-            });
-
-
-            response.Data.CreatedBy = users.Where(x => x.Key == item.CreatedBy).FirstOrDefault().Value;
-            response.Data.UpdatedBy = users.Where(x => x.Key == item.UpdatedBy).FirstOrDefault().Value;
+            response.Data = _mapper.Map<ItemResponse>(result.item);
 
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;

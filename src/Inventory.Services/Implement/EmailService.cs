@@ -1,5 +1,7 @@
 ﻿using Inventory.Core.Configurations;
+using Inventory.Core.Constants;
 using Inventory.Core.Template;
+using Inventory.Repository;
 using Inventory.Service.DTO.Email;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -13,18 +15,30 @@ namespace Inventory.Service.Implement
     {
         #region Ctor & Field
         private readonly EmailConfig _config;
+        private readonly IRepoWrapper _repoWrapper;
 
-        public EmailService(IOptionsSnapshot<EmailConfig> config)
+        public EmailService(IOptionsSnapshot<EmailConfig> config, IRepoWrapper repoWrapper)
         {
             _config = config.Value;
+            _repoWrapper = repoWrapper;
         }
 
         #endregion
 
         #region Method
 
-        public async Task<bool> SendNotificationEmail(NotificationEmailRequest request)
+        public async Task<bool> SendNotificationToSA(NotificationEmailRequest request)
         {
+            var saList = (from role in _repoWrapper.Role.Where(x => x.Name == InventoryRoles.SuperAdmin)
+                          join userRole in _repoWrapper.UserRole
+                          on role.Id equals userRole.RoleId
+                          join user in _repoWrapper.User
+                          on userRole.UserId equals user.Id
+                          select user
+                         ).ToList();
+
+            saList.ForEach(x => request.SendTo(x.FirstName + " " + x.LastName, x.Email));
+
             var email = CreateEmail(request);
             var isSuccess = true;
             using var smtp = new SmtpClient();
@@ -95,7 +109,7 @@ namespace Inventory.Service.Implement
             if (data.IsTicket)
             {
                 name = "ticket";
-                link = feHost + "/ticket/entry/" + data.InfoId;
+                link = feHost + "/ticket/entry/" + data.RecordId;
                 info += baseInfoLeft + "Ticket: No.#" + data.InfoId + baseInfoRight;
                 info += baseInfoLeft + "Ticket Type: " + data.TicketType + baseInfoRight;
                 info += baseInfoLeft + "Title: " + data.Title + baseInfoRight;
@@ -103,7 +117,7 @@ namespace Inventory.Service.Implement
             else
             {
                 name = "order";
-                link = feHost + "/order/entry/" + data.InfoId;
+                link = feHost + "/order/entry/" + data.RecordId;
                 info += baseInfoLeft + "Order: No.#" + data.InfoId + baseInfoRight;
             }
 

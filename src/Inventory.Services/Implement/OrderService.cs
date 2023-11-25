@@ -12,6 +12,7 @@ using Inventory.Service.DTO.Email;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Inventory.Service.Implement
 {
@@ -19,15 +20,19 @@ namespace Inventory.Service.Implement
     {
         #region Ctor & Field
 
+        private readonly IUserService _userService;
+
         public OrderService(
             IRepoWrapper repoWrapper,
             IMapper mapper,
             ICommonService commonService,
             IRedisCacheService cacheService,
-            IEmailService emailService
+            IEmailService emailService,
+            IUserService userService
             )
         : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
+            _userService = userService;
         }
 
         #endregion
@@ -125,6 +130,8 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
+                var user = (await _userService.GetByUserNameAsync(order.CreatedBy)).Data;
+
                 response.Data = new OrderResponse()
                 {
                     OrderId = order.Id,
@@ -134,12 +141,19 @@ namespace Inventory.Service.Implement
                     IsCompleted = order.CompleteDate != null,
                     CompletedDate = order.CompleteDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
-                    CreatedBy = record.CreatedBy,
+                    CreatedBy = user.FirstName + " " + user.LastName,
                     UpdatedAt = record.UpdatedAt,
                     UpdatedBy = record.UpdatedBy
                 };
 
-                SendNotification(response.Data, "New order has been planed!");
+                try
+                {
+                    SendNotification(response.Data, "New order has been planed!");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
 
                 return response;
             }
@@ -187,6 +201,8 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
+                var user = (await _userService.GetByUserNameAsync(order.CreatedBy)).Data;
+
                 response.Data = new OrderResponse()
                 {
                     OrderId = order.Id,
@@ -196,13 +212,20 @@ namespace Inventory.Service.Implement
                     IsCompleted = order.CompleteDate != null,
                     CompletedDate = order.CompleteDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
-                    CreatedBy = record.CreatedBy,
+                    CreatedBy = user.FirstName + " " + user.LastName,
                     UpdatedAt = record.UpdatedAt,
                     UpdatedBy = record.UpdatedBy
                 };
 
+                try
+                {
 
-                SendNotification(response.Data, "An order has changed!");
+                    SendNotification(response.Data, "An order has changed!");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
 
                 return response;
             }
@@ -512,29 +535,20 @@ namespace Inventory.Service.Implement
 
         private async void SendNotification(OrderResponse order, string subject)
         {
-            var saList = await _commonService.GetUsersInRoles(InventoryRoles.SuperAdmin);
-            var orderCreatorFullName = (await _commonService.GetUserFullName(new List<string> { order.CreatedBy }))
-                                                                .FirstOrDefault(x => x.Key == order.CreatedBy)
-                                                                .Value;
-
             var request = new NotificationEmailRequest()
             {
                 Subject = subject,
                 Body = new EmailBodyData()
                 {
                     InfoId = order.OrderId,
-                    InfoCreatedBy = orderCreatorFullName,
+                    RecordId = order.RecordId,
+                    InfoCreatedBy = order.CreatedBy,
                     InfoCreatedAt = order.CreatedAt,
                     Description = order.Description,
                 }
             };
 
-            foreach (var u in saList)
-            {
-                request.SendTo(u.FirstName + " " + u.LastName, u.Email);
-            }
-
-            await _emailService.SendNotificationEmail(request);
+            await _emailService.SendNotificationToSA(request);
         }
 
         #endregion

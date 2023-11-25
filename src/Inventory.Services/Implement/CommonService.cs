@@ -4,26 +4,18 @@ using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Service.Implement
 {
     public class CommonService : ICommonService
     {
         private readonly IRepoWrapper _repoWrapper;
-        private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
 
-        public CommonService(IRepoWrapper repoWrapper, IMapper mapper, UserManager<AppUser> userManager)
+        public CommonService(IRepoWrapper repoWrapper, IMapper mapper)
         {
             _repoWrapper = repoWrapper;
-            _userManager = userManager;
             _mapper = mapper;
         }
 
@@ -40,15 +32,6 @@ namespace Inventory.Service.Implement
 
             response = _mapper.Map<CommentResponse>(comment);
             return response;
-        }
-
-        public async Task<Dictionary<string, string>> GetUserFullName(List<string> userNames)
-        {
-            var users = await _repoWrapper.User.Where(x => userNames.Contains(x.UserName))
-                                               .Select(x => new { x.UserName, FullName = x.FirstName + " " + x.LastName })
-                                               .ToDictionaryAsync(x => x.UserName!, x => x.FullName);
-
-            return users;
         }
 
         public async Task<CommentResponse> GetComment(int recordId, bool isTicketComment = false)
@@ -91,20 +74,6 @@ namespace Inventory.Service.Implement
             collection.DoneId = status.FirstOrDefault(x => x.Name == StatusConstant.Done).Id;
 
             return collection;
-        }
-
-        public async Task<List<AppUser>> GetUsersInRoles(string roleName)
-        {
-            var result = await _userManager.GetUsersInRoleAsync(roleName);
-
-            return result.Select(
-                        x => new AppUser
-                        {
-                            UserName = x.UserName,
-                            Email = x.Email,
-                            FirstName = x.FirstName,
-                            LastName = x.LastName
-                        }).ToList();
         }
     }
 }
