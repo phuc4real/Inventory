@@ -5,11 +5,6 @@ using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Inventory.Service.Implement
 {
@@ -34,23 +29,9 @@ namespace Inventory.Service.Implement
 
             await _repoWrapper.Comment.AddAsync(comment);
             await _repoWrapper.SaveAsync();
-            
+
             response = _mapper.Map<CommentResponse>(comment);
             return response;
-        }
-
-        public async Task<(string, string)> GetAuditUserData(string createdBy, string updatedBy)
-        {
-            var users = await _repoWrapper.User.Where(x => x.UserName == createdBy || x.UserName == updatedBy)
-                                               .ToListAsync();
-
-            var createdUser = users.Where(x => x.UserName == createdBy).FirstOrDefault();
-            var fullNameCreatedUser = createdUser.FirstName + " " + createdUser.LastName;
-
-            var updatedUser = users.Where(x => x.UserName == updatedBy).FirstOrDefault();
-            var fullNameUpdatedUser = updatedUser.FirstName + " " + updatedUser.LastName;
-
-            return (fullNameCreatedUser, fullNameUpdatedUser);
         }
 
         public async Task<CommentResponse> GetComment(int recordId, bool isTicketComment = false)
@@ -69,7 +50,7 @@ namespace Inventory.Service.Implement
                     CommentBy = user.FirstName + " " + user.LastName,
 
                 })
-                .OrderByDescending(x=>x.CommentAt)
+                .OrderByDescending(x => x.CommentAt)
                 .FirstOrDefaultAsync();
 
             return result;

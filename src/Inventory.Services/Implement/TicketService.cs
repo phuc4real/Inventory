@@ -1,16 +1,21 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
+using Inventory.Service.DTO.Email;
 using Inventory.Service.DTO.Export;
 using Inventory.Service.DTO.Item;
+using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace Inventory.Service.Implement
 {
@@ -19,8 +24,8 @@ namespace Inventory.Service.Implement
 
         #region Ctor & Field
 
-        private readonly IUserService _userServices;
         private readonly IExportService _exportService;
+        private readonly IUserService _userService;
 
         public TicketService(IRepoWrapper repoWrapper,
                              IMapper mapper,
@@ -28,11 +33,11 @@ namespace Inventory.Service.Implement
                              IRedisCacheService cacheService,
                              IEmailService emailService,
                              IExportService exportService,
-                             IUserService userServices)
+                             IUserService userService)
         : base(repoWrapper, mapper, commonService, cacheService, emailService)
         {
-            _userServices = userServices;
             _exportService = exportService;
+            _userService = userService;
         }
 
         #endregion
@@ -44,7 +49,7 @@ namespace Inventory.Service.Implement
             var response = new TicketPageResponse();
 
             var userName = request.GetUserContext();
-            var permission = await _userServices.CheckRoleOfUser(userName);
+            var permission = await _userService.CheckRoleOfUser(userName);
             var isAdminOrSuperAdmin = permission.IsAdmin || permission.IsSuperAdmin;
 
             var search = request.SearchKeyword != null ? request.SearchKeyword?.ToLower() : "";
@@ -112,7 +117,7 @@ namespace Inventory.Service.Implement
             var response = new TicketObjectResponse();
 
             var userName = request.GetUserContext();
-            var permission = await _userServices.CheckRoleOfUser(userName);
+            var permission = await _userService.CheckRoleOfUser(userName);
             var isAdminOrSuperAdmin = permission.IsAdmin || permission.IsSuperAdmin;
 
             var result = await (from ticket in _repoWrapper.Ticket.FindByCondition(x => isAdminOrSuperAdmin
@@ -210,6 +215,8 @@ namespace Inventory.Service.Implement
                 await _repoWrapper.TicketEntry.AddRangeAsync(entries);
                 await _repoWrapper.SaveAsync();
 
+                var user = (await _userService.GetByUserNameAsync(ticket.CreatedBy)).Data;
+
                 response.Data = new TicketResponse()
                 {
                     TicketId = ticket.Id,
@@ -221,11 +228,19 @@ namespace Inventory.Service.Implement
                     IsClosed = ticket.CloseDate != null,
                     ClosedDate = ticket.CloseDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
-                    CreatedBy = record.CreatedBy,
+                    CreatedBy = user.FirstName + " " + user.LastName,
                     UpdatedAt = record.UpdatedAt,
                     UpdatedBy = record.UpdatedBy
                 };
 
+                try
+                {
+                    SendNotification(response.Data, "New ticket has been created!");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
                 return response;
             }
             //Case update ticket
@@ -282,6 +297,8 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
+                var user = (await _userService.GetByUserNameAsync(ticket.CreatedBy)).Data;
+
                 response.Data = new TicketResponse()
                 {
                     TicketId = ticket.Id,
@@ -293,12 +310,22 @@ namespace Inventory.Service.Implement
                     IsClosed = ticket.CloseDate != null,
                     ClosedDate = ticket.CloseDate.GetValueOrDefault(),
                     CreatedAt = record.CreatedAt,
-                    CreatedBy = record.CreatedBy,
+                    CreatedBy = user.FirstName + " " + user.LastName,
                     UpdatedAt = record.UpdatedAt,
                     UpdatedBy = record.UpdatedBy
                 };
 
+                try
+                {
+                    SendNotification(response.Data, "A ticket has been changed!");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex.ToString());
+                }
+
                 return response;
+
             }
         }
 
@@ -563,6 +590,27 @@ namespace Inventory.Service.Implement
             }
             else
                 return new List<RecordHistoryResponse> { };
+        }
+
+        private async void SendNotification(TicketResponse ticket, string subject)
+        {
+            var request = new NotificationEmailRequest()
+            {
+                Subject = subject,
+                Body = new EmailBodyData()
+                {
+                    InfoId = ticket.TicketId,
+                    RecordId = ticket.RecordId,
+                    IsTicket = true,
+                    TicketType = ticket.TicketType,
+                    Title = ticket.Title,
+                    InfoCreatedBy = ticket.CreatedBy,
+                    InfoCreatedAt = ticket.CreatedAt,
+                    Description = ticket.Description
+                }
+            };
+
+            await _emailService.SendNotificationToSA(request);
         }
 
         #endregion

@@ -1,6 +1,8 @@
 ﻿using Inventory.Database.DbContext;
 using Inventory.Model.Entity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Repository.Implement
 {
@@ -10,11 +12,10 @@ namespace Inventory.Repository.Implement
 
         private readonly AppDbContext _context;
         private string? _userContext;
-        private UserManager<AppUser> _userManager;
-        public RepoWrapper(AppDbContext context, UserManager<AppUser> userManager)
+
+        public RepoWrapper(AppDbContext context)
         {
             _context = context;
-            _userManager = userManager;
         }
 
         #endregion
@@ -174,7 +175,23 @@ namespace Inventory.Repository.Implement
         {
             get
             {
-                return _userManager.Users;
+                return _context.Users.AsQueryable();
+            }
+        }
+
+        public IQueryable<IdentityUserRole<string>> UserRole
+        {
+            get
+            {
+                return _context.UserRoles.AsQueryable();
+            }
+        }
+
+        public IQueryable<IdentityRole> Role
+        {
+            get
+            {
+                return _context.Roles.AsQueryable();
             }
         }
 
