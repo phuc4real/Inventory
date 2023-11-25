@@ -5,7 +5,6 @@ namespace Inventory.Service.DTO.Email
 {
     public class EmailBodyData
     {
-        public string? UserName { get; set; }
         public bool IsTicket { get; set; } = false;
         public int InfoId { get; set; }
         public string? TicketType { get; set; }

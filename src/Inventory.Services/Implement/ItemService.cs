@@ -129,7 +129,15 @@ namespace Inventory.Service.Implement
 
             response.Data = _mapper.Map<ItemResponse>(item);
 
-            (response.Data.CreatedBy, response.Data.UpdatedBy) = await _commonService.GetAuditUserData(item.CreatedBy, item.UpdatedBy);
+            var users = await _commonService.GetUserFullName(new List<string>
+            {
+                item.CreatedBy,
+                item.UpdatedBy
+            });
+
+
+            response.Data.CreatedBy = users.Where(x => x.Key == item.CreatedBy).FirstOrDefault().Value;
+            response.Data.UpdatedBy = users.Where(x => x.Key == item.UpdatedBy).FirstOrDefault().Value;
 
             await _cacheService.SetCacheAsync(cacheKey, response);
             return response;

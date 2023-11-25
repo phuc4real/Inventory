@@ -1,14 +1,17 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
+using Inventory.Service.DTO.Email;
 using Inventory.Service.DTO.Export;
 using Inventory.Service.DTO.Item;
+using Inventory.Service.DTO.Order;
 using Inventory.Service.DTO.Ticket;
 using Microsoft.EntityFrameworkCore;
 
@@ -226,6 +229,8 @@ namespace Inventory.Service.Implement
                     UpdatedBy = record.UpdatedBy
                 };
 
+                SendNotification(response.Data, "New ticket has been created!");
+
                 return response;
             }
             //Case update ticket
@@ -298,6 +303,7 @@ namespace Inventory.Service.Implement
                     UpdatedBy = record.UpdatedBy
                 };
 
+                SendNotification(response.Data, "A ticket has been changed!");
                 return response;
             }
         }
@@ -563,6 +569,36 @@ namespace Inventory.Service.Implement
             }
             else
                 return new List<RecordHistoryResponse> { };
+        }
+
+        private async void SendNotification(TicketResponse ticket, string subject)
+        {
+            var saList = await _commonService.GetUsersInRoles(InventoryRoles.SuperAdmin);
+            var ticketCreatorFullName = (await _commonService.GetUserFullName(new List<string> { ticket.CreatedBy }))
+                                                                .FirstOrDefault(x => x.Key == ticket.CreatedBy)
+                                                                .Value;
+
+            var request = new NotificationEmailRequest()
+            {
+                Subject = subject,
+                Body = new EmailBodyData()
+                {
+                    InfoId = ticket.TicketId,
+                    IsTicket = true,
+                    TicketType = ticket.TicketType,
+                    Title = ticket.Title,
+                    InfoCreatedBy = ticketCreatorFullName,
+                    InfoCreatedAt = ticket.CreatedAt,
+                    Description = ticket.Description
+                }
+            };
+
+            foreach (var u in saList)
+            {
+                request.SendTo(u.FirstName + " " + u.LastName, u.Email);
+            }
+
+            await _emailService.SendNotificationEmail(request);
         }
 
         #endregion

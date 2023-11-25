@@ -1,7 +1,10 @@
 ﻿using Inventory.Core.Configurations;
+using Inventory.Core.Template;
 using Inventory.Service.DTO.Email;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Serilog;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace Inventory.Service.Implement
@@ -20,56 +23,62 @@ namespace Inventory.Service.Implement
 
         #region Method
 
-        public async Task SendEmail(EmailSenderRequest request)
+        public async Task<bool> SendNotificationEmail(NotificationEmailRequest request)
         {
             var email = CreateEmail(request);
-
+            var isSuccess = true;
             using var smtp = new SmtpClient();
             try
             {
-                await smtp.ConnectAsync(_config.SmtpServer, _config.SmtpPort, true);
-                smtp.AuthenticationMechanisms.Remove("XOAUTH2");
+                await smtp.ConnectAsync(_config.SmtpServer, _config.SmtpPort, SecureSocketOptions.SslOnConnect);
                 await smtp.AuthenticateAsync(_config.Email, _config.Key);
                 await smtp.SendAsync(email);
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
+                Log.Error(ex.Message);
+                isSuccess = false;
             }
             finally
             {
                 await smtp.DisconnectAsync(true);
                 smtp.Dispose();
             }
+            return isSuccess;
         }
 
         #endregion
 
         #region Private 
 
-        private MimeMessage CreateEmail(EmailSenderRequest request)
+        private MimeMessage CreateEmail(NotificationEmailRequest request)
         {
-            var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(_config.Sender, _config.Email));
-            email.To.AddRange(request.Mails);
-            email.Subject = request.Subject;
 
             var builder = new BodyBuilder
             {
                 HtmlBody = GenerateHtmlBody(request.Body)
             };
 
-            email.Body = builder.ToMessageBody();
+            var email = new MimeMessage
+            {
+                Subject = request.Subject,
+                MessageId = "support@inventory",
+                Sender = new MailboxAddress(_config.Sender, _config.Email),
+                Body = builder.ToMessageBody()
+            };
+
+            email.From.Add(new MailboxAddress(_config.Sender, _config.Email));
+            email.To.AddRange(request.Mails);
 
             return email;
         }
 
         private static string GenerateHtmlBody(EmailBodyData data)
         {
+
             var isDev = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "development", StringComparison.InvariantCultureIgnoreCase);
             var feHost = isDev ? "http://localhost:4200" : "https://lhphuc-inventory.netlify.app";
-            var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "src\\Shared\\Inventory.Core\\Template\\", "EmailTemplate.html");
-            var html = File.ReadAllText(templatePath);
+            var html = EmailTemplate.Get();
 
 
             var baseInfoLeft = "<p style=\"font-size: 11px; font-family: Ubuntu, Helvetica, Arial; text-align: left;\"><span style=\"font-size: 16px;\">";
@@ -104,7 +113,6 @@ namespace Inventory.Service.Implement
 
             button += baseButtonPart1 + link + baseButtonPart2 + name + baseButtonPart3;
 
-            html = html.Replace("{user}", data.UserName);
             html = html.Replace("{name}", name);
             html = html.Replace("{info}", info);
             html = html.Replace("{link}", button);

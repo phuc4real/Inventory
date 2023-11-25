@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Inventory.Core.Common;
+using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
+using Inventory.Service.DTO.Email;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
 using Microsoft.EntityFrameworkCore;
@@ -123,7 +125,6 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
-                //_emailService.Send()
                 response.Data = new OrderResponse()
                 {
                     OrderId = order.Id,
@@ -137,6 +138,9 @@ namespace Inventory.Service.Implement
                     UpdatedAt = record.UpdatedAt,
                     UpdatedBy = record.UpdatedBy
                 };
+
+                SendNotification(response.Data, "New order has been planed!");
+
                 return response;
             }
             else
@@ -183,7 +187,6 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
-                //_emailService.Send()
                 response.Data = new OrderResponse()
                 {
                     OrderId = order.Id,
@@ -197,6 +200,10 @@ namespace Inventory.Service.Implement
                     UpdatedAt = record.UpdatedAt,
                     UpdatedBy = record.UpdatedBy
                 };
+
+
+                SendNotification(response.Data, "An order has changed!");
+
                 return response;
             }
         }
@@ -501,6 +508,33 @@ namespace Inventory.Service.Implement
             }
             else
                 return new List<RecordHistoryResponse> { };
+        }
+
+        private async void SendNotification(OrderResponse order, string subject)
+        {
+            var saList = await _commonService.GetUsersInRoles(InventoryRoles.SuperAdmin);
+            var orderCreatorFullName = (await _commonService.GetUserFullName(new List<string> { order.CreatedBy }))
+                                                                .FirstOrDefault(x => x.Key == order.CreatedBy)
+                                                                .Value;
+
+            var request = new NotificationEmailRequest()
+            {
+                Subject = subject,
+                Body = new EmailBodyData()
+                {
+                    InfoId = order.OrderId,
+                    InfoCreatedBy = orderCreatorFullName,
+                    InfoCreatedAt = order.CreatedAt,
+                    Description = order.Description,
+                }
+            };
+
+            foreach (var u in saList)
+            {
+                request.SendTo(u.FirstName + " " + u.LastName, u.Email);
+            }
+
+            await _emailService.SendNotificationEmail(request);
         }
 
         #endregion

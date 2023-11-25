@@ -4,6 +4,7 @@ using Inventory.Model.Entity;
 using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Comment;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -16,11 +17,13 @@ namespace Inventory.Service.Implement
     public class CommonService : ICommonService
     {
         private readonly IRepoWrapper _repoWrapper;
+        private readonly UserManager<AppUser> _userManager;
         private readonly IMapper _mapper;
 
-        public CommonService(IRepoWrapper repoWrapper, IMapper mapper)
+        public CommonService(IRepoWrapper repoWrapper, IMapper mapper, UserManager<AppUser> userManager)
         {
             _repoWrapper = repoWrapper;
+            _userManager = userManager;
             _mapper = mapper;
         }
 
@@ -34,23 +37,18 @@ namespace Inventory.Service.Implement
 
             await _repoWrapper.Comment.AddAsync(comment);
             await _repoWrapper.SaveAsync();
-            
+
             response = _mapper.Map<CommentResponse>(comment);
             return response;
         }
 
-        public async Task<(string, string)> GetAuditUserData(string createdBy, string updatedBy)
+        public async Task<Dictionary<string, string>> GetUserFullName(List<string> userNames)
         {
-            var users = await _repoWrapper.User.Where(x => x.UserName == createdBy || x.UserName == updatedBy)
-                                               .ToListAsync();
+            var users = await _repoWrapper.User.Where(x => userNames.Contains(x.UserName))
+                                               .Select(x => new { x.UserName, FullName = x.FirstName + " " + x.LastName })
+                                               .ToDictionaryAsync(x => x.UserName!, x => x.FullName);
 
-            var createdUser = users.Where(x => x.UserName == createdBy).FirstOrDefault();
-            var fullNameCreatedUser = createdUser.FirstName + " " + createdUser.LastName;
-
-            var updatedUser = users.Where(x => x.UserName == updatedBy).FirstOrDefault();
-            var fullNameUpdatedUser = updatedUser.FirstName + " " + updatedUser.LastName;
-
-            return (fullNameCreatedUser, fullNameUpdatedUser);
+            return users;
         }
 
         public async Task<CommentResponse> GetComment(int recordId, bool isTicketComment = false)
@@ -69,7 +67,7 @@ namespace Inventory.Service.Implement
                     CommentBy = user.FirstName + " " + user.LastName,
 
                 })
-                .OrderByDescending(x=>x.CommentAt)
+                .OrderByDescending(x => x.CommentAt)
                 .FirstOrDefaultAsync();
 
             return result;
@@ -93,6 +91,20 @@ namespace Inventory.Service.Implement
             collection.DoneId = status.FirstOrDefault(x => x.Name == StatusConstant.Done).Id;
 
             return collection;
+        }
+
+        public async Task<List<AppUser>> GetUsersInRoles(string roleName)
+        {
+            var result = await _userManager.GetUsersInRoleAsync(roleName);
+
+            return result.Select(
+                        x => new AppUser
+                        {
+                            UserName = x.UserName,
+                            Email = x.Email,
+                            FirstName = x.FirstName,
+                            LastName = x.LastName
+                        }).ToList();
         }
     }
 }
