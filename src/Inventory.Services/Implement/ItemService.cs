@@ -8,7 +8,9 @@ using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Category;
 using Inventory.Service.DTO.Item;
+using Inventory.Service.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Inventory.Service.Implement
 {
@@ -61,6 +63,15 @@ namespace Inventory.Service.Implement
             }
 
             Item item = _mapper.Map<Item>(request);
+
+            var result = ItemValidation.Validate(item);
+
+            if (!result.Message.IsNullOrEmpty())
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = result;
+                return response;
+            }
 
             await _repoWrapper.Item.AddAsync(item);
             await _repoWrapper.SaveAsync();

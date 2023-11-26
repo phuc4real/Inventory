@@ -11,7 +11,10 @@ using Inventory.Service.DTO.Comment;
 using Inventory.Service.DTO.Email;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
+using Inventory.Service.Validation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 namespace Inventory.Service.Implement
@@ -98,6 +101,15 @@ namespace Inventory.Service.Implement
             OrderObjectResponse response = new();
 
             var status = await _commonService.GetStatusCollections();
+
+            var result = OrderValidation.Validate(request);
+
+            if (!result.Message.IsNullOrEmpty())
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = result;
+                return response;
+            }
 
             if (request.RecordId == 0)
             {
