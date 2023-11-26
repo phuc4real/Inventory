@@ -254,7 +254,7 @@ namespace Inventory.Service.Implement
 
             var query = (from export in _repoWrapper.Export.FindByCondition(x => isAdminOrSuperAdmin
                                                                               ? x.IsInactive == request.IsInactive
-                                                                              : x.CreatedBy == userName
+                                                                              : x.ExportFor == userName
                                                                               && x.IsInactive == request.IsInactive)
                          join status in _repoWrapper.Status.FindByCondition(x => x.Name == StatusConstant.Done)
                          on export.StatusId equals status.Id
@@ -279,7 +279,7 @@ namespace Inventory.Service.Implement
                              UserName = user.UserName,
                              Email = user.Email,
                              FullName = user.FirstName + " " + user.LastName
-                         }); ;
+                         });
 
             if (request.SearchKeyword != null)
             {

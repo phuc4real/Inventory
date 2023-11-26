@@ -450,12 +450,13 @@ namespace Inventory.Service.Implement
                     ticket.CloseDate = DateTime.UtcNow;
                     _repoWrapper.Ticket.Update(ticket);
                 }
+                else
+                {
+                    response.StatusCode = ResponseCode.BadRequest;
+                    response.Message = new("Error", "Export for this ticket not done yet!");
 
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Export for this ticket not done yet!");
-
-                return response;
-
+                    return response;
+                }
             }
             else
             {
