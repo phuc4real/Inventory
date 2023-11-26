@@ -108,7 +108,7 @@ namespace Inventory.Service.Implement
             if (result == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Export", "Not found!");
+                response.Message = new("Error", "Export Not found!");
                 return response;
             }
 
@@ -154,7 +154,7 @@ namespace Inventory.Service.Implement
             if (export == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Export", "Export not found");
+                response.Message = new("Error", "Export not found");
                 return response;
             }
 
@@ -259,7 +259,7 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Data = _mapper.Map<ExportResponse>(export);
-            response.Message = new("Export", "Create export successfully!");
+            response.Message = new("Success", "Create export successfully!");
 
             return response;
         }

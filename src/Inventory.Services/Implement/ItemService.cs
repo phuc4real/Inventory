@@ -47,7 +47,7 @@ namespace Inventory.Service.Implement
             if (cate == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Category", "Category not found!");
+                response.Message = new("Error", "Category not found!");
                 return response;
             }
 
@@ -56,7 +56,7 @@ namespace Inventory.Service.Implement
             if (dupCodeItem != null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Item", "Duplicated item code!");
+                response.Message = new("Error", "Duplicated item code!");
                 return response;
             }
 
@@ -66,7 +66,7 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Data = _mapper.Map<ItemResponse>(item);
-            response.Message = new ResultMessage("Created", "Item create successfully!");
+            response.Message = new ResultMessage("Success", "Item create successfully!");
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
             return response;
         }
@@ -142,7 +142,7 @@ namespace Inventory.Service.Implement
             if (result == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Item", "Not found!");
+                response.Message = new("Error", "Item not found!");
                 return response;
             }
 
@@ -169,7 +169,7 @@ namespace Inventory.Service.Implement
             if (item == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Item", "Not found!");
+                response.Message = new("Error", "Item not found!");
                 return response;
             }
 
@@ -190,7 +190,7 @@ namespace Inventory.Service.Implement
             if (item == null || item.IsInactive)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Item", "Item not exists!");
+                response.Message = new("Error", "Item not exists!");
                 return response;
             }
 
@@ -221,14 +221,14 @@ namespace Inventory.Service.Implement
             if (item == null || item.IsInactive)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Item", "Item not exists!");
+                response.Message = new("Error", "Item not exists!");
                 return response;
             }
 
             _repoWrapper.Item.Remove(item);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Item", "Item deactive succesfully!");
+            response.Message = new("Success", "Item deactive succesfully!");
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
             await _cacheService.RemoveCacheAsync(CacheNameConstant.Item + item.Id);
             return response;
