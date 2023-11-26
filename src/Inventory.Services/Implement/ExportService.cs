@@ -246,6 +246,7 @@ namespace Inventory.Service.Implement
                                                         .ToListAsync();
             var export = new Export
             {
+                TicketId = ticket.Id,
                 Description = record.Description,
                 ExportFor = ticket.CreatedBy,
                 StatusId = status.PendingId

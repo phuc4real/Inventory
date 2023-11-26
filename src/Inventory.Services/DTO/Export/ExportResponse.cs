@@ -12,6 +12,8 @@ namespace Inventory.Service.DTO.Export
     public class ExportResponse : IEquatable<ExportResponse>
     {
         public int Id { get; set; }
+        public int TicketId { get; set; }
+        public int TicketRecordId { get; set; }
         public string? Description { get; set; }
         public string? Status { get; set; }
         public string? ExportFor { get; set; }

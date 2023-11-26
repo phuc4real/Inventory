@@ -3,3 +3,5 @@ dotnet ef migrations add initInventoryDb
 --project .\Shared\Inventory.Database\Inventory.Database.csproj 
 --output-dir Migrations 
 --startup-project .\Inventory.API\Inventory.API.csproj 
+
+dotnet ef migrations add addColumnExportTable --project .\Shared\Inventory.Database\Inventory.Database.csproj --output-dir Migrations --startup-project .\Inventory.API\Inventory.API.csproj 

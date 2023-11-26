@@ -360,8 +360,18 @@ namespace Inventory.Service.Implement
 
             var status = await _commonService.GetStatusCollections();
 
-            if (status.CanEdit.Contains(record.StatusId))
+            if (status.CanCancelTicket.Contains(record.StatusId))
             {
+                if(record.StatusId == status.ProcessingId)
+                {
+                    var export = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive && x.TicketId == ticket.Id)
+                                                .OrderByDescending(x => x.UpdatedAt)
+                                                .FirstOrDefaultAsync();
+
+                    export.StatusId = status.CancelId;
+                    _repoWrapper.Export.Update(export);
+                }
+
                 record.StatusId = status.CancelId;
                 _repoWrapper.TicketRecord.Update(record);
 
@@ -428,10 +438,24 @@ namespace Inventory.Service.Implement
             }
             else if (record.StatusId == status.ProcessingId)
             {
-                record.StatusId = status.DoneId;
 
-                ticket.CloseDate = DateTime.UtcNow;
-                _repoWrapper.Ticket.Update(ticket);
+                var export = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive && x.TicketId == ticket.Id)
+                                                .OrderByDescending(x => x.UpdatedAt)
+                                                .FirstOrDefaultAsync();
+
+                if (export?.StatusId == status.DoneId)
+                {
+                    record.StatusId = status.DoneId;
+
+                    ticket.CloseDate = DateTime.UtcNow;
+                    _repoWrapper.Ticket.Update(ticket);
+                }
+
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = new("Error", "Export for this ticket not done yet!");
+
+                return response;
+
             }
             else
             {

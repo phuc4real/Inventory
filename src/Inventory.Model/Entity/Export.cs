@@ -3,6 +3,7 @@
     public class Export : AuditLog
     {
         public int Id { get; set; }
+        public int TicketId { get; set; }
         public string? Description { get; set; }
         public int StatusId { get; set; }
         public string? ExportFor { get; set; }

@@ -18,6 +18,7 @@ namespace Inventory.Service.Common
         public int CloseId { get; set; }
 
         public List<int>? CanEdit => new() { ReviewId, PendingId, ProcessingId, RejectId };
+        public List<int>? CanCancelTicket => new() { ReviewId, PendingId, RejectId };
         public List<int>? CannotEdit => new() { CancelId, DoneId, CloseId };
         public List<int>? SummaryId => new() { ReviewId, PendingId, ProcessingId, DoneId };
         public List<Status>? Data { get; set; }
