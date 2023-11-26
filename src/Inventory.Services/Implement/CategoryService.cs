@@ -46,7 +46,7 @@ namespace Inventory.Service.Implement
             if (category == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Category", "Not found!");
+                response.Message = new("Error", "Category Not found!");
                 return response;
             }
 
@@ -86,7 +86,7 @@ namespace Inventory.Service.Implement
             if (category == null || category.IsInactive)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Category", "Category not exists!");
+                response.Message = new("Error", "Category not exists!");
                 return response;
 
             }
@@ -114,14 +114,14 @@ namespace Inventory.Service.Implement
             if (category == null || category.IsInactive)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Category", "Category not exists!");
+                response.Message = new("Error", "Category not exists!");
                 return response;
             }
 
             _repoWrapper.Category.Remove(category);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Category", "Category deleted!");
+            response.Message = new("Error", "Category deleted!");
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.Category + category.Id);
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.CategoruPagination);
             return response;

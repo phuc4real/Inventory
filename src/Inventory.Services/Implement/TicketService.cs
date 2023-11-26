@@ -163,7 +163,7 @@ namespace Inventory.Service.Implement
             if (result == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Ticket", "Ticket not found!");
+                response.Message = new("Error", "Ticket not found!");
                 return response;
             }
 
@@ -338,7 +338,7 @@ namespace Inventory.Service.Implement
             if (ticket == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Ticket", "Ticket not found!");
+                response.Message = new("Error", "Ticket not found!");
 
                 return response;
             };
@@ -359,12 +359,12 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
-                response.Message = new("Ticket", "Ticket has been canceled");
+                response.Message = new("Success", "Ticket has been canceled");
                 return response;
             }
             else
             {
-                response.Message = new("Ticket", "Cannot cancel ticket");
+                response.Message = new("Error", "Cannot cancel ticket");
                 return response;
             }
 
@@ -379,7 +379,7 @@ namespace Inventory.Service.Implement
             if (ticket == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Ticket", "Ticket not found!");
+                response.Message = new("Error", "Ticket not found!");
 
                 return response;
             };
@@ -391,7 +391,7 @@ namespace Inventory.Service.Implement
             if (record == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Ticket", "Ticket not found!");
+                response.Message = new("Error", "Ticket not found!");
 
                 return response;
             }
@@ -425,7 +425,7 @@ namespace Inventory.Service.Implement
             else
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Ticket", "Cannot change status!");
+                response.Message = new("Error", "Cannot change status!");
 
                 return response;
             }
@@ -433,7 +433,7 @@ namespace Inventory.Service.Implement
             _repoWrapper.TicketRecord.Update(record);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Ticket", "Update status successfully");
+            response.Message = new("Success", "Update status successfully");
 
             return response;
         }
@@ -559,7 +559,7 @@ namespace Inventory.Service.Implement
             _repoWrapper.Ticket.Update(ticket);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Ticket", "Thank for approve the ticket!");
+            response.Message = new("Success", "Thank for approve the ticket!");
 
             return response;
         }

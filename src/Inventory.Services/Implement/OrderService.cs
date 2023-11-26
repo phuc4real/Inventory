@@ -270,7 +270,7 @@ namespace Inventory.Service.Implement
             if (result == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Order", "Order not found!");
+                response.Message = new("Error", "Order not found!");
                 return response;
             }
 
@@ -290,7 +290,7 @@ namespace Inventory.Service.Implement
             if (order == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Order", "Order not found!");
+                response.Message = new("Error", "Order not found!");
 
                 return response;
             };
@@ -302,7 +302,7 @@ namespace Inventory.Service.Implement
             if (record == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Order", "Order not found!");
+                response.Message = new("Error", "Order not found!");
 
                 return response;
             }
@@ -342,7 +342,7 @@ namespace Inventory.Service.Implement
             else
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Order", "Cannot change status!");
+                response.Message = new("Error", "Cannot change status!");
 
                 return response;
             }
@@ -350,7 +350,7 @@ namespace Inventory.Service.Implement
             _repoWrapper.OrderRecord.Update(record);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Order", "Update status successfully");
+            response.Message = new("Success", "Update status successfully");
 
             return response;
         }
@@ -365,7 +365,7 @@ namespace Inventory.Service.Implement
             if (order == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Order", "Order not found!");
+                response.Message = new("Error", "Order not found!");
 
                 return response;
             };
@@ -383,12 +383,12 @@ namespace Inventory.Service.Implement
                 _repoWrapper.Order.Update(order);
                 await _repoWrapper.SaveAsync();
 
-                response.Message = new("Order", "Order has been canceled");
+                response.Message = new("Success", "Order has been canceled");
 
                 return response;
             }
             response.StatusCode = ResponseCode.BadRequest;
-            response.Message = new("Order", "Cannot cancel order");
+            response.Message = new("Error", "Cannot cancel order");
 
             return response;
         }

@@ -48,7 +48,7 @@ namespace Inventory.Service.Implement
             if (user == null)
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("UErrorser", "User not exists!");
+                response.Message = new("Error", "User not exists!");
             }
             else
             {
@@ -160,7 +160,7 @@ namespace Inventory.Service.Implement
             else
             {
                 response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Refresh token Invalid!", "Cannot refresh token, please try login again!");
+                response.Message = new("Error", "Refresh token Invalid!");
             }
 
             return response;
