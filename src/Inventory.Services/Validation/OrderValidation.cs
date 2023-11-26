@@ -38,6 +38,17 @@ namespace Inventory.Service.Validation
                 return new ResultMessage("Error", "Max Price of item is invalid!");
             }
 
+            var priceRangeInvalid = false;
+            foreach (var entry in entity.OrderEntries)
+            {
+                if (entry.MinPrice > entry.MaxPrice) { priceRangeInvalid = true; break; }
+            }
+
+            if (priceRangeInvalid)
+            {
+                return new ResultMessage("Error", "Price Range is invalid! Min price > Max price");
+            }
+
             return new ResultMessage();
         }
     }
