@@ -9,6 +9,8 @@ using Inventory.Core.Common;
 using Inventory.Core.Extensions;
 using System.Linq;
 using Inventory.Core.Constants;
+using Inventory.Service.Validation;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Inventory.Service.Implement
 {
@@ -65,6 +67,15 @@ namespace Inventory.Service.Implement
             request.Id = null;
 
             Category cate = _mapper.Map<Category>(request);
+
+            var result = CategoryValidation.Validate(cate);
+
+            if (!result.Message.IsNullOrEmpty())
+            {
+                response.StatusCode = ResponseCode.BadRequest;
+                response.Message = result;
+                return response;
+            }
 
             await _repoWrapper.Category.AddAsync(cate);
             await _repoWrapper.SaveAsync();
