@@ -344,9 +344,9 @@ namespace Inventory.Service.Implement
 
                 var items = data.Select(x => x.item).ToList();
                 _repoWrapper.Item.UpdateRange(items);
+                await _cacheService.RemoveCacheByListIdAsync(items.Select(x => x.Id));
 
                 record.StatusId = status.DoneId;
-
                 //Set order complete date
                 order.CompleteDate = DateTime.UtcNow;
                 _repoWrapper.Order.Update(order);

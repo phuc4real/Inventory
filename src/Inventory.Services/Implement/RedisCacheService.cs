@@ -1,4 +1,5 @@
-﻿using Inventory.Service;
+﻿using Inventory.Core.Constants;
+using Inventory.Service;
 using StackExchange.Redis;
 using System;
 using System.Text;
@@ -11,6 +12,7 @@ namespace Inventory.Service.Implement
         #region Ctor & Field
 
         private readonly IConnectionMultiplexer _conn;
+        private readonly TimeSpan expireTime = TimeSpan.FromMinutes(5);
 
         public RedisCacheService(IConnectionMultiplexer conn)
         {
@@ -55,7 +57,7 @@ namespace Inventory.Service.Implement
         {
             var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value));
 
-            await RedisDb.StringSetAsync(key, bytes, TimeSpan.FromMinutes(10));
+            await RedisDb.StringSetAsync(key, bytes, expireTime);
         }
 
         public bool TryGetCacheAsync<T>(string key, out T value)
@@ -71,6 +73,18 @@ namespace Inventory.Service.Implement
             }
 
             return false;
+        }
+
+
+        public async Task RemoveCacheByListIdAsync(IEnumerable<int> idList)
+        {
+            foreach (var id in idList)
+            {
+                await RemoveCacheAsync(CacheNameConstant.Item + id);
+                await RemoveCacheAsync(CacheNameConstant.ItemCompact + id);
+            }
+
+            await RemoveCacheTreeAsync(CacheNameConstant.ItemPagination);
         }
 
         #endregion

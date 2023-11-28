@@ -208,6 +208,7 @@ namespace Inventory.Service.Implement
 
                 var items = data.Select(x => x.item).ToList();
                 _repoWrapper.Item.UpdateRange(items);
+                await _cacheService.RemoveCacheByListIdAsync(items.Select(x => x.Id));
 
                 export.StatusId = status.DoneId;
             }

@@ -7,5 +7,6 @@
         public Task RemoveCacheAsync(string key);
         public Task RemoveCacheAsync(string[] keys);
         public Task RemoveCacheTreeAsync(string treeKey);
+        public Task RemoveCacheByListIdAsync(IEnumerable<int> idList);
     }
 }
