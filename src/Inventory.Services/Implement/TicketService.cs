@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using StackExchange.Redis;
 
 namespace Inventory.Service.Implement
 {
@@ -164,8 +165,7 @@ namespace Inventory.Service.Implement
 
             if (result == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Ticket not found!");
+                response.AddError("Ticket not found!");
                 return response;
             }
 
@@ -187,12 +187,11 @@ namespace Inventory.Service.Implement
             var type = await _repoWrapper.TicketType.FindAll().ToListAsync();
             var status = await _commonService.GetStatusCollections();
 
-            var result = TicketValidation.Validate(request);
+            var err = TicketValidation.Validate(request);
 
-            if (!result.Message.IsNullOrEmpty())
+            if (!err.Message.IsNullOrEmpty())
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = result;
+                response.AddError(err);
                 return response;
             }
 
@@ -246,7 +245,7 @@ namespace Inventory.Service.Implement
 
                 try
                 {
-                    SendNotification(response.Data, "New ticket has been created!");
+                    SendNotification(response.Data, $"New ticket #{ticket.Id} has been created!");
                 }
                 catch (Exception ex)
                 {
@@ -268,8 +267,7 @@ namespace Inventory.Service.Implement
 
                 if (ticketAndRecord == null)
                 {
-                    response.Message = new("Error", "Ticket not found!");
-                    response.StatusCode = ResponseCode.BadRequest;
+                    response.AddError("Ticket not found!");
                     return response;
                 }
 
@@ -278,8 +276,7 @@ namespace Inventory.Service.Implement
 
                 if (status.CannotEdit.Contains(oldRecord.StatusId))
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Error", "Cannot edit ticket!");
+                    response.AddError("Cannot edit ticket!");
                     return response;
                 }
 
@@ -328,7 +325,7 @@ namespace Inventory.Service.Implement
 
                 try
                 {
-                    SendNotification(response.Data, "A ticket has been changed!");
+                    SendNotification(response.Data, $"Ticket #{ticket.Id} has been changed!");
                 }
                 catch (Exception ex)
                 {
@@ -348,8 +345,7 @@ namespace Inventory.Service.Implement
                                                .FirstOrDefaultAsync();
             if (ticket == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Ticket not found!");
+                response.AddError("Ticket not found!");
 
                 return response;
             };
@@ -362,7 +358,7 @@ namespace Inventory.Service.Implement
 
             if (status.CanCancelTicket.Contains(record.StatusId))
             {
-                if(record.StatusId == status.ProcessingId)
+                if (record.StatusId == status.ProcessingId)
                 {
                     var export = await _repoWrapper.Export.FindByCondition(x => !x.IsInactive && x.TicketId == ticket.Id)
                                                 .OrderByDescending(x => x.UpdatedAt)
@@ -380,12 +376,12 @@ namespace Inventory.Service.Implement
 
                 await _repoWrapper.SaveAsync();
 
-                response.Message = new("Success", "Ticket has been canceled");
+                response.AddMessage("Ticket has been canceled");
                 return response;
             }
             else
             {
-                response.Message = new("Error", "Cannot cancel ticket");
+                response.AddError("Cannot cancel ticket");
                 return response;
             }
 
@@ -399,8 +395,7 @@ namespace Inventory.Service.Implement
             var ticket = await _repoWrapper.Ticket.FirstOrDefaultAsync(x => !x.IsInactive && x.Id == request.TicketId);
             if (ticket == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Ticket not found!");
+                response.AddError("Ticket not found!");
 
                 return response;
             };
@@ -411,8 +406,7 @@ namespace Inventory.Service.Implement
 
             if (record == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Ticket not found!");
+                response.AddError("Ticket not found!");
 
                 return response;
             }
@@ -429,8 +423,7 @@ namespace Inventory.Service.Implement
 
                 if (newExport != null && newExport.StatusCode == ResponseCode.BadRequest)
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = newExport.Message;
+                    response.AddMessage(newExport.Message);
                     return response;
                 }
 
@@ -452,16 +445,14 @@ namespace Inventory.Service.Implement
                 }
                 else
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Error", "Export for this ticket not done yet!");
+                    response.AddError("Export for this ticket not done yet!");
 
                     return response;
                 }
             }
             else
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Cannot change status!");
+                response.AddError("Cannot change status!");
 
                 return response;
             }
@@ -469,7 +460,7 @@ namespace Inventory.Service.Implement
             _repoWrapper.TicketRecord.Update(record);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Success", "Update status successfully");
+            response.AddMessage("Update status successfully");
 
             return response;
         }
@@ -497,7 +488,8 @@ namespace Inventory.Service.Implement
             }
             else
             {
-                response.Message = new("Error", "Ticket not found!");
+                response.StatusCode = ResponseCode.BadRequest;
+                response.AddError("Ticket not found!");
             }
             return response;
         }
@@ -559,8 +551,7 @@ namespace Inventory.Service.Implement
 
             if (ticketAndRecord == null)
             {
-                response.Message = new("Error", "Ticket not found!");
-                response.StatusCode = ResponseCode.BadRequest;
+                response.AddError("Ticket not found!");
 
                 return response;
             }
@@ -570,8 +561,7 @@ namespace Inventory.Service.Implement
 
             if (record.StatusId != status.ReviewId)
             {
-                response.Message = new("Error", "Cannot approval ticket!");
-                response.StatusCode = ResponseCode.BadRequest;
+                response.AddError("Cannot approval ticket!");
 
                 return response;
             }
@@ -586,16 +576,34 @@ namespace Inventory.Service.Implement
             {
                 //Update ticket status
                 record.StatusId = status.PendingId;
+            }
 
-                //Create new export
+            try
+            {
+                var user = await _repoWrapper.User.FirstOrDefaultAsync(x => x.UserName == record.CreatedBy);
 
+                SendNotification(new TicketResponse()
+                {
+                    TicketId = ticket.Id,
+                    RecordId = record.Id,
+                    Description = record.Description,
+                    Title = record.Title,
+                    CreatedAt = record.CreatedAt,
+                    CreatedBy = user.FirstName + " " + user.LastName,
+                },
+                "Your ticket #" + ticket.Id + " has been " + (request.IsReject ? "rejected!" : "approval!"),
+                user.Email);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
             }
 
             _repoWrapper.TicketRecord.Update(record);
             _repoWrapper.Ticket.Update(ticket);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Success", "Thank for approve the ticket!");
+            response.AddMessage("Thank for approve the ticket!");
 
             return response;
         }
@@ -628,7 +636,7 @@ namespace Inventory.Service.Implement
                 return new List<RecordHistoryResponse> { };
         }
 
-        private async void SendNotification(TicketResponse ticket, string subject)
+        private async void SendNotification(TicketResponse ticket, string subject, string? toEmail = null)
         {
             var request = new NotificationEmailRequest()
             {
@@ -646,7 +654,12 @@ namespace Inventory.Service.Implement
                 }
             };
 
-            await _emailService.SendNotificationToSA(request);
+            if (!toEmail.IsNullOrEmpty())
+            {
+                request.SendTo(ticket.CreatedBy, toEmail);
+            }
+
+            await _emailService.SendNotification(request);
         }
 
         #endregion

@@ -107,8 +107,7 @@ namespace Inventory.Service.Implement
 
             if (result == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Export Not found!");
+                response.AddError("Export Not found!");
                 return response;
             }
 
@@ -153,8 +152,7 @@ namespace Inventory.Service.Implement
 
             if (export == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Export not found");
+                response.AddError("Export not found");
                 return response;
             }
 
@@ -182,8 +180,7 @@ namespace Inventory.Service.Implement
 
                 if (errors != "")
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Error", errors);
+                    response.AddError(errors);
                     return response;
                 }
 
@@ -235,8 +232,7 @@ namespace Inventory.Service.Implement
 
             if (ticketAndRecord == null)
             {
-                response.Message = new("Error", "Ticket not found!");
-                response.StatusCode = ResponseCode.BadRequest;
+                response.AddError("Ticket not found!");
                 return response;
             }
 
@@ -261,7 +257,7 @@ namespace Inventory.Service.Implement
             await _repoWrapper.SaveAsync();
 
             response.Data = _mapper.Map<ExportResponse>(export);
-            response.Message = new("Success", "Create export successfully!");
+            response.AddMessage("Create export successfully!");
 
             return response;
         }
@@ -289,7 +285,7 @@ namespace Inventory.Service.Implement
             }
             else
             {
-                response.Message = new("Error", "Export not found!");
+                response.AddError("Export not found!");
             }
             return response;
         }

@@ -47,8 +47,8 @@ namespace Inventory.Service.Implement
 
             if (user == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "User not exists!");
+                response.AddError("User not exists!");
+                return response;
             }
             else
             {
@@ -65,14 +65,14 @@ namespace Inventory.Service.Implement
                     await _userManager.UpdateAsync(user);
 
                     response.Data = tokens;
+                    return response;
                 }
                 else
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Error", "Wrong password!");
+                    response.AddError("Wrong password!!");
+                    return response;
                 }
             }
-            return response;
         }
 
         public async Task<BaseResponse> SignUpAsync(RegisterRequest request)
@@ -84,8 +84,8 @@ namespace Inventory.Service.Implement
 
             if (emailExist || userNameExist)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "User already exists!");
+                response.AddError("User already exists!");
+                return response;
             }
             else
             {
@@ -100,16 +100,15 @@ namespace Inventory.Service.Implement
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, InventoryRoles.NormalUser);
-                    response.Message = new("Success", "User created successfully!");
+                    response.AddMessage("User created successfully!");
+                    return response;
                 }
                 else
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Error", "User info invalid!");
+                    response.AddError("User info invalid!");
+                    return response;
                 }
             }
-
-            return response;
         }
 
         public async Task<BaseResponse> SignOutAsync(BaseRequest request)
@@ -119,8 +118,8 @@ namespace Inventory.Service.Implement
 
             if (user == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "User not exist!");
+                response.AddError("User not exist!");
+                return response;
             }
             else
             {
@@ -131,10 +130,10 @@ namespace Inventory.Service.Implement
                 await _userManager.UpdateAsync(user);
                 await _userManager.UpdateSecurityStampAsync(user);
 
-                response.Message = new("Success", "User logout!");
+                response.AddMessage("User logout!");
+                return response;
             }
 
-            return response;
         }
 
         public async Task<IdentityObjectResponse> RefreshTokenAsync(BaseRequest request)
@@ -159,8 +158,7 @@ namespace Inventory.Service.Implement
             }
             else
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Refresh token Invalid!");
+                response.AddError("Refresh token Invalid!");
             }
 
             return response;
