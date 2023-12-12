@@ -4,6 +4,6 @@ namespace Inventory.Service
 {
     public interface IEmailService
     {
-        public Task<bool> SendNotificationToSA(NotificationEmailRequest request);
+        public Task<bool> SendNotification(NotificationEmailRequest request);
     }
 }

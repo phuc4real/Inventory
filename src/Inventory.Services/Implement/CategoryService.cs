@@ -47,8 +47,7 @@ namespace Inventory.Service.Implement
             var category = await _repoWrapper.Category.FirstOrDefaultAsync(x => x.Id == request.Id);
             if (category == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Category Not found!");
+                response.AddError("Category not found!");
                 return response;
             }
 
@@ -68,12 +67,11 @@ namespace Inventory.Service.Implement
 
             Category cate = _mapper.Map<Category>(request);
 
-            var result = CategoryValidation.Validate(cate);
+            var err = CategoryValidation.Validate(cate);
 
-            if (!result.Message.IsNullOrEmpty())
+            if (!err.Message.IsNullOrEmpty())
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = result;
+                response.AddError(err);
                 return response;
             }
 
@@ -96,8 +94,7 @@ namespace Inventory.Service.Implement
 
             if (category == null || category.IsInactive)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Category not exists!");
+                response.AddError("Category not exists!");
                 return response;
 
             }
@@ -124,15 +121,14 @@ namespace Inventory.Service.Implement
 
             if (category == null || category.IsInactive)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Category not exists!");
+                response.AddError("Category not found!");
                 return response;
             }
 
             _repoWrapper.Category.Remove(category);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Error", "Category deleted!");
+            response.AddMessage("Category deleted!");
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.Category + category.Id);
             await _cacheService.RemoveCacheTreeAsync(CacheNameConstant.CategoruPagination);
             return response;

@@ -15,6 +15,28 @@ namespace Inventory.Service.Common
         public ResponseCode StatusCode { get; set; } = ResponseCode.Success;
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public ResultMessage? Message { get; set; }
+        public ResultMessage? Message { get; private set; }
+
+        public void AddMessage(string message)
+        {
+            Message = new ResultMessage("Success", message);
+        }
+
+        public void AddMessage(ResultMessage message)
+        {
+            Message = message;
+        }
+
+        public void AddError(string message)
+        {
+            StatusCode = ResponseCode.BadRequest;
+            Message = new ResultMessage("Error", message);
+        }
+
+        public void AddError(ResultMessage message)
+        {
+            StatusCode = ResponseCode.BadRequest;
+            Message = message;
+        }
     }
 }

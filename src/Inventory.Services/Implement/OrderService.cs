@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Inventory.Core.Common;
-using Inventory.Core.Constants;
 using Inventory.Core.Enums;
 using Inventory.Core.Extensions;
 using Inventory.Model.Entity;
@@ -12,7 +11,6 @@ using Inventory.Service.DTO.Email;
 using Inventory.Service.DTO.Item;
 using Inventory.Service.DTO.Order;
 using Inventory.Service.Validation;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -102,19 +100,18 @@ namespace Inventory.Service.Implement
 
             var status = await _commonService.GetStatusCollections();
 
-            var result = OrderValidation.Validate(request);
+            var err = OrderValidation.Validate(request);
 
-            if (!result.Message.IsNullOrEmpty())
+            if (!err.Message.IsNullOrEmpty())
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = result;
+                response.AddError(err);
                 return response;
             }
 
             if (request.RecordId == 0)
             {
                 //Add Order 
-                var order = new Model.Entity.Order()
+                var order = new Order()
                 {
                     CompleteDate = null
                 };
@@ -160,7 +157,7 @@ namespace Inventory.Service.Implement
 
                 try
                 {
-                    SendNotification(response.Data, "New order has been planed!");
+                    SendNotification(response.Data, $"New order #{order.Id} has been planed!");
                 }
                 catch (Exception ex)
                 {
@@ -186,8 +183,7 @@ namespace Inventory.Service.Implement
 
                 if (status.CannotEdit.Contains(oldRecord.StatusId))
                 {
-                    response.StatusCode = ResponseCode.BadRequest;
-                    response.Message = new("Error", "Cannot edit order!");
+                    response.AddError("Cannot edit order!");
                     return response;
                 }
 
@@ -231,8 +227,7 @@ namespace Inventory.Service.Implement
 
                 try
                 {
-
-                    SendNotification(response.Data, "An order has changed!");
+                    SendNotification(response.Data, $"Order #{order.Id} has changed!");
                 }
                 catch (Exception ex)
                 {
@@ -281,8 +276,7 @@ namespace Inventory.Service.Implement
 
             if (result == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Order not found!");
+                response.AddError("Order not found!");
                 return response;
             }
 
@@ -301,9 +295,7 @@ namespace Inventory.Service.Implement
                                                 .FirstOrDefaultAsync();
             if (order == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Order not found!");
-
+                response.AddError("Order not found!");
                 return response;
             };
 
@@ -313,9 +305,7 @@ namespace Inventory.Service.Implement
 
             if (record == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Order not found!");
-
+                response.AddError("Order not found!");
                 return response;
             }
 
@@ -353,17 +343,14 @@ namespace Inventory.Service.Implement
             }
             else
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Cannot change status!");
-
+                response.AddError("Cannot change status!");
                 return response;
             }
 
             _repoWrapper.OrderRecord.Update(record);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Success", "Update status successfully");
-
+            response.AddMessage("Update status successfully");
             return response;
         }
 
@@ -376,9 +363,7 @@ namespace Inventory.Service.Implement
                                                 .FirstOrDefaultAsync();
             if (order == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "Order not found!");
-
+                response.AddError("Order not found!");
                 return response;
             };
 
@@ -395,13 +380,12 @@ namespace Inventory.Service.Implement
                 _repoWrapper.Order.Update(order);
                 await _repoWrapper.SaveAsync();
 
-                response.Message = new("Success", "Order has been canceled");
+                response.AddMessage("Order has been canceled");
 
                 return response;
             }
-            response.StatusCode = ResponseCode.BadRequest;
-            response.Message = new("Error", "Cannot cancel order");
 
+            response.AddError("Cannot cancel order");
             return response;
         }
 
@@ -456,7 +440,7 @@ namespace Inventory.Service.Implement
             }
             else
             {
-                response.Message = new("Order", "Order has been canceled");
+                response.AddMessage("Order entries not found!");
             }
             return response;
         }
@@ -478,9 +462,7 @@ namespace Inventory.Service.Implement
 
             if (orderAndRecord == null)
             {
-                response.Message = new("Error", "Order not found!");
-                response.StatusCode = ResponseCode.BadRequest;
-
+                response.AddMessage("Order not found!");
                 return response;
             }
 
@@ -489,9 +471,7 @@ namespace Inventory.Service.Implement
 
             if (record.StatusId != status.ReviewId)
             {
-                response.Message = new("Error", "Cannot approval order!");
-                response.StatusCode = ResponseCode.BadRequest;
-
+                response.AddError("Cannot approval order!");
                 return response;
             }
 
@@ -509,7 +489,27 @@ namespace Inventory.Service.Implement
             _repoWrapper.Order.Update(order);
             await _repoWrapper.SaveAsync();
 
-            response.Message = new("Ticket", "Thank for approve the order!");
+            try
+            {
+                var user = await _repoWrapper.User.FirstOrDefaultAsync(x => x.UserName == record.CreatedBy);
+
+                SendNotification(new OrderResponse()
+                {
+                    OrderId = order.Id,
+                    RecordId = record.Id,
+                    Description = record.Description,
+                    CreatedAt = record.CreatedAt,
+                    CreatedBy = user.FirstName + " " + user.LastName,
+                },
+                "Your order #" + order.Id + " has been " + (request.IsReject ? "rejected!" : "approval!"),
+                user.Email);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.ToString());
+            }
+
+            response.AddMessage("Thank for approve the order!");
 
             return response;
         }
@@ -545,7 +545,7 @@ namespace Inventory.Service.Implement
                 return new List<RecordHistoryResponse> { };
         }
 
-        private async void SendNotification(OrderResponse order, string subject)
+        private async void SendNotification(OrderResponse order, string subject, string? toEmail = null)
         {
             var request = new NotificationEmailRequest()
             {
@@ -560,7 +560,12 @@ namespace Inventory.Service.Implement
                 }
             };
 
-            await _emailService.SendNotificationToSA(request);
+            if (!toEmail.IsNullOrEmpty())
+            {
+                request.SendTo(order.CreatedBy, toEmail);
+            }
+
+            await _emailService.SendNotification(request);
         }
 
         #endregion

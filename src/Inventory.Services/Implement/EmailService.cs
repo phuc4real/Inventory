@@ -4,6 +4,7 @@ using Inventory.Core.Template;
 using Inventory.Repository;
 using Inventory.Service.DTO.Email;
 using MailKit.Security;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Serilog;
@@ -27,17 +28,20 @@ namespace Inventory.Service.Implement
 
         #region Method
 
-        public async Task<bool> SendNotificationToSA(NotificationEmailRequest request)
+        public async Task<bool> SendNotification(NotificationEmailRequest request)
         {
-            var saList = (from role in _repoWrapper.Role.Where(x => x.Name == InventoryRoles.SuperAdmin)
-                          join userRole in _repoWrapper.UserRole
-                          on role.Id equals userRole.RoleId
-                          join user in _repoWrapper.User
-                          on userRole.UserId equals user.Id
-                          select user
-                         ).ToList();
+            if (request.Mails.Count == 0)
+            {
+                var saList = (from role in _repoWrapper.Role.Where(x => x.Name == InventoryRoles.SuperAdmin)
+                              join userRole in _repoWrapper.UserRole
+                              on role.Id equals userRole.RoleId
+                              join user in _repoWrapper.User
+                              on userRole.UserId equals user.Id
+                              select user
+                             ).ToList();
 
-            saList.ForEach(x => request.SendTo(x.FirstName + " " + x.LastName, x.Email));
+                saList.ForEach(x => request.SendTo(x.FirstName + " " + x.LastName, x.Email));
+            }
 
             var email = CreateEmail(request);
             var isSuccess = true;

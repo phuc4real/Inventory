@@ -45,8 +45,7 @@ namespace Inventory.Service.Implement
 
             if (user == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "User not exist");
+                response.AddError("User not exist");
             }
             else
             {
@@ -64,8 +63,7 @@ namespace Inventory.Service.Implement
 
             if (user == null)
             {
-                response.StatusCode = ResponseCode.BadRequest;
-                response.Message = new("Error", "User not exist");
+                response.AddError("User not exist");
             }
             else
             {
