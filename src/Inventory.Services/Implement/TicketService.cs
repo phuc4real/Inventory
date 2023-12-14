@@ -49,7 +49,10 @@ namespace Inventory.Service.Implement
 
         public async Task<TicketPageResponse> GetPaginationAsync(PaginationRequest request)
         {
-            var response = new TicketPageResponse();
+            var response = new TicketPageResponse()
+            {
+                Data = new List<TicketResponse>()
+            };
 
             var userName = request.GetUserContext();
             var permission = await _userService.CheckRoleOfUser(userName);
@@ -100,6 +103,7 @@ namespace Inventory.Service.Implement
                                          UpdatedBy = updatedBy.FirstName + " " + updatedBy.LastName
                                      })
                                .Distinct()
+                               .OrderByDescending(x => x.UpdatedAt)
                                .ToListAsync();
 
             var listTicket = ticketQuery.GroupBy(x => x.TicketId)
@@ -107,10 +111,16 @@ namespace Inventory.Service.Implement
                                                       .FirstOrDefault());
 
             response.Count = listTicket.Count();
-            response.Data = listTicket.AsQueryable()
-                                  .Pagination(request)
-                                  .ProjectTo<TicketResponse>(_mapper.ConfigurationProvider)
-                                  .ToList();
+            var result = listTicket.AsQueryable()
+                                   .Pagination(request)
+                                   .ProjectTo<TicketResponse>(_mapper.ConfigurationProvider)
+                                   .ToList();
+
+            var reviewTicket = result.Where(x => x.Status == "In Review").ToList();
+            response.Data.AddRange(reviewTicket);
+
+            var remainTicket = result.Where(x => x.Status != "In Review").OrderBy(x => x.Status).ToList();
+            response.Data.AddRange(remainTicket);
 
             return response;
         }
@@ -273,6 +283,14 @@ namespace Inventory.Service.Implement
 
                 var ticket = ticketAndRecord.Ticket;
                 var oldRecord = ticketAndRecord.Record;
+
+                var recordCount = await _repoWrapper.TicketRecord.FindByCondition(x => x.TicketId == ticket.Id).CountAsync();
+
+                if (recordCount >= 3)
+                {
+                    response.AddError("Cannot edit ticket!, A ticket can only edit 3 times");
+                    return response;
+                }
 
                 if (status.CannotEdit.Contains(oldRecord.StatusId))
                 {
@@ -548,6 +566,7 @@ namespace Inventory.Service.Implement
                                              Ticket = t,
                                              Record = r,
                                          }).FirstOrDefaultAsync();
+
 
             if (ticketAndRecord == null)
             {

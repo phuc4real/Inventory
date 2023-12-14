@@ -42,7 +42,7 @@ namespace Inventory.Service.Implement
 
         public async Task<OrderPageResponse> GetPaginationAsync(PaginationRequest request)
         {
-            var response = new OrderPageResponse();
+            var response = new OrderPageResponse() { Data = new List<OrderResponse>() };
 
             var search = request.SearchKeyword != null ? request.SearchKeyword?.ToLower() : "";
             var orderQuery = await (from order in _repoWrapper.Order.FindByCondition(x => x.IsInactive == request.IsInactive)
@@ -85,10 +85,16 @@ namespace Inventory.Service.Implement
                                       .Select(x => x.OrderByDescending(x => x.UpdatedAt)
                                                     .FirstOrDefault());
             response.Count = listOrder.Count();
-            response.Data = listOrder.AsQueryable()
+            var result = listOrder.AsQueryable()
                                      .Pagination(request)
                                      .ProjectTo<OrderResponse>(_mapper.ConfigurationProvider)
                                      .ToList();
+
+            var review = result.Where(x => x.Status == "In Review").ToList();
+            response.Data.AddRange(review);
+
+            var remain = result.Where(x => x.Status != "In Review").OrderBy(x => x.Status).ToList();
+            response.Data.AddRange(remain);
 
             return response;
         }
@@ -180,6 +186,15 @@ namespace Inventory.Service.Implement
 
                 var order = orderAndRecord.Order;
                 var oldRecord = orderAndRecord.Record;
+
+
+                var recordCount = await _repoWrapper.OrderRecord.FindByCondition(x => x.OrderId == order.Id).CountAsync();
+
+                if (recordCount >= 3)
+                {
+                    response.AddError("Cannot edit order!, An order can only edit 3 times");
+                    return response;
+                }
 
                 if (status.CannotEdit.Contains(oldRecord.StatusId))
                 {

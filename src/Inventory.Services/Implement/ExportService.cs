@@ -8,6 +8,7 @@ using Inventory.Repository;
 using Inventory.Service.Common;
 using Inventory.Service.DTO.Export;
 using Inventory.Service.DTO.Item;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.Service.Implement
@@ -32,7 +33,7 @@ namespace Inventory.Service.Implement
 
         public async Task<ExportPaginationResponse> GetPaginationAsync(PaginationRequest request)
         {
-            var response = new ExportPaginationResponse();
+            var response = new ExportPaginationResponse() { Data = new List<ExportResponse>() };
 
             var search = request.SearchKeyword != null ? request.SearchKeyword?.ToLower() : "";
             var exports = (from export in _repoWrapper.Export.FindByCondition(x => x.IsInactive == request.IsInactive)
@@ -70,8 +71,15 @@ namespace Inventory.Service.Implement
                            }).Distinct();
 
             response.Count = await exports.CountAsync();
-            response.Data = await exports.Pagination(request)
-                                         .ToListAsync();
+            var result = await exports.Pagination(request)
+                                      .ToListAsync();
+
+            var review = result.Where(x => x.Status == "In Review").ToList();
+            response.Data.AddRange(review);
+
+            var remain = result.Where(x => x.Status != "In Review").OrderBy(x => x.Status).ToList();
+            response.Data.AddRange(remain);
+
             return response;
         }
 
